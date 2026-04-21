@@ -30,9 +30,8 @@ yarn-error.log*
 *.db-shm
 *.db-wal
 
-# Documentation
-*.md
-!README.md
+# Documentation (keep docs/blog content, only ignore the top-level README)
+# (intentionally not excluding *.md — content/docs relies on markdown files)
 
 # Config files that aren't needed for build
 .vscode

@@ -1,0 +1,74 @@
+{
+  "fields": {
+    "slug": "路由",
+    "title": "标题",
+    "description": "描述",
+    "status": "状态",
+    "created_at": "创建时间",
+    "updated_at": "更新时间",
+    "is_fixed_order": "文章排序按创建时间",
+    "is_fixed_order_tip": "开启后，前台后台该分类下的文章列表将按创建时间排序（默认按更新时间）"
+  },
+  "list": {
+    "title": "分类",
+    "crumbs": {
+      "admin": "管理后台",
+      "categories": "分类"
+    },
+    "buttons": {
+      "add": "添加分类",
+      "edit": "编辑分类",
+      "view": "查看分类",
+      "delete": "删除分类",
+      "sort": "排序"
+    },
+    "tabs": {
+      "all": "全部",
+      "published": "已发布",
+      "pending": "待审核",
+      "draft": "草稿",
+      "archived": "已归档"
+    }
+  },
+  "add": {
+    "title": "添加分类",
+    "crumbs": {
+      "admin": "管理后台",
+      "categories": "分类",
+      "add": "添加分类"
+    },
+    "buttons": {
+      "submit": "添加分类"
+    }
+  },
+  "edit": {
+    "title": "编辑分类",
+    "crumbs": {
+      "admin": "管理后台",
+      "categories": "分类",
+      "edit": "编辑分类"
+    },
+    "buttons": {
+      "submit": "编辑分类"
+    }
+  },
+  "sort": {
+    "title": "分类排序",
+    "crumbs": {
+      "admin": "管理后台",
+      "categories": "分类",
+      "sort": "排序"
+    },
+    "description": "拖动分类进行排序，完成后点击保存",
+    "sort_label": "排序",
+    "buttons": {
+      "save": "保存",
+      "saving": "保存中...",
+      "cancel": "取消"
+    },
+    "messages": {
+      "save_success": "排序已保存",
+      "save_failed": "保存失败，请重试"
+    }
+  }
+}

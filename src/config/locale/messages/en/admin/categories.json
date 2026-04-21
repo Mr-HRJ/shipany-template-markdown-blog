@@ -1,0 +1,74 @@
+{
+  "fields": {
+    "slug": "Slug",
+    "title": "Title",
+    "description": "Description",
+    "status": "Status",
+    "created_at": "Created At",
+    "updated_at": "Updated At",
+    "is_fixed_order": "Sort Posts by Creation Time",
+    "is_fixed_order_tip": "When enabled, posts in this category will be sorted by creation time (default is by update time)"
+  },
+  "list": {
+    "title": "Categories",
+    "crumbs": {
+      "admin": "Admin",
+      "categories": "Categories"
+    },
+    "buttons": {
+      "add": "Add Category",
+      "edit": "Edit Category",
+      "view": "View Category",
+      "delete": "Delete Category",
+      "sort": "Sort"
+    },
+    "tabs": {
+      "all": "All",
+      "published": "Published",
+      "pending": "Pending",
+      "draft": "Draft",
+      "archived": "Archived"
+    }
+  },
+  "add": {
+    "title": "Add Category",
+    "crumbs": {
+      "admin": "Admin",
+      "categories": "Categories",
+      "add": "Add Category"
+    },
+    "buttons": {
+      "submit": "Add Category"
+    }
+  },
+  "edit": {
+    "title": "Edit Category",
+    "crumbs": {
+      "admin": "Admin",
+      "categories": "Categories",
+      "edit": "Edit Category"
+    },
+    "buttons": {
+      "submit": "Edit Category"
+    }
+  },
+  "sort": {
+    "title": "Sort Categories",
+    "crumbs": {
+      "admin": "Admin",
+      "categories": "Categories",
+      "sort": "Sort"
+    },
+    "description": "Drag categories to reorder, then click save",
+    "sort_label": "Sort",
+    "buttons": {
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "save_success": "Sort order saved",
+      "save_failed": "Failed to save, please try again"
+    }
+  }
+}

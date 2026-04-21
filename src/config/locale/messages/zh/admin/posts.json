@@ -1,0 +1,89 @@
+{
+  "fields": {
+    "slug": "路由",
+    "title": "标题",
+    "description": "描述",
+    "image": "图片",
+    "content": "内容",
+    "categories": "分类",
+    "tags": "标签",
+    "author_name": "作者名称",
+    "author_role": "作者角色",
+    "author_image": "作者图片",
+    "status": "状态",
+    "created_at": "创建时间",
+    "updated_at": "更新时间",
+    "deleted_at": "删除时间",
+    "slug_tip": "文章的唯一路由",
+    "author_name_default": "管理员"
+  },
+  "list": {
+    "title": "文章",
+    "crumbs": {
+      "admin": "管理后台",
+      "posts": "文章"
+    },
+    "search_placeholder": "搜索文章标题或描述...",
+    "search_button": "搜索",
+    "clear_button": "清除",
+    "buttons": {
+      "add": "添加文章",
+      "edit": "编辑文章",
+      "view": "查看文章",
+      "delete": "删除文章",
+      "pin": "置顶",
+      "unpin": "取消置顶",
+      "recommend": "小编推荐",
+      "unrecommend": "取消推荐"
+    },
+    "messages": {
+      "pinned": "已置顶",
+      "unpinned": "已取消置顶",
+      "recommended": "已设为推荐",
+      "unrecommended": "已取消推荐",
+      "deleted": "文章已删除",
+      "delete_confirm": "确定要删除这篇文章吗？"
+    },
+    "tabs": {
+      "all": "全部",
+      "published": "已发布",
+      "pending": "待审核",
+      "draft": "草稿",
+      "archived": "已归档"
+    }
+  },
+  "add": {
+    "title": "添加文章",
+    "crumbs": {
+      "admin": "管理后台",
+      "posts": "文章",
+      "add": "添加文章"
+    },
+    "buttons": {
+      "submit": "添加文章"
+    },
+    "messages": {
+      "success": "文章已添加",
+      "failed": "添加文章失败"
+    }
+  },
+  "edit": {
+    "title": "编辑文章",
+    "crumbs": {
+      "admin": "管理后台",
+      "posts": "文章",
+      "edit": "编辑文章"
+    },
+    "buttons": {
+      "submit": "编辑文章"
+    },
+    "messages": {
+      "success": "文章已更新",
+      "failed": "更新文章失败"
+    }
+  },
+  "messages": {
+    "no_auth": "无权限",
+    "slug_title_required": "路由和标题为必填项"
+  }
+}

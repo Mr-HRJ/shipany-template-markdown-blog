@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "title": "博客",
+    "description": "阅读我们最新的产品功能、解决方案和更新内容。"
+  },
+  "blog": {
+    "id": "blog",
+    "sr_only_title": "ShipAny 博客",
+    "title": "博客",
+    "description": "阅读我们最新的产品功能、解决方案和更新内容。"
+  },
+  "page": {
+    "all": "全部",
+    "no_content": "暂无内容",
+    "crumb": "博客",
+    "toc": "目录",
+    "categories": "分类",
+    "grid_view": "网格视图",
+    "list_view": "列表视图",
+    "search_placeholder": "搜索文章...",
+    "clear_search": "清除搜索",
+    "found_posts": "找到 {count} 篇文章",
+    "recommended": "小编推荐",
+    "pinned": "置顶",
+    "loading": "加载中...",
+    "all_loaded": "已加载全部文章",
+    "no_results": "未找到匹配的文章",
+    "new": "新",
+    "prev_post": "上一篇",
+    "next_post": "下一篇"
+  }
+}

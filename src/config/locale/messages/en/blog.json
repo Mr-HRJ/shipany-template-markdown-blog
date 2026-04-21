@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "title": "Blog",
+    "description": "Read about our latest product features, solutions, and updates."
+  },
+  "blog": {
+    "id": "blog",
+    "sr_only_title": "ShipAny Blog",
+    "title": "Blog",
+    "description": "Read about our latest product features, solutions, and updates."
+  },
+  "page": {
+    "all": "All",
+    "no_content": "No Content",
+    "crumb": "Blog",
+    "toc": "Table of Contents",
+    "categories": "Categories",
+    "grid_view": "Grid View",
+    "list_view": "List View",
+    "search_placeholder": "Search posts...",
+    "clear_search": "Clear Search",
+    "found_posts": "Found {count} posts",
+    "recommended": "Recommended",
+    "pinned": "Pinned",
+    "loading": "Loading...",
+    "all_loaded": "All posts loaded",
+    "no_results": "No matching posts found",
+    "new": "New",
+    "prev_post": "Previous",
+    "next_post": "Next"
+  }
+}

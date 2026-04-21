@@ -1,0 +1,89 @@
+{
+  "fields": {
+    "slug": "Slug",
+    "title": "Title",
+    "description": "Description",
+    "image": "Image",
+    "content": "Content",
+    "categories": "Categories",
+    "tags": "Tags",
+    "author_name": "Author Name",
+    "author_role": "Author Role",
+    "author_image": "Author Image",
+    "status": "Status",
+    "created_at": "Created At",
+    "updated_at": "Updated At",
+    "deleted_at": "Deleted At",
+    "slug_tip": "Unique slug for the post",
+    "author_name_default": "Admin"
+  },
+  "list": {
+    "title": "Posts",
+    "crumbs": {
+      "admin": "Admin",
+      "posts": "Posts"
+    },
+    "search_placeholder": "Search posts by title or description...",
+    "search_button": "Search",
+    "clear_button": "Clear",
+    "buttons": {
+      "add": "Add Post",
+      "edit": "Edit Post",
+      "view": "View Post",
+      "delete": "Delete Post",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "recommend": "Recommend",
+      "unrecommend": "Unrecommend"
+    },
+    "messages": {
+      "pinned": "Post pinned",
+      "unpinned": "Post unpinned",
+      "recommended": "Post recommended",
+      "unrecommended": "Post unrecommended",
+      "deleted": "Post deleted",
+      "delete_confirm": "Are you sure you want to delete this post?"
+    },
+    "tabs": {
+      "all": "All",
+      "published": "Published",
+      "pending": "Pending",
+      "draft": "Draft",
+      "archived": "Archived"
+    }
+  },
+  "add": {
+    "title": "Add Post",
+    "crumbs": {
+      "admin": "Admin",
+      "posts": "Posts",
+      "add": "Add Post"
+    },
+    "buttons": {
+      "submit": "Add Post"
+    },
+    "messages": {
+      "success": "Post added",
+      "failed": "Add post failed"
+    }
+  },
+  "edit": {
+    "title": "Edit Post",
+    "crumbs": {
+      "admin": "Admin",
+      "posts": "Posts",
+      "edit": "Edit Post"
+    },
+    "buttons": {
+      "submit": "Edit Post"
+    },
+    "messages": {
+      "success": "Post updated",
+      "failed": "Update post failed"
+    }
+  },
+  "messages": {
+    "no_auth": "No auth",
+    "slug_title_required": "Slug and title are required"
+  }
+}

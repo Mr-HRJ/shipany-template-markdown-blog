@@ -10,7 +10,7 @@ import {
 
 import { source } from '@/core/docs/source';
 
-export const revalidate = 86400;
+export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
 
 // Fumadocs indexes pages under encodeURI(segment). Next.js 16.2 passes

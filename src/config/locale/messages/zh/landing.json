@@ -2,17 +2,26 @@
   "header": {
     "id": "header",
     "brand": {
-      "title": "Blog",
+      "title": "王大锤",
       "logo": {
         "src": "/logo.png",
-        "alt": "Blog",
+        "alt": "王大锤",
         "width": 100,
         "height": 100
       },
       "url": "/"
     },
     "nav": {
-      "items": []
+      "items": [
+        {
+          "title": "博客",
+          "url": "/blog"
+        },
+        {
+          "title": "文档",
+          "url": "/docs"
+        }
+      ]
     },
     "buttons": [],
     "user_nav": {
@@ -39,11 +48,11 @@
   "footer": {
     "id": "footer",
     "brand": {
-      "title": "Blog",
+      "title": "王大锤",
       "description": "ShipAny 是专为 AI SaaS 创业项目打造的 NextJS 模板。丰富模板与组件，极速交付你的产品。",
       "logo": {
         "src": "/logo.png",
-        "alt": "Blog",
+        "alt": "王大锤",
         "width": 100,
         "height": 100
       },

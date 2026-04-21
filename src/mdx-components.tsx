@@ -82,6 +82,13 @@ export function withNoFollow(
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   const mergedComponents = {
     ...defaultMdxComponents,
+    // Render plain heading tags (no anchor wrapper / link icon)
+    h1: (props: React.ComponentProps<'h1'>) => <h1 {...props} />,
+    h2: (props: React.ComponentProps<'h2'>) => <h2 {...props} />,
+    h3: (props: React.ComponentProps<'h3'>) => <h3 {...props} />,
+    h4: (props: React.ComponentProps<'h4'>) => <h4 {...props} />,
+    h5: (props: React.ComponentProps<'h5'>) => <h5 {...props} />,
+    h6: (props: React.ComponentProps<'h6'>) => <h6 {...props} />,
     a: CustomLink,
     img: (props: React.ComponentProps<'img'>) => {
       const { src } = props;

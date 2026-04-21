@@ -1,0 +1,61 @@
+---
+title: 'Stripe雷达设置，防止封号'
+---
+
+最近看到有朋友，stripe 账号被坏人利用了，被封stripe 账号了，感觉挺影响心态的，刚好自己有2个stripe账号，另外一个也是忘记开通雷达了，今天也是设置上了。
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/350a10b7800fcbf2.jpg)
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/94096870e2372477.jpg)
+
+
+> 雷达就是检测这个异常支付的，网站上你会发现有些用户是压根不使用积分，用非常多的卡去进行尝试购买。这种用户大概率就是盗刷的，如果用户找回自己的卡，发现莫名其妙被扣款，发起争议，这个时候你不仅要退款，还有支付20美元的争议费用，如果争议率或者异常支付过高，就会封你的stripe 账号。
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c4aa7879493cdf3f.jpg)
+
+
+## 怎么设置stripe 雷达？
+
+在设置里面找到Radar ,升级到Radar 风控团队版
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/bd185fcdd735a20b.jpg)
+
+在产品->Payments->Radar-> 规则里面 添加规则。
+
+这里我用的是哥飞群友分享的规则。
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/54513935b492102a.jpg)
+
+
+```
+#3DS rules
+:card_3d_secure_support: = 'optional' and :risk_score: > 40
+:card_country: = 'PH' and :card_3d_secure_support: = 'optional'
+
+#block rules
+:refund_count_on_card_all_time: > 1
+:card_country: = 'PH' and :risk_score: > 30
+:dispute_count_on_card_number_all_time: > 0
+:card_count_for_customer_all_time: > 2
+:ip_country: = 'PH' and :risk_score: > 30
+:card_country: = 'PH' and :risk_score: > 30
+:card_country: ='SG' and :risk_score: > 40
+:card_count_for_ip_address_weekly: > 2
+:dispute_count_on_ip_all_time: > 0
+:efw_count_on_ip_all_time: > 0
+:card_count_for_ip_address_weekly: > 2
+:name_count_for_card_all_time: > 5
+
+#manual review rules:
+:risk_score: > 30
+:cvc_check: = 'unavailable'
+```
+
+然后就是分别在请求 3DS 验证、阻止、审查加上这些对应的规则。
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/73e1cd95203e13f8.jpg)
+
+
+然后我在风险控制哪里，还加上了阻止更多欺诈，把风险评分高于50的都阻止了
+
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/afb5bf2b16674c20.jpg)

@@ -26,5 +26,13 @@ export default defineConfig({
       // Use defaultLanguage for unknown language codes
       defaultLanguage: 'plaintext',
     },
+    // Strip the default remarkImage plugin — it fetches remote image sizes at
+    // build time and our R2 pub domain can be flaky on slow/Chinese networks.
+    // Without it, <img> just keeps the string src and renders directly.
+    remarkPlugins: (v) =>
+      v.filter((p) => {
+        const name = Array.isArray(p) ? (p[0] as any)?.name : (p as any)?.name;
+        return name !== 'remarkImage';
+      }),
   },
 });

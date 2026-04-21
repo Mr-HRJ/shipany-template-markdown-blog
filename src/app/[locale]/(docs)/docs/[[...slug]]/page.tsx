@@ -11,14 +11,29 @@ import {
 import { source } from '@/core/docs/source';
 
 export const revalidate = 86400;
-export const dynamic = 'force-static';
 export const dynamicParams = true;
+
+// Fumadocs indexes pages under encodeURI(segment). Next.js 16.2 passes
+// URL-encoded segments to page() but decoded segments to generateMetadata(),
+// so we normalize to encodeURI here for consistent lookup.
+function encodeSlug(slug?: string[]) {
+  return slug?.map((s) => {
+    try {
+      // If already encoded, decoding yields a different string; encodeURI that back.
+      // If raw, encodeURI produces the canonical encoded form.
+      return encodeURI(decodeURI(s));
+    } catch {
+      return s;
+    }
+  });
+}
 
 export default async function DocsContentPage(props: {
   params: Promise<{ slug?: string[]; locale?: string }>;
 }) {
   const params = await props.params;
-  const page = source.getPage(params.slug, params.locale);
+  const slug = encodeSlug(params.slug);
+  const page = source.getPage(slug, params.locale);
 
   if (!page) notFound();
 
@@ -54,7 +69,8 @@ export async function generateMetadata(props: {
   params: Promise<{ slug?: string[]; locale?: string }>;
 }) {
   const params = await props.params;
-  const page = source.getPage(params.slug, params.locale);
+  const slug = encodeSlug(params.slug);
+  const page = source.getPage(slug, params.locale);
   if (!page) notFound();
 
   return {

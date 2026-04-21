@@ -2,17 +2,26 @@
   "header": {
     "id": "header",
     "brand": {
-      "title": "Blog",
+      "title": "王大锤",
       "logo": {
         "src": "/logo.png",
-        "alt": "Blog",
+        "alt": "王大锤",
         "width": 100,
         "height": 100
       },
       "url": "/"
     },
     "nav": {
-      "items": []
+      "items": [
+        {
+          "title": "Blog",
+          "url": "/blog"
+        },
+        {
+          "title": "Docs",
+          "url": "/docs"
+        }
+      ]
     },
     "buttons": [],
     "user_nav": {
@@ -39,11 +48,11 @@
   "footer": {
     "id": "footer",
     "brand": {
-      "title": "Blog",
+      "title": "王大锤",
       "description": "ShipAny is a NextJS boilerplate for building AI SaaS startups. Ship Fast with a variety of templates and components.",
       "logo": {
         "src": "/logo.png",
-        "alt": "Blog",
+        "alt": "王大锤",
         "width": 1024,
         "height": 1024
       },

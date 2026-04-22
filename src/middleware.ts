@@ -50,6 +50,13 @@ export async function middleware(request: NextRequest) {
   intlResponse.headers.set('x-pathname', request.nextUrl.pathname);
   intlResponse.headers.set('x-url', request.url);
 
+  // Handbook root URLs redirect to their deep entry page, so we don't want
+  // browsers / CDNs to cache the interim HTML and trap users on a stale tree.
+  const isHandbookRoot =
+    /^\/docs\/(shipany-two|joyflix|nanobanana|gamiary|blog|markdown-blog)\/?$/.test(
+      pathWithoutLocale
+    );
+
   // Remove Set-Cookie from public pages to allow caching
   // We exclude admin, settings, activity, and auth pages from this behavior
   if (
@@ -57,7 +64,8 @@ export async function middleware(request: NextRequest) {
     !pathWithoutLocale.startsWith('/settings') &&
     !pathWithoutLocale.startsWith('/activity') &&
     !pathWithoutLocale.startsWith('/sign-') &&
-    !pathWithoutLocale.startsWith('/auth')
+    !pathWithoutLocale.startsWith('/auth') &&
+    !isHandbookRoot
   ) {
     intlResponse.headers.delete('Set-Cookie');
 
@@ -65,6 +73,8 @@ export async function middleware(request: NextRequest) {
     const cacheControl = 'public, s-maxage=3600, stale-while-revalidate=14400';
 
     intlResponse.headers.set('Cache-Control', cacheControl);
+  } else if (isHandbookRoot) {
+    intlResponse.headers.set('Cache-Control', 'no-store');
   }
 
   // For all other routes (including /, /sign-in, /sign-up, /sign-out), just return the intl response

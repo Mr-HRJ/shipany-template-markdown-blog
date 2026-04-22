@@ -1,0 +1,13 @@
+{
+  "title": "ShipAny Two 手册",
+  "root": true,
+  "pages": [
+    "getting-started",
+    "configuration",
+    "payment",
+    "deployment",
+    "video-tutorials",
+    "faq",
+    "others"
+  ]
+}

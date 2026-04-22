@@ -1,0 +1,369 @@
+---
+title: '更新日志'
+---
+
+## 官方从2025-12-18开始维护日志
+
+
+
+请点击查看：[官方日志](https://shipany.ai/updates)
+
+
+
+
+
+> 下面是2025-12-18（含）以前我维护的更新日志，后续不维护，以官方日志为准
+
+
+
+## 2025-12-18 (v1.6.3)
+
+
+
+feat: 对用户积分系统、安全性、用户追踪、角色管理和文件上传体验进行全面的增强和优化
+
+
+
+ 1. 用户积分功能 (User Credits Feature):
+
+       * 后台管理: 在用户管理列表 (admin/users/page.tsx)
+
+         中增加了“授予积分”(Grant Credits) 的操作按钮。
+
+       * 数据库: credit.ts 模型被重构，提取了 grantCreditsForUser
+
+         函数，使其更通用。新用户注册时会调用此函数来授予初始积分。
+
+       * 多语言: 添加了“授予积分”页面的中英文翻译 (en/admin/users.json,
+
+         zh/admin/users.json)。
+
+
+
+   2. 安全性增强 (Security Enhancements):
+
+       * API速率限制: 为认证相关的 API 端点 (api/auth/.../route.ts)
+
+         增加了速率限制 (rate-limit)，以防止请求风暴。
+
+       * 用户信息追踪:
+
+           * 数据库 user 表 (schema.ts) 新增了 utmSource, ip, locale
+
+             字段，用于追踪用户的来源渠道、IP地址和语言偏好。
+
+           * 认证流程 (core/auth/config.ts)
+
+             中增加了逻辑，在用户创建时自动捕获并保存这些信息。
+
+       * 后台展示: 用户管理列表页增加了 IP, 语言, UTM来源等字段的显示。
+
+
+
+   3. 存储和上传功能优化 (Storage & Upload Improvements):
+
+       * 图片去重: 图片上传接口 (api/storage/upload-image/route.ts)
+
+         增加了基于文件内容 MD5 哈希的去重功能。如果文件已存在，将直接返回现有
+
+         URL，节省存储空间。
+
+       * 组件增强: ImageUploader 组件 (image-uploader.tsx)
+
+         进行了大幅重构，增加了拖拽上传、粘贴上传、替换图片、失败/上传中状态显示
+
+         等功能，交互体验更好。
+
+       * 存储接口: 存储服务接口 (extensions/storage/index.ts, r2.ts, s3.ts)
+
+         增加了 exists 和 getPublicUrl 方法，以支持文件存在性检查和 URL 生成。
+
+
+
+   4. 用户角色管理 (User Role Management):
+
+       * 初始角色分配: 新增了在用户注册时自动分配初始角色的功能 (rbac.ts,
+
+         settings.ts)。此功能可在后台设置中开启并配置。
+
+       * 后台设置: 在后台“设置”页面增加了“用户角色”(User Role) 的配置项。
+
+
+
+   5. 其他改进 (Other Improvements):
+
+       * 营销追踪: 新增了 UtmCapture 组件 (app/layout.tsx)，用于在全局捕获 UTM
+
+         参数并存入 Cookie。
+
+       * 错误处理: 全局错误边界 (ErrorBoundary) 组件现在会忽略 NEXT_NOT_FOUND
+
+         错误，并改进了错误页面的UI。
+
+       * 依赖和配置: package.json 版本号升级，config/index.ts
+
+         增加了应用描述、Logo、预览图等新配置项。
+
+
+
+## 2025-12-13 (v1.6.0)
+
+
+
+feat: 升级依赖项并添加新的“更新”部分
+
+
+
+- 将 Next.js 升级到 16.0.7，将 React 升级到 19.2.1。
+
+修复安全漏洞：
+
+React 19.0/19.1/19.2.0 以及所有 Next.js 15.x 和 16.x（包括 16.0.0–16.0.6）存在严重的 React Server Components 远程代码执行（RCE）漏洞（CVE-2025-55182 / CVE-2025-66478）。
+
+React 19.2.1 和 Next.js 16.0.7 是官方修复这些漏洞的版本。
+
+- 引入 ErrorBoundary 组件以实现更好的错误处理。
+
+- 通过新的日志文件和更新部分增强文档和内容管理。
+
+- 完善国际化配置并为“更新”添加新的语言消息。
+
+- 对 UI 组件和类型进行全面改进。
+
+
+
+## 2025-12-07 (v1.5.2)
+
+
+
+feat: 强力优化ShipAnyTwo网站指标干到了匹项全优，实现了“秒开”
+
+
+
+1. **加快首屏渲染**：Hero 组件不要用 motion 动画或 LazyImage，直接渲染内容以减少 LCP 延时。
+
+2. **压缩图片**：图片尽量放 CDN；若放在本地 /imgs，先用 tinypng 压缩降低体积。
+
+3. **提升无障碍性**：给只有图标的 `<a>`、`<button>` 标签加 aria-label，提升 Accessibility 得分。
+
+4. **优化字体加载**：自定义字体添加 `display: 'swap'` 和 `preload: true`，减少渲染阻塞。
+
+5. **缓存静态资源**：在 public/_headers 和 next.config.mjs 为 /imgs/* 设置 Cache-Control，提升加载速度。
+
+6. **缓存静态页面（ISR）**：在 page.tsx 添加 `export const revalidate = 3600;`，页面一小时内不重复生成。
+
+7. **多语言下保持缓存正常**：使用 next-intl 时删除无关路由的 `Set-Cookie`，避免影响 ISR 缓存。
+
+8. **配置 CDN 缓存**：Cloudflare 中使用 Cache everything + 尊重源站，让带 Cache-Control 的页面可被缓存。
+
+9. **优化 SSR 性能**：数据请求用 `Promise.all` 并行处理，降低服务端延时。
+
+10. **数据缓存**：通过 unstable_cache、revalidateTag 缓存频繁读库的数据（如 getConfigs），减少读取成本。
+
+
+
+## 2025-12-5 (v1.5.1)
+
+feat: 新增动态页面与组件
+
+   - 新增了动态路由页面 [...slug]，以支持更灵活的页面内容展示。
+
+   - 增加了多个新的页面组件，例如 features-flow、features-media 和
+
+     showcases-flow，以丰富页面的展现形式。
+
+   - 新增了 dynamic-page 和 static-page
+
+     两种页面模板，便于快速创建不同类型的内容页。
+
+
+
+  refactor: 核心主题与组件重构
+
+   - 重构了默认主题下的多个核心区块（Blocks），如
+
+     hero、features、pricing、showcases 等，提升了代码的可维护性和复用性。
+
+   - 对图片生成器 image.tsx 和核心主题配置 core/theme/index.ts 进行了优化。
+
+   - 更新了 landing 和 showcases 相关的中英文语言包，以匹配最新的页面内容。
+
+
+
+  chore: 依赖项更新
+
+   - 更新了 package.json 和 pnpm-lock.yaml 文件，以同步最新的依赖包版本。
+
+   
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f1adc85d607b2a57.jpg" alt="image" />
+
+
+
+ 
+
+
+
+## 2025-12-2 (v1.3.3)
+
+
+
+feat: 集成 AI 视频生成并增强 AI 功能
+
+
+
+- 新增 AI 视频生成器:
+
+   - 添加了用于 AI 视频生成的新页面。
+
+   - 引入了视频生成器的新 UI 组件。
+
+   - 增加了一个新的 AI 提供商 fal.ai。
+
+   - 为 AI 服务增加了一个新的代理 API。
+
+
+
+- AI 功能增强:
+
+   - 更新了用于生成和查询的 AI API 路由。
+
+   - 修改了各种 AI 扩展和相关服务。
+
+   - 更新了与 AI 生成相关的 UI 组件。
+
+
+
+- 国际化:
+
+   - 为新的 AI 视频功能添加了翻译。
+
+   - 更新了现有的本地化配置。
+
+   
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/bced276d16284912.jpg" alt="image" />
+
+
+
+
+
+
+
+## 2025-12-1 (v1.3.2)
+
+
+
+feat(core): 集成动态 AI 与存储服务配置功能
+
+本次更新引入了动态配置 AI提供商和存储提供商的核心功能，允许管理员在设置页面根据需求进行选择和切换。
+
+主要变更：
+
+- **后台设置**: 新增 "AI" 与 "Storage" 设置选项卡，用于管理相关服务的 API密钥和参数。
+
+- **AI 提供商**: 新增 Gemini 作为可选的 AI 模型。AI 服务现在会通过`getStorageService()` 动态获取并使用当前配置的文件存储服务。
+
+- **存储提供商**: 新增 Cloudflare R2作为文件存储选项，并重构了存储服务以支持在 Vercel Blob 和 R2 之间动态切换。
+
+- **解耦**: 实现了 AI服务和存储服务的完全解耦，为未来集成更多第三方服务提供了良好的扩展性。
+
+
+
+## 2025-11-26 (v1.3.0)
+
+
+
+主要变更：
+
+ - feat(payment): 将支付相关的类型定义重构到独立的 `types.ts`文件，优化了代码结构。
+
+- feat(payment): 为 Stripe添加了优惠码支持，允许在结账时应用折扣，并提供了相应的后台配置。
+
+- feat(auth): 实现 Google One Tap一键登录功能，以改善用户登录体验，并重构了核心认证逻辑。
+
+- perf(config): 为应用配置增加了缓存 (`next/cache`)，以减少数据库查询，提升性能。
+
+ - refactor(db): 优化了数据库事务处理，允许在服务层复用事务对象。
+
+- fix(ui): 更新了侧边栏的用户数据显示逻辑，并调整了 tsconfig 以满足构建要求。
+
+
+
+## 2025-11-23 (v1.2.0)
+
+
+
+主要变更：
+
+  - ✨ 新增新用户注册赠送积分功能，支持自定义积分数量和有效期
+
+  - 🎨 优化表单卡片组件，支持可折叠展开功能
+
+  - ⚙️ 新增积分系统后台配置，管理员可设置初始积分参数
+
+  - 🌐 完善中英文多语言支持，新增积分相关翻译
+
+  - 🐛 修复JSON预览组件冗余代码问题
+
+  - 🎨 更新React图标和UI细节优化
+
+
+
+## 2025-11-21 
+
+
+
+ 主要变更：
+
+   - ✨ 重构AI扩展模块，优化图像生成功能
+
+   - 🎨 更新控制台布局和生成器组件UI
+
+   - 📝 更新中英文档内容和隐私政策
+
+   - 🗑️ 移除冗余博客文章
+
+   - ⚙️ 更新依赖包和部署配置
+
+   - 🌐 完善多语言本地化支持
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/43fea0e658e911c3.jpg" alt="image" />
+
+
+
+
+
+
+
+## 2025-11-13
+
+
+
+ 主要变更：
+
+   - ✨ 增加微信、支付宝支付
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d89ad6ab63d62dd0.jpg" alt="image" />
+
+
+
+
+
+## 2025-11-11 
+
+ 主要变更：
+
+   - Two发版
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4f13db339bd4257c.jpg" alt="image" />

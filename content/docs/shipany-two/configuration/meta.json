@@ -1,0 +1,9 @@
+{
+  "title": "配置指南",
+  "pages": [
+    "r2-storage-configuration",
+    "how-use-db-neon",
+    "how-use-local-psql",
+    "share-about-dbbackup"
+  ]
+}

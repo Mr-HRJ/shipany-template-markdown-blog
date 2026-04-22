@@ -1,0 +1,83 @@
+---
+title: '写在前面'
+---
+
+
+
+如果你不想一个个录入Post数据，那么你可以试试直接导入我的sql表数据（非表结构），导入后就是和[https://mdxblog-cf.16781678.xyz/](https://mdxblog-cf.16781678.xyz/) 呈现一样了
+
+
+
+注意点：
+
+（1）下面2个表数据中图片为我的R2图库，如果你感觉有点别扭，就一个个自行上传；
+
+（2）post_rows中有一列是user_id是关联的我user表数据，直接导入会报错，需要编辑sql批量更换成你表中管理员的user_id
+
+
+
+## post_rows.sql
+
+
+
+[post_rows.sql](https://img-template-mdx-blog.16781678.xyz/uploads/post_rows.sql)
+
+
+
+> 下载后需要编辑修改下sql中的user_id值为你数据库表中你的admin用户的user_id, 要不然会报错
+
+
+
+
+
+## 如何导入到Supabase
+
+
+
+### 打开Supabase 打开下图：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1dde66fbf9d3ed8b.jpg" alt="image" />
+
+
+
+
+
+### 打开下载到本地的sql文件，全选复制：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b0998c909e6c9798.jpg" alt="image" />
+
+
+
+
+
+### 粘贴到Supabase
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a8d4db43eb9867d0.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8cee4acecb8552f1.jpg" alt="image" />
+
+
+
+验证下表数据
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8e4ca1b06d9caba1.jpg" alt="image" />

@@ -7,8 +7,10 @@ import {
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/page';
+import { findNeighbour } from 'fumadocs-core/server';
 
 import { source } from '@/core/docs/source';
+import { redirect } from '@/core/i18n/navigation';
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
@@ -28,16 +30,43 @@ function encodeSlug(slug?: string[]) {
   });
 }
 
+const HANDBOOK_ROOTS = new Set([
+  'shipany-two',
+  'joyflix',
+  'nanobanana',
+  'gamiary',
+  'blog',
+  'markdown-blog',
+]);
+
 export default async function DocsContentPage(props: {
   params: Promise<{ slug?: string[]; locale?: string }>;
 }) {
   const params = await props.params;
   const slug = encodeSlug(params.slug);
+
+  // fumadocs skips a root folder's index.mdx, so /docs/<handbook> can't be
+  // matched by searchPath and the sidebar falls back to the full tree. Send
+  // visitors straight to the first real page instead. Use next-intl's redirect
+  // so the locale prefix follows the `as-needed` rule (no bouncing).
+  if (slug && slug.length === 1 && HANDBOOK_ROOTS.has(slug[0])) {
+    redirect({
+      href: `/docs/${slug[0]}/getting-started/readme`,
+      locale: (params.locale || 'en') as 'en' | 'zh',
+    });
+  }
+
   const page = source.getPage(slug, params.locale);
 
   if (!page) notFound();
 
   const MDXContent = page.data.body;
+
+  // Compute prev/next on the server so the footer doesn't depend on
+  // `usePathname()` during hydration (that caused grid-cols-1 ↔ grid-cols-2
+  // hydration mismatch warnings).
+  const tree = (source.pageTree as any)[params.locale || 'en'];
+  const neighbour = findNeighbour(tree, page.url);
 
   return (
     <DocsPage
@@ -46,6 +75,7 @@ export default async function DocsContentPage(props: {
       tableOfContent={{
         style: 'clerk',
       }}
+      footer={{ items: neighbour }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>

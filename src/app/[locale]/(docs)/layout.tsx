@@ -52,9 +52,6 @@ export default async function DocsRootLayout({
         {...baseOptions(lang)}
         tree={source.pageTree[lang]}
         nav={{ ...baseOptions(lang).nav, mode: 'top' }}
-        sidebar={{
-          tabs: [],
-        }}
         tabMode="sidebar"
       >
         {children}

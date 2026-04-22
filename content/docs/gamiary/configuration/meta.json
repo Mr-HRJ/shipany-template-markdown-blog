@@ -1,0 +1,9 @@
+{
+  "title": "配置指南",
+  "pages": [
+    "how-use-db-neon",
+    "how-use-game",
+    "r2-storage-configuration",
+    "share-about-dbbackup"
+  ]
+}

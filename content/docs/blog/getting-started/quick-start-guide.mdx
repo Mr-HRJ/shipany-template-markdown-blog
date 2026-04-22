@@ -1,0 +1,751 @@
+---
+title: '注意：如果你要将新项目提交到自己github需要做下面动作，当前仓库设置了只读权限，提不上去'
+---
+
+## 写在前面
+
+
+
+本文档是在NanoBananaDoc基础上修改的，可能截图中有含有NanoBanana字样，大家阅读时将其理解为MdxBlog（感谢理解）
+
+
+
+## 初始化项目
+
+
+
+### 通过shipany-template-mdx-blog源码 去新建项目
+
+
+
+> 下面命令中的`my-shipany-project`是你新项目名字，注意改下
+
+
+
+#### 下面命令是要部署在Vercel上的新建项目命令 
+
+
+
+```
+
+git clone git@github.com:template-code-team/shipany-template-mdx-blog.git my-shipany-project
+
+```
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2d2e1bb0f4d0fe72.png" alt="" />
+
+
+
+#### 下面命令是要部署在Cloudflare上的新建项目命令 
+
+
+
+> 此分支基于 [Next.js 15.5.5](https://nextjs.org/docs/15/app/getting-started/project-structure)，暂不支持 Next.js 16。
+
+
+
+```
+
+git clone -b cloudflare git@github.com:template-code-team/shipany-template-mdx-blog.git my-shipany-project
+
+```
+
+
+
+clone完毕后进入项目
+
+
+
+```
+
+cd my-shipany-project
+
+```
+
+
+
+### 安装依赖
+
+
+
+```
+
+pnpm install
+
+```
+
+
+
+### 启动开发服务器
+
+
+
+```
+
+pnpm dev
+
+```
+
+
+
+#### 点击输出的 Local 地址，在浏览器打开网页：[http://localhost:3000](http://localhost:3000) ，即可预览项目
+
+
+
+
+
+
+
+# 注意：如果你要将新项目提交到自己github需要做下面动作，当前仓库设置了只读权限，提不上去
+
+
+
+```
+
+rm -rf .git
+
+```
+
+```
+
+git init
+
+```
+
+```
+
+git add -A
+
+```
+
+```
+
+git commit -m "feat: first commit"
+
+```
+
+// xxx/xxxxx: gitub username/you project name，例如：git remote add origin https://github.com/boomer1678/nano-banana-pro.git
+
+```
+
+git remote add origin git@github.com:xxx/xxxxx.git
+
+```
+
+```
+
+git branch -M main
+
+```
+
+```
+
+git push -u origin main
+
+```
+
+
+
+## 修改网站配色
+
+
+
+### 选择一个 shadcn 主题调试器
+
+
+
+#### 在下面url中可以修改字体颜色等等
+
+
+
+[https://tweakcn.com/editor/theme](https://tweakcn.com/editor/theme)
+
+
+
+> 当前项目使用的是`Supabase`主题，然后又在`Supabase`的基础上二改：
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/084d24f80e34db12.jpg" alt="image" />
+
+
+
+
+
+### 为你的项目挑一套主题配色：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c804efe020433294.png" alt="" />
+
+
+
+
+
+> Shipany 使用 tailwindcss4，请使用 oklch 颜色格式，复制主题样式
+
+
+
+### 粘贴主题样式到项目文件：`src/config/style/theme.css`
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/15909c38ce98c39f.png" alt="" />
+
+
+
+
+
+### 重新进入项目预览页面，即可看到你定制的主题
+
+
+
+
+
+## 配置环境变量
+
+
+
+```
+
+cp .env.example .env.development
+
+```
+
+
+
+### 修改环境变量值 (注意：登录、AI等配置不在这里，那些在管理后台页面，后面会有介绍)
+
+
+
+```
+
+# app
+
+NEXT_PUBLIC_APP_URL = "http://localhost:3000"
+
+NEXT_PUBLIC_APP_NAME = "Your App Name"
+
+
+
+# theme
+
+NEXT_PUBLIC_THEME = "default"
+
+
+
+# appearance
+
+NEXT_PUBLIC_APPEARANCE = "system"
+
+
+
+# database
+
+DATABASE_URL = ""
+
+DATABASE_PROVIDER = "postgresql"
+
+DB_SINGLETON_ENABLED = "true"
+
+
+
+# auth secret
+
+# openssl rand -base64 32
+
+AUTH_SECRET = ""
+
+```
+
+
+
+## 下图为Supabase获取DATABASE_URL值截图
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/522af77c487e2045.png" alt="" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7dc4b0227f8c3485.png" alt="" />
+
+
+
+
+
+注意：复制粘贴内容中[YOUR-PASSWORD] 是你要替换的内容，把[]要删除了，要不然连不上
+
+
+
+// 例如
+
+```
+
+DATABASE_URL="postgresql://postgres.tsjbzbpzwilbxnrqkqzp:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+
+```
+
+
+
+## 数据库
+
+
+
+### 按照上面环境变量配置好后，迁移数据表
+
+
+
+#### 项目下终端运行下面命令：
+
+
+
+##### 第一步：
+
+
+
+```
+
+pnpm db:generate
+
+```
+
+
+
+##### 第二步：
+
+
+
+```
+
+pnpm db:migrate
+
+```
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9dd4c1661854d406.png" alt="" />
+
+
+
+
+
+## 先把基础表弄起来，后面再说怎么写入预制Showcase等数据
+
+
+
+
+
+## 配置登录鉴权
+
+
+
+###  管理后台RBAC初始化
+
+
+
+```
+
+pnpm rbac:init
+
+```
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/460541b9b58681d5.png" alt="" />
+
+
+
+
+
+### 注册管理员账户
+
+
+
+访问 `http://localhost:3000/admin` 进入后台管理系统，由于没有登录会遇到登录拦截，重定向到 /sign-in 登录页面。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/429b8e07575d32d0.png" alt="" />
+
+
+
+
+
+你需要先注册一个账户，比如 `admin@xxx.com`。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e620de058156f5bd.png" alt="" />
+
+
+
+### 分配超级管理员权限
+
+
+
+注册成功后，在终端执行
+
+
+
+// admin@xxx.com 更换成你注册的账户邮箱
+
+```
+
+pnpm rbac:assign -- --email=admin@xxx.com --role=super_admin
+
+```
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c8dc09269ab02a9c.png" alt="" />
+
+
+
+
+
+### 访问管理后台
+
+
+
+再次访问 `http://localhost:3000/admin`，即可进入管理后台。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e5b5f4cfd6b1ba0d.png" alt="" />
+
+
+
+
+
+
+
+### 配置google登录 
+
+
+
+访问[https://console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f1154521f29be0f5.png" alt="" />
+
+
+
+
+
+#### 注意：如果没有Project的，先创建个Project！
+
+
+
+##### 下图为创建Project截图，要选择外部！
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8ba5f941c9a341ec.png" alt="" />
+
+
+
+#### 创建客户端
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9b6d8a1b78915838.jpg" alt="image" />
+
+
+
+
+
+#### 配置用到的（注意：生产环境的还得单独重新再配一个）：
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9f0e225581c85f50.jpg" alt="image" />
+
+
+
+1、http://localhost:3000
+
+
+
+2、http://localhost:3000/api/auth/callback/google
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8ecd1f8ae6ef2a5b.png" alt="" />
+
+
+
+
+
+下图为生产配置时截图（仅供参考）：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/45b0a1ea58c856b1.png" alt="" />
+
+
+
+
+
+#### 然后访问：http://localhost:3000/zh/admin/settings/auth
+
+
+
+##### 将google给你的复制粘贴到下图：
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1ae321e1ce88fa2f.png" alt="" />
+
+
+
+
+
+#### 然后回到项目首页：http://localhost:3000
+
+
+
+##### 下图为第1种登录方式：OneTap生效
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2f5d61d8ce731b26.png" alt="" />
+
+
+
+
+
+
+
+##### 下图为第2中登录方式：Auth生效
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3e4bbfed605013e7.png" alt="" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0e1dfe6c10420e2c.png" alt="" />
+
+
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cfd9f9329e9605c5.png" alt="" />
+
+
+
+
+
+##### google成功后跳回首页：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8dfd65d396059262.png" alt="" />
+
+
+
+
+
+##### 最后如果配完生产后是下面这样（2个）
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f48cfc96c77488d6.png" alt="" />
+
+
+
+
+
+### github登录太简单了，就不写过程了，
+
+
+
+官方文档：https://shipany.ai/docs/auth/github
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c314606b205fdfa8.png" alt="" />
+
+
+
+
+
+## 字体图标使用
+
+
+
+项目中使用了[lucide-react](https://lucide.dev/icons/)、react-icons 中的 [Remix Icon](https://react-icons.github.io/react-icons/icons/ri/)。如果有需要图标，可在这里查找
+
+
+
+
+
+# 部署
+
+
+
+## 部署到 Vercel
+
+
+
+点击查看：
+
+[项目部署到Vercel](/docs/blog/deployment/deploy-to-vercel)
+
+
+
+## 部署到Cloudflare
+
+
+
+点击查看：
+
+[项目部署到 Cloudflare Workers](/docs/blog/deployment/deploy-to-cloudflare-mac)
+
+
+
+## 部署到Dokploy
+
+
+
+这个部署我没有做，大家可以看[部署到Dokploy-官方文档](https://shipany.ai/zh/docs/deploy/dokploy)
+
+
+
+
+
+# Vercel和Cloudflare的区别：
+
+
+
+|对比维度|Vercel|Cloudflare|
+
+| ---- | ---- | ---- |
+
+|核心定位|主打前端开发部署，聚焦开发者体验，是Next.js官方适配平台|定位“边缘操作系统”，以全球CDN和边缘计算为核心，兼顾部署与网络安全|
+
+|框架适配|原生支持Next.js所有功能，包括实验性功能，适配无需额外配置|支持多语言框架，但对Next.js等框架需手动配置适配器，适配灵活性稍弱|
+
+|免费额度|100次/天构建，100GB/月带宽，源文件大小限100MB|500次/月构建，带宽不限，D1数据库免费版限500MB存储|
+
+|计算与存储|基于AWS Lambda的Serverless Functions，按流量计费，存储单独计费|Workers边缘计算（无冷启动），R2对象存储免费，云函数按请求次数计费|
+
+|开发体验|集成度高，部署流程顺滑，Git提交自动构建预览，新手友好|配置稍复杂，免费版不支持并发构建，适合需控制细节的开发者|
+
+|网络性能|国内访问时延较低，无需担心域名禁用等问题|全球节点多，但国内访问时延高，请求常回源至美国节点|
+
+|特色功能|预览部署功能完善，适配Next.js的增量静态再生等专属能力|强大的DDoS防护、WAF等安全功能，支持Workers无缝拓展动态功能|
+
+
+
+
+
+#### Cloudflare Workers 的费用分为免费计划、付费标准计划，企业账户则按合同约定计费，且付费计划还涵盖其关联的KV、Durable Objects等配套功能的收费规则，具体如下：
+
+|计费项目|免费计划|付费标准计划|
+
+| ---- | ---- | ---- |
+
+|基础费用|0美元|每月最低5美元|
+
+|核心请求量|每天10万次请求，每次调用含10毫秒CPU时间|每月包含1000万次请求，超出部分每100万次收费0.3美元；每月含3000万CPU毫秒，超出部分每1000万CPU毫秒收费0.02美元|
+
+|Workers KV|每天10万次读请求，1000次写/删除请求，存储1GB|每月1000万次读请求、100万次写/删除请求，超出部分每100万次收费0.5美元；存储1GB，超出部分每1GB收费0.5美元|
+
+|Durable Objects|不可用|每月包含100万次请求，超出部分每100万次收费0.15美元|
+
+|队列操作|每月100万次操作|每月100万次操作，超出部分每100万次收费0.4美元|
+
+|D1数据库|每天500万次读行、10万次写行，存储5GB|每月前25亿次读行、50万次写行，超出读行部分每100万次收费0.001美元，超出写行部分每100万次收费1美元；存储5GB|
+
+|Workers Trace Events Logpush|不可用|每月1.1亿次请求量，超出部分每100万次收费0.05美元|
+
+
+
+此外，企业账户的计费不遵循上述标准计划规则，而是依据合同中约定的使用模式计费，若需切换使用模式，需联系专属客户成功经理协调。
+
+
+
+#### Vercel 付费分Pro和Enterprise两类计划，采用信用额度+按需计费结合的模式；Cloudflare 付费分Pro、Business、Enterprise三类固定套餐，还可额外选购增值服务，
+
+
+
+
+
+# 预制数据
+
+
+
+如果你不想你的网站部署成功后，很空，那么你可以导入我的预制数据
+
+
+
+## 首页Post 预览
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e1fa09155ff80555.jpg" alt="" />
+
+
+
+
+
+## Posts页 预览
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e1fa09155ff80555.jpg" alt="" />
+
+
+
+
+
+## 查看导入教程
+
+
+
+[✨项目可导入的表预制数据](/docs/blog/configuration/preset-data)

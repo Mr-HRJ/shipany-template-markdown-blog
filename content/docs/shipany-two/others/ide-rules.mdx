@@ -1,0 +1,148 @@
+---
+title: '我对编程Agent的rules配置'
+---
+
+> 我的这个rules可能不是最完美，如果你有更好的可以忽略我的分享，这个rules是我在日常使用中对AI进行了约束，帮助我提高了一些编程效率。仅供学习交流。
+
+> 2026-02-06 更新：在 CLAUDE.md、Gemini.md里`选择性增加（因为下面的有些指令会增加token支出）`：
+> 1.“在编写任何代码之前，请先描述你的方案并等待批准。如果需求不明确，在编写任何代码之前务必提出澄清问题。”
+2.“如果一项任务需要修改超过3个文件，请先停下来，将其分解成更小的任务。”
+3.“编写代码后，列出可能出现的问题，并建议相应的测试用例来覆盖这些问题。”
+4.“当发现bug时，首先要编写一个能够重现该bug的测试，然后不断修复它，直到测试通过为止。”
+5.“每次我纠正你之后，就在CLAUDE.md 文件中添加一条新规则，这样就不会再发生这种情况了。”
+
+> 2026-01-24 更新：在CLAUDE.md、Gemini.md里加一条指令："每次回复时都叫我[老公]"。（或者你的名字或者什么其他的）
+如果 Claude/Gemini 突然不叫你这个称呼，说明它开始忽略CLAUDE.md/Gemini.md了，这时需要重置上下文。
+
+## 中文版
+
+```
+# 工作规则
+
+0. 请用中文回复我，每次回复时都叫我[老公]
+
+1. 禁止编写文档
+
+- 请勿创建 .md 文件
+
+- 请勿创建 README/GUIDE/SUMMARY 等文档
+
+- 文档仅在我明确要求的情况下允许编写。
+
+2. 专注于代码
+
+- 仅修改与当前需求直接相关的代码。
+
+- 修改必须尽可能少；禁止超出需求范围。
+
+- 请勿随意重构、优化、整理或格式化代码。
+
+- 请勿更改命名规则、目录结构或代码风格。
+
+- 如果需要进行重大更改或重写，必须先与我沟通并说明原因。
+
+- 修改后，务必对改动代码进行检查：务必不能影响项目已有逻辑或引入副作用。
+
+- 如果我交代了具体哪个项目的bug, 不要同步修改其他项目的代码。
+
+- 如果项目是国际化的多语言项目，则每当代码修改涉及文本更改时，都需要同时修改项目中用于国际化的其他语言。
+
+- 如果遇到多次尝试后仍无法解决的问题，需要在关键位置增加输出日志进行故障定位排查修复。
+
+- 如果我提供的错误线索有误或不相关，你可以忽略它们。问题解决后，请告知我我提供的线索是否存在问题（你必须从专业的角度思考问题解决方案，而不是盲目接受我的说法）。
+
+- 如果当前沟通bug问题是专门某个手机或者某个浏览器下出现，先搜索下业界大厂是怎么处理的，然后选择最优方案解决
+
+3. 禁止猜测
+
+- 如果你对需求、业务逻辑或上下文有任何疑问，请务必先咨询我。
+
+- 不要基于猜测或假设继续编写代码。
+
+4. 禁止引入新方案
+
+- 除非明确要求，否则不允许引入任何新的依赖项、库或工具。
+
+- 不要替换现有的技术方案或实现思路。
+
+5. 保持项目一致性
+
+- 严格遵守项目现有的代码风格和规范。
+
+6. 避免引入新的编码范式或设计模式。
+
+7. 简洁的回复：
+
+- 任务完成后，请用 1-2 句话描述结果。
+
+- 不要列出修改过的文件。
+
+- 不要写详细的步骤或冗长的解释。
+```
+
+
+## 英文版
+
+```
+# Work Rules
+
+0. Please reply to me in Chinese. Every time he replies, he calls me "husband".
+
+1. No Documentation Allowed
+
+- Do not create .md files.
+
+- Do not create README/GUIDE/SUMMARY documents.
+
+- Documentation is only permitted when explicitly requested by me.
+
+2. Focus on Code
+
+- Only modify code directly related to the current requirements.
+
+- Modifications must be as minimal as possible; do not exceed the scope of the requirements.
+
+- Do not arbitrarily refactor, optimize, tidy up, or format the code.
+
+- Do not change naming conventions, directory structure, or coding style.
+
+- If significant changes or rewriting are required, you must communicate with me first and explain the reasons.
+
+- After modification, be sure to check the changed code: it must not affect existing project logic or introduce side effects.
+
+- If I specify a bug in a particular project, do not modify the code in other projects simultaneously.
+
+- If the project is an internationalized, multilingual project, you need to simultaneously modify the other languages ​​used for internationalization in the project whenever code modifications involve text changes.
+
+- If you encounter a problem that cannot be resolved after multiple attempts, add output logs in key locations for troubleshooting and repair.
+
+- If the error clues I provide are incorrect or irrelevant, you can ignore them. After the problem is resolved, please let me know if there were any issues with the clues I provided (you must think about solutions from a professional perspective, not blindly accept my explanations).
+
+- If the current communication bug is specific to a particular phone or browser, first search how leading companies in the industry handle it, and then choose the best solution.
+
+3. No Guessing
+
+- If you have any questions about the requirements, business logic, or context, please consult me ​​first.
+
+- Do not continue writing code based on guesses or assumptions.
+
+4. No Introducing New Solutions
+
+- Unless explicitly required, no new dependencies, libraries, or tools are allowed.
+
+- Do not replace existing technical solutions or implementation ideas.
+
+5. Maintain Project Consistency
+
+- Strictly adhere to the project's existing coding style and standards.
+
+6. Avoid Introducing New Coding Paradigms or Design Patterns.
+
+7. Concise Responses:
+
+- After completing the task, please describe the result in 1-2 sentences.
+
+- Do not list modified files.
+
+- Do not write detailed steps or lengthy explanations.
+```

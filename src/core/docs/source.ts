@@ -8,6 +8,11 @@ import { icons } from 'lucide-react';
 export const i18n: I18nConfig = {
   defaultLanguage: 'en',
   languages: ['en', 'zh'],
+  // Match next-intl's `localePrefix: 'as-needed'` so the default locale has
+  // no /en prefix. Without this the default locale's pageTree URLs are
+  // `/en/docs/...` while the browser URL is `/docs/...` → searchPath can't
+  // find the active root → sidebar falls back to the full tree.
+  hideLocale: 'default-locale',
 };
 
 const iconHelper = (icon: string | undefined) => {

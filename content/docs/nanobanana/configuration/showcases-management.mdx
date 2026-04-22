@@ -1,0 +1,87 @@
+---
+title: '写在前面'
+---
+
+如果你启动后感觉网站很空，可以选择 [导入预制数据](https://nanobanana2.16781678.xyz/docs/configuration/preset-data)
+
+# 首页Showcases块
+
+## 本项目展示数据均为数据库数据，非动态JSON配置的items假数据，好处是：更贴近真实项目，方便上线维护，减少写代码；（在访问预览时会有loading...交互）
+
+## 前期还没有用户生成图
+
+这时候咱们就得先录入一些数据（数据可以从[https://nanobanana2.ai/](https://nanobanana2.ai/)上复刻）（比自己消耗Token生成图更划算）
+
+## 首页Showcases块限制按照创建时间倒序20天数据，避免内容太多影响用户浏览Showcases下面的首页信息块
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cc0ae77f7ca335d3.jpg" alt="image" />
+
+
+## 以本地开发为例，使用超级管理员用户登录访问：http://localhost:3000/admin/showcases
+
+## 录入数据（点击Add）
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a09e944ba6b7755a.jpg" alt="image" />
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/86c68f59f9ac69e0.jpg" alt="image" />
+
+然后前台页面对应展示：
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f4f4e677b1dc3052.jpg" alt="image" />
+
+
+# Showcases页面：http://localhost:3000/showcases
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8b447f08223c60a0.jpg" alt="image" />
+
+
+## 以本地开发为例：使用超级管理员用户登录访问：http://localhost:3000/admin/showcases
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ab5ce4f3d4d19a74.jpg" alt="image" />
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/99feff97966a7eae.jpg" alt="image" />
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2523699ab1d22891.jpg" alt="image" />
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/63893745c6a6e258.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d7322db562af6c5a.jpg" alt="image" />
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/dbbd5d3b2ae6ffaf.jpg" alt="image" />
+
+
+
+# Hairstyle页：http://localhost:3000/hairstyles
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ac3ed0ff430925ba.jpg" alt="image" />
+
+
+hairstyles的数据也是在http://localhost:3000/admin/showcases 中录入（不过有区别，下面会说）
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7c7753183ea68647.jpg" alt="image" />
+
+## Hairstyle页 有个Tabs功能，需要按下图这么配置
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/10bdfc19d157a4c2.jpg" alt="image" />
+
+```
+// 可选配置值
+hairstyles,men
+hairstyles,women
+hairstyles,animal
+```

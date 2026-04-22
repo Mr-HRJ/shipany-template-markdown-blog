@@ -1,0 +1,319 @@
+---
+title: '技能名称（与YAML头部一致）'
+---
+
+相信大家最近都在各种地方看到一个单词——Skills。从GitHub上星标数万的仓库到AI圈的热烈讨论，这个概念的热度已经不亚于2023-2024年的Prompts。很多人都在问：Skills到底是什么？它和Prompt、MCP有什么区别？怎么才能用上？今天就用通俗易懂的方式，带你彻底搞懂Skills。
+
+
+
+> 2026-02-13 补充
+
+> https://www.skills.google/  google官方skills： Build AI skills for tomorrow, today
+
+
+
+> 2026-01-27 补充
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8f0ddba51c0983ee.jpg" alt="image" />
+
+> 首款可视化 Skills 神器开源，Claude/Cursor/Codex 一键同步 https://github.com/qufei1993/skills-hub
+
+
+
+
+
+> 2026-01-18 补充
+
+> Vercel 把他们的最佳实践总结成了两个 Skills，质量不错，值得一看。https://github.com/vercel-labs/agent-skills/tree/react-best-practices
+
+> 1、react-best-practices：React 和 Next.js 应用的性能优化指南，8 个类别 40+ 条规则，按影响程度排序，用于指导自动化重构和代码生成。 https://github.com/vercel-labs/agent-skills/blob/react-best-practices/skills/react-best-practices/SKILL.md
+
+> 2、web-design-guidelines：Web 界面设计规范，让 AI 审查代码时有据可依 https://github.com/vercel-labs/agent-skills/blob/web-design-guidelines/skills/web-design-guidelines/SKILL.md
+
+
+
+## 先看案例：Skills到底能做什么？
+
+
+
+在深入解释前，先通过两个实际案例感受Skills的强大功能：
+
+
+
+### 案例1：AI选题系统（自动化热点到选题的全流程）
+
+过去人工找选题需要每天花费2-3小时，浏览推特、Reddit、Github、微博、知乎等8个平台，筛选热点、思考切入角度和标题。而用Skills搭建的AI选题系统，只需说一句“开始今日选题生成”，就能全自动完成：
+
+1. **热点采集（Skill1）**：抓取全网80条最新科技热点；
+
+2. **选题生成（Skill2）**：从热点中筛选Top10选题，包含“事件描述+核心角度+标题”，筛选标准涵盖信息密度、话题性、时效性、差异化；
+
+3. **选题审核（Skill3）**：按既定方法论审核选题，给出通过/不通过结论及修改意见；
+
+4. **迭代优化**：未通过的选题会由主Agent读取反馈，重新调用选题生成Skill修改，循环审核直至100%通过（最终达到S级标准）。
+
+
+
+整个流程由1个总控Agent+3个Skill组成，本质是可自动迭代的Workflow，完美复刻了人工选题的全流程，却将时间从几小时压缩到3分钟。
+
+
+
+### 案例2：GitHub项目整合包生成器（小白也能用上开源项目）
+
+很多GitHub开源项目没有前端界面、需要复杂环境配置，编程小白难以使用。为此搭建的“整合包生成器”Skill，只需输入GitHub链接和“整合包”“打包”等关键词，就能自动完成：
+
+1. 克隆GitHub仓库并分析项目结构；
+
+2. 识别核心功能和依赖清单；
+
+3. 生成美观的Gradio WebUI；
+
+4. 打包成Windows/Mac便携包（含Python运行时、启动脚本、自动依赖安装）；
+
+5. 自动修复报错（如缺失ffprobe工具时，自动下载并集成到包中）。
+
+
+
+比如给Manim项目（数学动画引擎）生成整合包后，小白只需解压、双击启动脚本，就能通过WebUI选择场景、调整参数，直接渲染动画，无需任何编程知识。
+
+
+
+## 核心解析：Skills到底是什么？
+
+### 定义与起源
+
+Skills（译为“技能”）是2025年10月Anthropic在Claude Code上推出的特性，2025年12月18日正式作为**开放标准**发布，允许跨平台（Claude、OpenCode、Codex、Cursor等）复用。
+
+
+
+它的本质是：**给AI Agent使用的“能力包文件夹”**，包含指令、脚本、参考文档、模板等资源，Agent可在需要时自动加载使用，核心是将“流程性知识”转化为“可复用的自动化能力”。
+
+
+
+### 与Prompt、MCP的核心区别
+
+用“带新人”的故事轻松理解三者差异：
+
+| 概念 | 类比 | 核心特点 | 适用场景 |
+
+|------|------|----------|----------|
+
+| Prompt | 口头交代任务 | 临时、反应式、仅当前对话生效，仅含文本指令 | 一次性、临场性需求（如写一段文案、改语气） |
+
+| Skills | 公司SOP手册（文件夹形式） | 可复用、结构化、含多类型资源（文本+脚本+模板），跨对话生效 | 流程固定、需重复执行的任务（如选题、打包、文档处理） |
+
+| MCP | 门禁卡 | 仅负责连接外部系统/API，提供权限支持 | 需要调用外部工具/数据的场景（如访问公司仓库、调用第三方API） |
+
+
+
+关键差异点：
+
+- Prompt是“临时指令”，Skills是“固化流程”；
+
+- Prompt只有文本，Skills可以包含脚本、模板等多种资源；
+
+- MCP不教AI“怎么干”，只解决AI“能不能干”（权限问题）。
+
+
+
+### Skills的核心设计：渐进式披露（Progressive Disclosure）
+
+Skills之所以高效，关键在于“渐进式披露”设计——避免一次性加载所有资源导致Token浪费和认知过载：
+
+1. 先加载Skill元信息（名称、描述），让Agent知道“有这个工具及适用场景”；
+
+2. 若判断任务相关，再加载完整的核心文档（SKILL.md）；
+
+3. 如需进一步支持，再按需加载脚本、参考资料等附属资源。
+
+
+
+这种设计既节省Token（长对话中尤为重要），又能让Agent聚焦当前任务，提升执行效率。
+
+
+
+## 实操指南：如何创建/使用Skills？
+
+### 一、Skill的基本结构
+
+一个完整的Skill是一个**小写字母+连字符命名**的文件夹（如`repo-packager`），核心结构如下：
+
+```
+
+my-skill/                # 技能文件夹（必需，命名规范：小写+连字符）
+
+├── SKILL.md             # 核心文件（必需，含元信息和工作流程）
+
+├── reference.md         # 参考文档（可选）
+
+├── examples.md          # 示例（可选）
+
+└── scripts/             # 脚本目录（可选）
+
+    └── helper.py        # 辅助脚本（如Python、Shell脚本）
+
+```
+
+
+
+### 二、核心文件SKILL.md的编写规范
+
+SKILL.md是Agent识别和使用Skill的关键，结构固定为两部分：
+
+#### 1. YAML头部（必需）
+
+用`---`包裹，包含Skill的“名片信息”，供工具识别：
+
+```yaml
+
+---
+
+name: repo-packager  # 技能名称（简洁明了）
+
+description: GitHub项目整合包生成器。自动分析Python项目、生成Gradio WebUI、打包成Windows/Mac便携包。当用户发送GitHub URL并提及"整合包"、"打包"、"部署"、"运行"等关键词时触发。输出：解压即用的Zip文件（含便携Python运行时、启动脚本、自动依赖安装）。  # 触发条件+功能描述（必需）
+
+---
+
+```
+
+- 描述需用**第三人称**（如“处理Excel文件”而非“我可以处理Excel文件”）；
+
+- 包含触发关键词，便于Agent识别调用场景；
+
+- 整体正文控制在500行内，提升执行效率。
+
+
+
+#### 2. Markdown主体（必需）
+
+详细说明工作流程、操作步骤、示例等，核心模块包括：
+
+```markdown
+
+# 技能名称（与YAML头部一致）
+
+## 技能概述
+
+说明技能的核心价值、适用范围（如“消除技术门槛，让非技术用户也能使用GitHub优质工具”）。
+
+
+
+## 触发条件
+
+明确激活技能的必要条件（如“同时包含GitHub URL和‘打包’关键词”），可搭配正则表达式。
+
+
+
+## 工作流程（CRITICAL）
+
+按顺序列出执行步骤（如“克隆仓库→分析依赖→生成WebUI→打包→验证”），确保Agent严格遵循。
+
+
+
+## 示例
+
+展示触发语句、输入输出格式（如“触发语句：帮我把这个项目做成整合包：https://github.com/3b1b/manim”）。
+
+```
+
+
+
+### 三、快速安装现成Skill（推荐新手）
+
+无需从零编写，可直接安装Anthropic官方或社区开源的Skill，步骤如下：
+
+
+
+#### 1. 推荐开源仓库
+
+- 官方仓库（38.3k星标）：https://github.com/anthropics/skills
+
+  - 必装Skill：`docx`（处理Word）、`pdf`（PDF处理）、`skill-creator`（生成新Skill）、`xlsx`（Excel处理）、`frontend-design`（前端界面设计）；
+
+- 社区仓库：`awesome-claude-skills`（18k星标，含50+技能）、`superpowers`（18k星标，编码工作流技能集）。
+
+
+
+#### 2. 安装方法（两种）
+
+##### 方法1：命令安装（推荐）
+
+打开Claude Code/OpenCode，直接发送指令：
+
+```
+
+安装这个skill，skill项目地址为: https://github.com/anthropics/skills/tree/main/skills/skill-creator
+
+```
+
+等待10分钟左右，系统会自动下载并部署到本地目录。
+
+
+
+##### 方法2：手动放置文件夹
+
+1. 新建本地目录（按工具区分）：
+
+   - Claude Code：`~/.claude/skills`
+
+   - OpenCode：`~/.config/opencode/skill`（Windows需手动创建`skill`文件夹）；
+
+2. 从GitHub下载Skill文件夹（如`skill-creator`），复制到上述目录；
+
+3. OpenCode需重启生效，Claude Code支持热重载（2.1.0+版本）。
+
+
+
+### 四、运行Skill的步骤
+
+1. 打开Claude Code/OpenCode，确保Skill已安装；
+
+2. 在对话中输入需求（需包含触发关键词，如“帮我把这个GitHub项目做成整合包：https://github.com/xxx”）；
+
+3. 系统自动识别并调用对应Skill，可先通过Plan模式规划步骤，再切换模式执行；
+
+4. 等待执行完成，接收输出结果（如Zip包、文档、WebUI文件）。
+
+
+
+## 总结：Skills的核心价值
+
+Skills的本质是“**可复用的自动化流程包**”，它解决了Prompt的“临时性”和“单一性”问题，让AI从“听指令做事”升级为“按手册自主完成复杂任务”。
+
+
+
+无论你是：
+
+- 专业开发者：将工作流（如代码测试、文档生成）封装为Skill，提升团队效率；
+
+- 普通用户：用现成Skill解决痛点（如选题、打包、文件处理），无需技术知识；
+
+
+
+都能从Skills中受益。正如业内观点：“几乎所有能用Workflow完成的AI任务，都可以用Agent + Skills实现。”
+
+
+
+现在就安装`skill-creator`，把你最常用的流程（如筛热点、写周报、修复报错）固化为Skill，体验“一次搭建，终身复用”的高效工作方式吧！
+
+
+
+
+
+## 扩展：如何在 Antigravity 中安装 skills
+
+
+
+将下面发给Antigravity
+
+
+
+```
+
+https://antigravity.google/docs/skills  阅读这个,给我装 skills
+
+```
+
+
+
+然后他会自己安装，搞定

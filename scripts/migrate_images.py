@@ -92,11 +92,14 @@ def guess_ext(url: str, content_type: str | None) -> str:
     return ".jpg"  # sensible default
 
 
-def collect_urls() -> tuple[list[str], dict[str, list[Path]]]:
-    """Return (unique_urls, url_to_files). Markdown-style `![](url)` shouldn't
-    appear after convert_markdown.py, but include it for safety."""
+def collect_urls(skip_host: str | None = None) -> tuple[list[str], dict[str, list[Path]]]:
+    """Return (unique_urls, url_to_files). Scans both .md and .mdx.
+    URLs whose host equals `skip_host` (our own R2) are ignored."""
+    from urllib.parse import urlparse as _urlparse
+
     url_files: dict[str, list[Path]] = {}
-    for md in sorted(DOCS.rglob("*.md")):
+    files = sorted(list(DOCS.rglob("*.md")) + list(DOCS.rglob("*.mdx")))
+    for md in files:
         text = md.read_text(encoding="utf-8")
         urls = set()
         for m in IMG_SRC_RE.finditer(text):
@@ -104,6 +107,8 @@ def collect_urls() -> tuple[list[str], dict[str, list[Path]]]:
         for m in MD_IMG_RE.finditer(text):
             urls.add(m.group(2))
         for u in urls:
+            if skip_host and _urlparse(u).hostname == skip_host:
+                continue
             url_files.setdefault(u, []).append(md)
     return list(url_files.keys()), url_files
 
@@ -171,7 +176,9 @@ def main() -> None:
     creds = load_creds()
     manifest = load_manifest()
 
-    urls, url_to_files = collect_urls()
+    from urllib.parse import urlparse as _urlparse
+    skip_host = _urlparse(creds["public_base"]).hostname
+    urls, url_to_files = collect_urls(skip_host=skip_host)
     print(f"Found {len(urls)} unique URLs across {sum(len(v) for v in url_to_files.values())} usages")
 
     if args.dry_run:

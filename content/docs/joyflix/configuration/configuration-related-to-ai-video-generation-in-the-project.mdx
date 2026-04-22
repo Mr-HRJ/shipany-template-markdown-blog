@@ -1,0 +1,149 @@
+---
+title: 'Configuration Related To Ai Video Generation In The Project'
+---
+
+##  生成视频模型了解
+
+当前模版作者使用的是`Replicate`，先了解下旗下的模型费用
+
+| **模型/类型**                     | **收费单位** | **价格区间**         | **说明**                                                 |
+| ----------------------------- | -------- | ---------------- | ------------------------------------------------------ |
+| Hailuo 02 | 单次 | $0.28 - $0.56 | 咱们目前默认的模型 |
+| Kling (Standard) | 秒 | $0.25 - $0.50 | 按输出秒数计费，大约 $0.05/秒 |
+| Wan 2.1 | 单次 | $0.15 - $0.30 | 目前最便宜的方案之一 |
+| Pixverse v4.5 | 单次 | $0.30 - $0.80 | 分辨率越高越贵 |
+| Luma Ray 2 | 单次 | $0.50 - $1.00 | 相对较贵，生成一次可能就耗尽你现在的 $1                   |
+
+
+### 定价特点（补充说明）
+
+1. **Replicate 是按用量计费**：你只为 GPU 处理时间或输出内容付费，没有固定月费。
+2. 不同模型价格模式可能不同：有的按秒，有的按完整输出视频计价。
+3. 视频生成成本受 **分辨率、帧数（fps）、时长** 等因素影响。
+
+## 在配置Replicate之前需要做的
+
+一定要先完成：[项目中关于R2存储相关配置](/docs/joyflix/configuration/r2-storage-configuration)
+
+## 使用Replicate获取token
+
+访问：[https://replicate.com/](https://replicate.com/signin)
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b97ffb1b3eb2175c.jpg" alt="image" />
+
+登录成功后，访问https://replicate.com/account/api-tokens
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/beab3be3ab49ec05.jpg" alt="image" />
+
+
+## 回到Admin-Setting
+
+1. 点击 **设置 (Settings)** -> **AI**。
+2. **Replicate API Token**：填入 [Replicate Token](https://replicate.com/account/api-tokens)。
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/fb4d04f23061a7f2.jpg" alt="image" />
+3. **关键操作**：开启 **Replicate 自定义存储**。这样 AI 生成的视频会自动存入你的 R2 桶，而不会在 Replicate 服务器过期后失效。
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/de24c62dc01be600.jpg" alt="image" />
+
+然后点击`Save` 保存
+
+
+## 设置注册用户赠送默认积分
+
+> 设置后新注册用户即可获得免费试用额度。
+
+1. 点击 **设置 (Settings)** -> **常规 (General)** ->  **积分 (Credit)**。
+2. 开启 **启用初始积分**（initial_credits_enabled）。
+3. 设置赠送积分数量（默认需配置）（initial_credits_amount）（例如 `20`，你设置的时候根据自己需求来设置，按照现在配置设置为`10` 比较合理，因为看下图 生成1个视频走的默认配置是9个积分 ）和有效期天数（initial_credits_valid_days）（如 `30` 天）。
+  <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/366701f5944b9d1d.jpg" alt="image" />
+4. 保存后，新注册用户即可获得免费试用额度。
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5b2faca70f3e9d19.jpg" alt="image" />
+
+## 新用户注册测试
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/27a2f325a4516134.jpg" alt="image" />
+
+接着在 /app/video-generator 生成视频
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c3738c862f7f0dd7.jpg" alt="image" />
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7044e01c922cb8da.jpg" alt="image" />
+
+生成视频比较慢，Loading耐心等待`api/video/ai`接口请求
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a3692a7b45aa87b0.jpg" alt="image" />
+
+生成成功,  可以看到response中已经使用了咱们配置的R2
+
+```
+{
+    "success": true,
+    "data": {
+        "id": "8ho9iFet8BpyLKuFeR-AT",
+        "status": "succeeded",
+        "videoUrl": "https://img-joyflix.16781678.xyz/uploads/videos/video_8ho9iFet8BpyLKuFeR-AT_1769480902714.mp4",
+        "output": "https://img-joyflix.16781678.xyz/uploads/videos/video_8ho9iFet8BpyLKuFeR-AT_1769480902714.mp4",
+        "originalVideoUrl": "https://replicate.delivery/xezq/HgsM8Cil3GbvOVPk10l8v4NOHk7OCmI1uMo2TNnoeEdfSdBWA/tmpmd9mbwzq.mp4",
+        "completedAt": "2026-01-27T02:28:14.761526038Z",
+        "generationTime": 107
+    }
+}
+```
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e1ceeae8dbf50d31.jpg" alt="image" />
+
+验证下生成费用，如下图
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/89a4582bfb75066f.jpg" alt="image" />
+
+用户生成的视频在`/app/my-videos`路由，不会丢失
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ddfbcdc0fae35c42.jpg" alt="image" />
+
+上图中能看到生成的视频，但是缺少封面；
+
+这里需要用到 `Cloudflare 视频抽帧功能`
+
+Media Transformations（媒体转换）。它允许 Cloudflare 实时读取你 R2 里的视频，并提取某一秒的画面作为图片。
+
+```
+配置开启步骤：
+
+1、登录 Cloudflare 控制台。
+2、进入你的域名（Zone）：选择你绑定到 joyflix.16781678.xyz 的那个域名。
+3、导航到 Transformations：
+4、在左侧菜单点击 Speed -> Optimization。
+找到 Image Resizing（或者叫 Media Transformations / Image Transformations）部分。
+5、点击 Enable（开启）：开启后，Cloudflare 才能处理 cdn-cgi/media/ 这样的请求来帮你抽帧。
+
+注意：
+1、如果你的域名是免费套餐，开启这个功能可能每月需要一小笔费用（大约 $5 或 $9，取决于你的套餐）。
+2、开启后，新生成的视频封面就会自动展示出来了
+```
+
+
+> 如果是下面情况，是你需要充钱了
+><img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a6bf3042a8288128.jpg" alt="image" />
+> Post https://joyflix.16781678.xyz/api/video/ai
+> Response \{"error":"Failed to start video generation","details":"\{\"title\":\"Insufficient credit\",\"detail\":\"You have insufficient credit to run this model. Go to https://replicate.com/account/billing#billing to purchase credit. Once you purchase credit, please wait a few minutes before trying again.\",\"status\":402\}\n"\}
+> 这个错误提示非常明确，是 Replicate 官方账号欠费了
+> 需要去充值：按照提示访问 https://replicate.com/account/billing 充个 5 到 10 美金试试
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ac6c414d9cc492fc.jpg" alt="image" />
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/76b59794a1a01dfc.jpg" alt="image" />
+> 我使用招商银行-全币种信用卡 可以提交成功
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/15668ecac51da5b8.jpg" alt="image" />
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9df463363c1e4fde.jpg" alt="image" />
+> 提交成功后自动返回Bill
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b30e052fed973d98.jpg" alt="image" />
+> 充值最少$1 (但是Replicate官方不喜欢账户里只剩“最后一块钱”的用户，Replicate 为了防止 API 调用过程中余额变负，通常会有一个启动门槛。如果你的余额只有 $1.00（处于临界点），系统在评估任务（包含排队、模型加载和生成时间）时，可能会认为风险较高而直接返回 402 Insufficient credit) 【实测$1 可以生成，不过你要是上站让别人注册使用，必须得多充】
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/98e63a29bd580fe5.jpg" alt="image" />
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/64ec3f9d5ee2431a.jpg" alt="image" />
+> 充值成功
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5e3a8e004b687aea.jpg" alt="image" />
+
+
+## 如何自定义 AI 模型与规则？
+
+所有的视频生成规则（参数、积分、模型标识）都在一个配置文件中：
+- **核心文件**：`src/config/model-config.ts`
+- **如何新增模型**：模仿现有的 `ModelConfig` 结构。只需在 `schema` 中定义你需要的参数（如 `fps`, `resolution`），前台会自动渲染出对应的滑块或输入框。
+- **自定义积分算法**：在 `calculateCredits` 函数中编写你的逻辑（如果看不懂，让AI给你修改或者分析下代码）。

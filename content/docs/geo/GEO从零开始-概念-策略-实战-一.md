@@ -241,7 +241,7 @@ Sitemap: https://yourdomain.com/sitemap.xml
 
 ① Article Schema — 每篇文章都要加
 
-```
+```html
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -284,7 +284,7 @@ Sitemap: https://yourdomain.com/sitemap.xml
 
 ② FAQPage Schema — 效果最显著，有 FAQ 就要加
 
-```
+```html
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

@@ -1,0 +1,169 @@
+---
+title: '写在前面'
+---
+
+
+
+使用R2之前，你最好有个VISA卡：例如 `招商全币种信用卡`（后来了解到`去闲鱼搜索”代绑“”虚拟卡“也可以成功通过`），因为用存储虽然有免费额度，但是Cloudflare担心你可能用超，所以需要录入下支付方式才能使用R2；
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/bd62cbcf3a71235b.jpg" alt="image" />
+
+
+
+
+
+# 项目使用Cloudflare R2支撑图片生成的存储
+
+
+
+
+
+## Cloudflare R2 亮点：免费量大
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e05c3cc5b6663d5a.jpg" alt="image" />
+
+
+
+
+
+| 项目                       | 每月免费额度                          |                        |
+
+| ------------------------ | ------------------------------- | ---------------------- |
+
+| **标准存储容量**               | **10 GB-month**（等于每月最高可存 10 GB） |                        |
+
+| **Class A 操作（如写入/列出对象）** | **1,000,000 次/月**               |                        |
+
+| **Class B 操作（如读取对象）**    | **10,000,000 次/月**              |                        |
+
+| **出站流量（Egress）**         | **始终免费**（无论使用多少）                |  |
+
+
+
+
+
+## 项目中需要先使用Admin权限账户去/admin/settings/storage更新R2配置，要不然会像下面报错
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7067087ddb16ccdc.jpg" alt="image" />
+
+
+
+
+
+## 访问下面链接
+
+
+
+[https://www.cloudflare.com/zh-cn/](https://www.cloudflare.com/zh-cn/)
+
+
+
+### 登录后，按照下图点击创建bucket
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/380400a9b4bda402.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0550190db0a234a1.jpg" alt="image" />
+
+
+
+> 在本地记录下你创建的bucket name
+
+
+
+
+
+### 配置Custom domain
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b5e612741b36757a.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/fd2838cfc32cc9b1.jpg" alt="image" />
+
+
+
+注意：如果你没有域名，需要先买域名：[购买便宜域名](/docs/markdown-blog/others/buy-cheap-domain)
+
+
+
+> 在本地记录下你创建的 domain
+
+
+
+### 配置R2_ACCESS_KEY_ID、R2_SECRET_ACCESS_KEY
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/91fb3f84cd346553.jpg" alt="image" />
+
+
+
+选择Create User API token
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/59098b2312f909a6.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ac850af01f14f891.jpg" alt="image" />
+
+
+
+点击”Create User API Token“
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ecf99fff5b6bc7c0.jpg" alt="image" />
+
+
+
+
+
+然后访问`http://localhost:3000/admin/settings/storage`将其配置进去
+
+
+
+> 下图中
+
+> Cloudflare Access Key：对应上面的`Access Key ID`
+
+> Cloudflare Secret Key： 对应上面的`Secret Access Key`
+
+> Bucket Name： 对应上面新建的`bucket name`
+
+> Endpoint： 对应上面的 `Use jurisdiction-specific endpoints for S3 clients:`下的`Default`
+
+> Domain: 对应上面你设置的`Custom domain`
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c96dcb020accf319.jpg" alt="image" />
+
+
+
+
+
+保存后，此时重启服务 `pnpm run dev`，可以在[http://localhost:3000/admin/settings/general](http://localhost:3000/admin/settings/general) 测试图片文件上传，提示上传成功后可以即时的看到图片，当然也可以去CloudflareR2上去看下这张图是否已经上传到
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c85098ed57abdddd.jpg" alt="image" />

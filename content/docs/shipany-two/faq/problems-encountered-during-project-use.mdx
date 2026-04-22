@@ -1,0 +1,1149 @@
+---
+title: '项目使用遇到的问题'
+---
+
+## 官方常见问题
+
+
+
+[官方常见问题解答](https://shipany.ai/zh/docs/guide/faq)
+
+
+
+[ShipanyTwo系统架构](https://shipany.ai/zh/docs/guide/architecture)
+
+
+
+## 我整理的常见问题
+
+
+
+### 1.8.2版本部署到vercel后报错
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0d533099c3651956.jpg" alt="image" />
+
+
+
+```
+
+Error: Vulnerable version of next-mdx-remote detected (5.0.0). Please update to version 6.0.0 or later. Learn More: https://vercel.link/CVE-2026-0969
+
+```
+
+> 原因：Vercel 部署时的安全漏洞错误：
+
+需要将 next-mdx-remote 从有风险的 5.0.0 版本一键升级到了官方要求的 6.0.0 安全版本。
+
+
+
+请在项目中执行：
+
+
+
+```
+
+pnpm add next-mdx-remote@^6.0.0
+
+```
+
+然后提交git重新部署
+
+
+
+
+
+### 启动后访问首页居然是not found
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5d6983fc289cd8fd.jpg" alt="image" />
+
+
+
+多是由于分支切换（例如：dev切换到cf、cf切换dev）后，没有及时pnpm install 安装对应分支依赖导致。
+
+
+
+
+
+### .env.example中为什么配置这么少？
+
+
+
+答：OAuth、支付、存储等配置都是通过 Admin Settings UI（/admin/settings）在数据库中管理的，而不是通过.env环境变量。<br/>
+
+所有OAuth、支付、存储的高级配置都通过管理界面完成：
+
+1. 启动应用后访问 http://localhost:3000/admin/settings
+
+2. 使用管理员账号登录
+
+3. 在对应的标签页填写配置信息
+
+4. 保存后配置立即生效，无需重启应用
+
+
+
+### 官方文档为什么内容那么少？
+
+
+
+答：[官方文档](https://shipany.ai/zh/docs) 作者2025-11-24已补全所有文档，各位在开发时可以参阅，预祝各位出海发大财！
+
+
+
+### Cloudflare分支须知
+
+
+
+Cloudflare分支代码可以部署到Cloudflare，但是需要购买Cloudflare每月$5的套餐才能使用，否则会因为文件打包大小超过3MB而导致线上构建失败。
+
+
+
+### Two 与 One 有什么区别？
+
+答：<br/> 
+
+- Two已实现订阅续费自监听和自动发放积分功能；<br/>
+
+- Two内置Al图片生成器、AI 聊天机器人、Al 音乐生成器；<br/>
+
+- Two基础功能：后台管理系统（CMS、RBAC等）、用户中心User Console、配置话Landing Page;<br/>
+
+- Two支付功能：支持Stripe、Creem、Paypal三种收款渠道（Stripe已支持支付宝、微信收款方式）；
+
+
+
+### 支付-如果是月付的话是会每个月扣钱然后加credits吗？
+
+
+
+答： 是的，月付会每个月扣钱然后加 Credits。
+
+从代码分析来看，项目确实支持订阅续费时自动扣款并发放 Credits。项目支持两种支付类型：
+
+- one_time: 一次性付款
+
+- subscription: 订阅付款（包括月付、年付等）
+
+
+
+> 总结
+
+
+
+| 场景         | 扣款               | Credits 发放               | Credits 过期时间               |
+
+|--------------|--------------------|---------------------------|-------------------------------|
+
+| 首次订阅     | 立即扣款           | 立即发放 creditsAmount     | 当前订阅周期结束（currentPeriodEnd） |
+
+| 订阅续费（月付/年付） | 每个周期自动扣款   | 每次续费成功后自动发放     | 新的订阅周期结束               |
+
+| 一次性付款   | 立即扣款           | 立即发放                   | 按 creditsValidDays 计算       |
+
+
+
+
+
+> 数据表结构
+
+
+
+- **subscription 表**：存储订阅信息，包括 creditsAmount、creditsValidDays、interval（月/年）、currentPeriodStart、currentPeriodEnd
+
+- **credit 表**：存储每次发放/消费的 Credits 记录，包括 remainingCredits、expiresAt
+
+- **order 表**：每次支付（包括续费）都会创建订单记录
+
+
+
+
+
+简而言之：月付确实是每个月自动扣款，成功后系统会自动发放新的 Credits，这些 Credits 在下个扣款周期结束时过期。
+
+
+
+### Stripe、Creem、Paypal等支付都是这样的么？
+
+
+
+答： 是的，Stripe、Creem、PayPal 都是统一的处理逻辑
+
+项目采用了统一的支付抽象层设计，所有支付提供商都实现了相同的 PaymentProvider接口。
+
+```
+
+┌─────────────────────────────────────────────────────────┐
+
+│              统一的业务处理层 (payment.ts)                │
+
+│  handleCheckoutSuccess / handleSubscriptionRenewal      │
+
+└─────────────────────────────────────────────────────────┘
+
+                           ▲
+
+                           │ 统一的 PaymentSession
+
+┌─────────────────────────────────────────────────────────┐
+
+│                 Webhook 路由 (notify/[provider])         │
+
+│     根据 provider 参数选择对应的支付提供商处理              │
+
+└─────────────────────────────────────────────────────────┘
+
+                           ▲
+
+         ┌─────────────────┼─────────────────┐
+
+         ▼                 ▼                 ▼
+
+┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+
+│ StripeProvider │ │ CreemProvider  │ │ PayPalProvider │
+
+│  mapStripeEvent│ │  mapCreemEvent │ │   (暂未完善)   │
+
+└────────────────┘ └────────────────┘ └────────────────┘
+
+```
+
+>  各提供商的事件映射
+
+
+
+| 统一事件类型       | Stripe 原始事件                  | Creem 原始事件          |
+
+|--------------------|----------------------------------|-------------------------|
+
+| CHECKOUT_SUCCESS   | checkout.session.completed       | checkout.completed      |
+
+| PAYMENT_SUCCESS    | invoice.payment_succeeded        | subscription.paid       |
+
+| SUBSCRIBE_UPDATED  | customer.subscription.updated    | subscription.update     |
+
+| SUBSCRIBE_CANCELED | customer.subscription.deleted    | subscription.canceled   |
+
+
+
+
+
+>  关键点
+
+
+
+1. **统一处理逻辑**：无论是 Stripe 还是 Creem，收到续费成功的 webhook 时：
+
+   - 被映射为 `PaymentEventType.PAYMENT_SUCCESS`
+
+   - 若 `subscriptionCycleType === SubscriptionCycleType.RENEWAL`
+
+   - 都会调用 `ts handleSubscriptionRenewal()` 发放新的 Credits
+
+
+
+2. **PayPal 目前不完整**：从代码看，PayPal 的 `ts getPaymentEvent` 返回的 `paymentSession` 是 `undefined`，说明 PayPal 的订阅续费功能尚未实现完整。
+
+
+
+3. **Credits 发放时机**：
+
+   - 首次订阅：`CHECKOUT_SUCCESS` → `ts handleCheckoutSuccess()`
+
+   - 续费：`PAYMENT_SUCCESS + RENEWAL` → `ts handleSubscriptionRenewal()`
+
+
+
+
+
+>  结论
+
+
+
+Stripe 和 Creem 的月付/年付逻辑完全一致：
+
+- ✅ 每个周期自动扣款
+
+- ✅ 扣款成功后自动发放 Credits
+
+- ✅ Credits 在当前周期结束时过期
+
+
+
+PayPal 的订阅续费功能目前未完全实现，只有一次性支付和首次订阅可用。
+
+
+
+
+
+
+
+## 项目启动报错：
+
+
+
+```
+
+get configs from db failed: Error: Failed query: select "name", "value" from "config"
+
+params: 
+
+    at async getConfigs.revalidate (src/shared/models/config.ts:60:20)
+
+    at async getAllConfigs (src/shared/models/config.ts:84:19)
+
+    at async getAuth (src/core/auth/index.ts:10:19)
+
+    at async GET (src/app/api/auth/[...all]/route.ts:12:16)
+
+  58 |     }
+
+  59 |
+
+> 60 |     const result = await db().select().from(config);
+
+     |                    ^
+
+  61 |     if (!result) {
+
+  62 |       return configs;
+
+  63 |     } {
+
+  query: 'select "name", "value" from "config"',
+
+  params: [],
+
+  [cause]: Error [PostgresError]: relation "config" does not exist
+
+      at ignore-listed frames {
+
+    severity_local: 'ERROR',
+
+    severity: 'ERROR',
+
+    code: '42P01',
+
+    position: '29',
+
+    file: 'parse_relation.c',
+
+    line: '1449',
+
+    routine: 'parserOpenTable'
+
+  }
+
+}
+
+```
+
+
+
+答：这个是你没有配置DATABASE_URL、没有执行：pnpm db:generate、pnpm db:migrate
+
+一定要按照文档一步步做，不要图省事，省事肯定会报错
+
+
+
+## 如果项目开始二创开发了，发现控制台刷起来如下图报错
+
+
+
+请执行`rm -rf .next` ，然后再重新启动
+
+
+
+<img width="1550" height="634" alt="Image" src="https://github.com/user-attachments/assets/15f35ae1-627c-4c25-a014-8a400e9e3c25" />
+
+
+
+## 如果部署到Vercel免费，可能会遇到数据库连接池耗尽的问题
+
+
+
+错误信息显示 "Max client connections reached"，说明数据库连接没有正确释放，让Gemini或者Claude帮你搞定。
+
+
+
+`花钱：去闲鱼买Cursor、Claude Code ，或者Trae 每月注册新账户 $3/月` 
+
+
+
+`”穷鬼“组合：Kiro 新号总送一个月500次Claude请求，Antigravity现在免费使用（有使用额度，过几个小时再释放额度）组合使用`
+
+
+
+##  启动后控制台报错，但是页面可以访问到数据和内容：
+
+
+
+```
+
+ ⨯ [Error [APIError]: Failed to get session] {
+
+  status: 'INTERNAL_SERVER_ERROR',
+
+  body: [Object],
+
+  headers: {},
+
+  statusCode: 500,
+
+  digest: '3914836991'
+
+}
+
+ GET /admin/posts 200 in 21.1s (compile: 737ms, proxy.ts: 5ms, render: 20.4s)
+
+ ⨯ [Error [APIError]: Failed to get session] {
+
+  status: 'INTERNAL_SERVER_ERROR',
+
+  body: [Object],
+
+  headers: {},
+
+  statusCode: 500,
+
+  digest: '3914836991'
+
+}
+
+ GET /api/auth/get-session 200 in 2.5s (compile: 7ms, render: 2.5s)
+
+get configs from db failed: Error: Failed query: select "name", "value" from "config"
+
+params: 
+
+    at async getConfigs (src/shared/models/config.ts:50:18)
+
+    at async getAllConfigs (src/shared/models/config.ts:68:19)
+
+    at async getAuthOptions (src/core/auth/config.ts:36:19)
+
+    at async getAuth (src/core/auth/index.ts:10:21)
+
+    at async getSignUser (src/shared/models/user.ts:91:16)
+
+    at async requirePermission (src/core/rbac/permission.ts:94:16)
+
+    at async PostsPage (src/app/[locale]/(admin)/admin/posts/page.tsx:28:3)
+
+  48 |   }
+
+  49 |
+
+> 50 |   const result = await db().select().from(config);
+
+     |                  ^
+
+  51 |   if (!result) {
+
+  52 |     return configs;
+
+  53 |   } {
+
+  query: 'select "name", "value" from "config"',
+
+  params: [],
+
+  [cause]: Error: write CONNECT_TIMEOUT aws-1-ap-northeast-1.pooler.supabase.com:6543
+
+      at <unknown> (Error: write CONNECT_TIMEOUT aws-1-ap-northeast-1.pooler.supabase.com:6543) {
+
+    code: 'CONNECT_TIMEOUT',
+
+    errno: 'CONNECT_TIMEOUT',
+
+    address: 'aws-1-ap-northeast-1.pooler.supabase.com',
+
+    port: 6543
+
+  }
+
+}
+
+get configs from db failed: Error: Failed query: select "name", "value" from "config"
+
+params: 
+
+    at async getConfigs (src/shared/models/config.ts:50:18)
+
+    at async getAllConfigs (src/shared/models/config.ts:68:19)
+
+    at async getAuthOptions (src/core/auth/config.ts:36:19)
+
+    at async getAuth (src/core/auth/index.ts:10:21)
+
+    at async getSignUser (src/shared/models/user.ts:91:16)
+
+    at async requireAdminAccess (src/core/rbac/permission.ts:253:16)
+
+    at async AdminLayout (src/app/[locale]/(admin)/layout.tsx:23:3)
+
+  48 |   }
+
+  49 |
+
+> 50 |   const result = await db().select().from(config);
+
+     |                  ^
+
+  51 |   if (!result) {
+
+  52 |     return configs;
+
+  53 |   } {
+
+  query: 'select "name", "value" from "config"',
+
+  params: [],
+
+  [cause]: Error: write CONNECT_TIMEOUT aws-1-ap-northeast-1.pooler.supabase.com:6543
+
+```
+
+
+
+答：数据库连接超时问题
+
+本地配置文件.env.development中：DB_SINGLETON_ENABLED 设置为 false，导致每次请求都创建新的数据库连接，而 Supabase 连接池有超时限制。在本地开发环境应该启用单例模式， DB_SINGLETON_ENABLED 设置为 true。
+
+另外，需要更换低延迟的靠谱Ti子，连Supabase都连不上了。
+
+
+
+那生产环境呢？Vercel 部署时 DB_SINGLETON_ENABLED = "false" 是正确的配置。当 DB_SINGLETON_ENABLED 为 false 时，会自动使用 Supabase 的连接池（pooler），并且代码已经做了优化。
+
+max: 1 - serverless 环境每个函数实例只保持 1 个连接
+
+idle_timeout: 20 - 20 秒空闲超时
+
+connect_timeout: 10 - 10 秒连接超时
+
+max_lifetime: 60 * 30 - 连接最长存活 30 分钟
+
+这个配置适合 Vercel 的 serverless 环境。
+
+
+
+## vercel部署报错：
+
+
+
+```
+
+Skipping build cache since Package Manager changed from "pnpm" to "yarn"
+
+Running "vercel build"
+
+Vercel CLI 48.12.0
+
+Running "install" command: `pnpm install --frozen-lockfile`...
+
+ WARN  Ignoring not compatible lockfile at /vercel/path0/pnpm-lock.yaml
+
+ ERR_PNPM_FROZEN_LOCKFILE_WITH_OUTDATED_LOCKFILE  Cannot perform a frozen installation because the lockfile needs updates
+
+Note that in CI environments this setting is true by default. If you still need to run install in such cases, use "pnpm install --no-frozen-lockfile"
+
+Error: Command "pnpm install --frozen-lockfile" exited with 1
+
+```
+
+
+
+答： Vercel 检测到你同时有 pnpm-lock.yaml 和 yarn.lock，导致包管理器混乱。需要删除 yarn 相关文件并更新 pnpm lockfile
+
+```
+
+rm -f yarn.lock yarn-error.log
+
+```
+
+提交github重新自动部署后OK
+
+
+
+## 项目启动后报错 ELIFECYCLE  Command failed with exit code 3221225477.
+
+
+
+```
+
+shipany-template-two@1.3.2 dev D:\shipany-template
+
+> next dev --turbopack
+
+
+
+   ▲ Next.js 16.0.0 (Turbopack)
+
+   - Local:        http://localhost:3000
+
+   - Network:      http://192.168.31.101:3000
+
+   - Environments: .env
+
+   - Experiments (use with caution):
+
+     ✓ mdxRs
+
+     ✓ turbopackFileSystemCacheForDev
+
+
+
+ ✓ Starting...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[MDX] updated map file in 19.175199999999904ms
+
+[MDX] started dev server
+
+ ✓ Ready in 775ms
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ○ Compiling /[locale] ...
+
+ GET / 200 in 10.7s (compile: 9.5s, proxy.ts: 152ms, render: 1056ms)
+
+
+
+ ELIFECYCLE  Command failed with exit code 3221225477.
+
+```
+
+
+
+答：
+
+错误代码 3221225477(0xC0000005)是Windows的内存访问违规错误。这个问题可能由以下原因导致:
+
+（1）内存不足
+
+（2）Turbopack 兼容性问题
+
+（3）Next.js 16.0.0 +Turbopack在 Windows 上可能存在一些稳定性问题
+
+特别是在处理复杂的 MDX 配置和多个插件时2.Node.js 版本问题某些 Node.js 版本与 Next.js 16+Turbopack 不兼容
+
+（4）依赖包的原生模块问题某些包可能在 Windows 上编译有问题
+
+```
+
+方案 1：不使用 Turbopack（推荐先尝试）
+
+npm run dev -- --no-turbopack
+
+方案 2：检查 Node.js 版本
+
+确保使用 Node.js 20.x 或 22.x LTS 版本：
+
+node -v
+
+建议使用 Node.js v20.18.0 或 v22.x LTS。
+
+
+
+方案 3：清理并重新安装依赖
+
+# 删除 node_modules 和 lock 文件
+
+rmdir /s /q node_modules
+
+del package-lock.json
+
+del yarn.lock
+
+del pnpm-lock.yaml
+
+
+
+# 清理 Next.js 缓存
+
+rmdir /s /q .next
+
+
+
+# 重新安装
+
+npm install
+
+
+
+方案 4：增加 Node.js 内存限制
+
+set NODE_OPTIONS=--max-old-space-size=4096
+
+npm run dev
+
+```
+
+
+
+# 在vercel上打包提示Vulnerable version of Next.js detected, please update immediately
+
+
+
+在vercel上打包提示Vulnerable version of Next.js detected, please update immediately. Learn more: https://vercel.link/CVE-2025-66478
+
+
+
+<img width="600"  alt="Image" src="https://github.com/user-attachments/assets/33c3208a-eb08-48bc-ba8a-2a1223307ea6" />
+
+
+
+Next.js 的相关依赖包已经更新到最新版本 (16.0.7)，这将修复 Vercel 报告的 CVE-2025-66478 安全漏洞。
+
+
+
+更新内容
+
+next: 16.0.0 -> 16.0.7
+
+eslint-config-next: 16.0.0 -> 16.0.7
+
+@next/bundle-analyzer: 16.0.0 -> 16.0.7
+
+@next/third-parties: 16.0.0 -> 16.0.7
+
+
+
+<img width="600"  alt="Image" src="https://github.com/user-attachments/assets/b7b082f1-ea88-4420-83c2-aaa036bd890c" />
+
+
+
+<img width="600"  alt="Image" src="https://github.com/user-attachments/assets/57510237-aabb-4242-a13a-59aa2e4428f9" />
+
+
+
+请拉取最新版代码再部署
+
+
+
+<img width="600"  alt="Image" src="https://github.com/user-attachments/assets/05447ec2-d49b-4237-866e-a809342a7476" />
+
+
+
+
+
+# 安装依赖报错
+
+
+
+```
+
+> shipany-template-two@1.5.2 postinstall /Users/wangwenjie/Documents/shipany/shipany-template
+
+> fumadocs-mdx
+
+
+
+node:internal/modules/esm/resolve:214
+
+  const resolvedOption = FSLegacyMainResolve(packageJsonUrlString, packageConfig.main, baseStringified);
+
+                         ^
+
+
+
+Error: Cannot find package '/Users/wangwenjie/Documents/shipany/shipany-template/node_modules/.pnpm/fumadocs-mdx@11.10.0_fumadocs-core@15.7.12_@types+react@19.2.2_next@16.0.7_@babel+core@_6cf903d1c44e47876164549c67f2f64d/node_modules/tinyglobby/package.json' imported from /Users/wangwenjie/Documents/shipany/shipany-template/node_modules/.pnpm/fumadocs-mdx@11.10.0_fumadocs-core@15.7.12_@types+react@19.2.2_next@16.0.7_@babel+core@_6cf903d1c44e47876164549c67f2f64d/node_modules/fumadocs-mdx/dist/next/index.js
+
+    at legacyMainResolve (node:internal/modules/esm/resolve:214:26)
+
+    at packageResolve (node:internal/modules/esm/resolve:832:14)
+
+    at moduleResolve (node:internal/modules/esm/resolve:918:18)
+
+    at defaultResolve (node:internal/modules/esm/resolve:1148:11)
+
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:528:12)
+
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:497:25)
+
+    at ModuleLoader.getModuleJob (node:internal/modules/esm/loader:231:38)
+
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:97:39)
+
+    at link (node:internal/modules/esm/module_job:96:36) {
+
+  code: 'ERR_MODULE_NOT_FOUND'
+
+}
+
+
+
+Node.js v22.0.0
+
+
+
+ ELIFECYCLE  Command failed with exit code 1.
+
+```
+
+
+
+答：
+
+// 清理并重新安装（最常见的解决方案）
+
+```
+
+rm -rf node_modules 
+
+pnpm install
+
+```
+
+
+
+
+
+## 控制台老是报这个错
+
+
+
+```
+
+Error: MISSING_MESSAGE: Could not resolve `pages.appspecific.com.chrome.devtools.json` in messages for locale `en`.
+
+    at async DynamicPage (src/app/[locale]/(landing)/[...slug]/page.tsx:125:13)
+
+  123 |   const messageKey = `pages.${dynamicPageSlug}`;
+
+  124 |
+
+> 125 |   const t = await getTranslations({ locale, namespace: messageKey });
+
+      |             ^
+
+  126 |
+
+  127 |   // return dynamic page
+
+  128 |   if (t.has('page')) { {
+
+  code: 'MISSING_MESSAGE',
+
+  originalMessage: 'Could not resolve `pages.appspecific.com.chrome.devtools.json` in messages for locale `en`.'
+
+}
+
+```
+
+
+
+答： 这个不是项目的问题，是你chrome.devtools 谷歌浏览器devtools问题
+
+
+
+## 打包部署报错
+
+
+
+```
+
+✘ [ERROR] fetch failed
+
+
+
+If you think this is a bug then please create an issue at https://github.com/cloudflare/workers-sdk/issues/new/choose
+
+
+
+Note that there is a newer version of Wrangler available (4.54.0). Consider checking whether upgrading resolves this error.
+
+
+
+✔ Would you like to report this error to Cloudflare? Wrangler's output and the error details will be shared with the Wrangler team to help us diagnose and fix the issue. … yes
+
+
+
+🪵  Logs were written to "/Users/boomer/Library/Preferences/.wrangler/logs/wrangler-2025-12-14_09-17-27_519.log"
+
+
+
+ERROR Wrangler command failed
+
+
+
+error Command failed with exit code 1.
+
+
+
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+
+```
+
+
+
+答：网络问题，换个节点后再试
+
+
+
+执行`pnpm db:migrate`报错
+
+
+
+```
+
+> shipany-template-two@1.7.1 db:migrate /Users/xxxx/Documents/shipany/shipany-template
+
+> npx drizzle-kit migrate --config=src/core/db/config.ts
+
+
+
+Reading config file '/Users/xxxx/Documents/shipany/shipany-template/src/core/db/config.ts'
+
+[dotenv@17.2.2] injecting env (13) from .env.development -- tip: ⚙️  override existing env vars with { override: true }
+
+[dotenv@17.2.2] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+Using 'postgres' driver for database querying
+
+[⣟] applying migrations...{
+
+  severity_local: 'NOTICE',
+
+  severity: 'NOTICE',
+
+  code: '42P06',
+
+  message: 'schema "drizzle" already exists, skipping',
+
+  file: 'schemacmds.c',
+
+  line: '132',
+
+  routine: 'CreateSchemaCommand'
+
+}
+
+[⢿] applying migrations...{
+
+  severity_local: 'NOTICE',
+
+  severity: 'NOTICE',
+
+  code: '42P07',
+
+  message: 'relation "__drizzle_migrations" already exists, skipping',
+
+  file: 'parse_utilcmd.c',
+
+  line: '207',
+
+  routine: 'transformCreateStmt'
+
+}
+
+[⢿] applying migrations...DrizzleQueryError: Failed query: CREATE TABLE "account" (
+
+        "id" text PRIMARY KEY NOT NULL,
+
+        "account_id" text NOT NULL,
+
+        "provider_id" text NOT NULL,
+
+        "user_id" text NOT NULL,
+
+        "access_token" text,
+
+        "refresh_token" text,
+
+        "id_token" text,
+
+        "access_token_expires_at" timestamp,
+
+        "refresh_token_expires_at" timestamp,
+
+        "scope" text,
+
+        "password" text,
+
+        "created_at" timestamp DEFAULT now() NOT NULL,
+
+        "updated_at" timestamp NOT NULL
+
+);
+
+
+
+params: 
+
+    at PostgresJsPreparedQuery.queryWithCache (/Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/drizzle-orm@0.44.5_@libsql+client@0.15.15_@opentelemetry+api@1.9.0_@types+pg@8.15.5_kysely@0.28.5_postgres@3.4.7/node_modules/src/pg-core/session.ts:73:11)
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+    at <anonymous> (/Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/drizzle-orm@0.44.5_@libsql+client@0.15.15_@opentelemetry+api@1.9.0_@types+pg@8.15.5_kysely@0.28.5_postgres@3.4.7/node_modules/src/pg-core/dialect.ts:102:7)
+
+    at async scope (file:///Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/postgres@3.4.7/node_modules/postgres/src/index.js:260:18)
+
+    at async Function.begin (file:///Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/postgres@3.4.7/node_modules/postgres/src/index.js:243:14)
+
+    at PgDialect.migrate (/Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/drizzle-orm@0.44.5_@libsql+client@0.15.15_@opentelemetry+api@1.9.0_@types+pg@8.15.5_kysely@0.28.5_postgres@3.4.7/node_modules/src/pg-core/dialect.ts:95:3)
+
+    at migrate (/Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/drizzle-orm@0.44.5_@libsql+client@0.15.15_@opentelemetry+api@1.9.0_@types+pg@8.15.5_kysely@0.28.5_postgres@3.4.7/node_modules/src/postgres-js/migrator.ts:10:2) {
+
+  query: 'CREATE TABLE "account" (\n' +
+
+    '\t"id" text PRIMARY KEY NOT NULL,\n' +
+
+    '\t"account_id" text NOT NULL,\n' +
+
+    '\t"provider_id" text NOT NULL,\n' +
+
+    '\t"user_id" text NOT NULL,\n' +
+
+    '\t"access_token" text,\n' +
+
+    '\t"refresh_token" text,\n' +
+
+    '\t"id_token" text,\n' +
+
+    '\t"access_token_expires_at" timestamp,\n' +
+
+    '\t"refresh_token_expires_at" timestamp,\n' +
+
+    '\t"scope" text,\n' +
+
+    '\t"password" text,\n' +
+
+    '\t"created_at" timestamp DEFAULT now() NOT NULL,\n' +
+
+    '\t"updated_at" timestamp NOT NULL\n' +
+
+    ');\n',
+
+  params: [],
+
+  cause: PostgresError: relation "account" already exists
+
+      at ErrorResponse (file:///Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/postgres@3.4.7/node_modules/postgres/src/connection.js:794:26)
+
+      at handle (file:///Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/postgres@3.4.7/node_modules/postgres/src/connection.js:480:6)
+
+      at Socket.data (file:///Users/xxxx/Documents/shipany/shipany-template/node_modules/.pnpm/postgres@3.4.7/node_modules/postgres/src/connection.js:315:9)
+
+      at Socket.emit (node:events:520:28)
+
+      at addChunk (node:internal/streams/readable:559:12)
+
+      at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+
+      at Readable.push (node:internal/streams/readable:390:5)
+
+      at TCP.onStreamRead (node:internal/stream_base_commons:191:23) {
+
+    severity_local: 'ERROR',
+
+    severity: 'ERROR',
+
+    code: '42P07',
+
+    file: 'heap.c',
+
+    line: '1160',
+
+    routine: 'heap_create_with_catalog'
+
+  }
+
+}
+
+ ELIFECYCLE  Command failed with exit code 1.
+
+```
+
+
+
+答：数据库中已经有重复的表了，需要改用`pnpm db:push`执行推送
+
+
+
+
+
+# 启动后访问页面展示`page not found`
+
+
+
+控制台能看到编译`/_not-found/page`
+
+
+
+大多数是在cloudfare分支项目切换到了vercel分支项目，没有删除node_modules后重新pnpm install，然后直接启动就会有这种错误
+
+
+
+# 启动后访问报font字体错误
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0588b31f0a681406.jpg" alt="image" />
+
+
+
+这种是因为你 魔法梯子没开，google字体加载不到报错，打开魔法后刷新页面再看
+
+
+
+# 开发时使用Supabase：出现Failed query错误
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/15c7654d2b1de174.jpg" alt="image" />
+
+
+
+```
+
+Error: Failed query: select distinct "permission"."id", "permission"."code", "permission"."resource", "permission"."action", "permission"."title", "permission"."description", "permission"."created_at", "permission"."updated_at" from "role_permission" inner join "permission" on "role_permission"."permission_id" = "permission"."id" where "role_permission"."role_id" in ($1)params: e53ac16d-fd6a-41fa-a83d-9083c08418ee
+
+```
+
+
+
+重新刷新页面，还是不行，魔法梯子更换节点，一般是网络问题导致查询异常；
+
+
+
+
+
+# 入库更新编辑报错
+
+
+
+提示我：Server Action "70b6666f57ea7873f7beddbb8aa4e1e5060c1b6542" was not found on the server. Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
+
+Server action not found. 
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d685b7aa9196e626.jpg" alt="image" />
+
+
+
+刷新后又好了
+
+
+
+答：你Cloudflare上有新的部署成功了，但是你页面没有及时刷新（当你修改文件时，Server Action 的 ID 会变化，但浏览器还持有旧的 ID。 ）
+
+
+
+# 使用Cloudflare git提交后自动部署方案，但是刷新页面后发现未生效
+
+
+
+这时候去Cloudflare上查看下最新部署是否成功，多半是出错了；
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cbd6d896ece9bf5d.jpg" alt="image" />

@@ -1,0 +1,20 @@
+{
+  "title": "支付集成",
+  "pages": [
+    "stripe-configuration",
+    "use-pay-by-creem",
+    "hk-bank-account-guide",
+    "how-to-use-creem-wise",
+    "wise-card-guide",
+    "how-to-transfer-a-small-amount-of-money-back-to-china",
+    "stripe-registration-guide",
+    "how-set-stripe-radar",
+    "saas-pay-calc",
+    "stripe-jiqiao",
+    "how-use-paypal-cn",
+    "paypal-world-china-person",
+    "paypal-cn-person",
+    "how-china-person-pay",
+    "how-test-pay"
+  ]
+}

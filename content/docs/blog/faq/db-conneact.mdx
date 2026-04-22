@@ -1,0 +1,52 @@
+---
+title: 'Db Conneact'
+---
+
+访问某个路由遇到报错：
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/aa0d62fb03e5eb43.jpg" alt="image" />
+
+看下vercel日志：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e754addc66e9fddb.jpg" alt="image" />
+
+```
+Error: Failed query: select distinct "permission"."id", "permission"."code", "permission"."resource", "permission"."action", "permission"."title", "permission"."description", "permission"."created_at", "permission"."updated_at" from "role_permission" inner join "permission" on "role_permission"."permission_id" = "permission"."id" where "role_permission"."role_id" in ($1)
+params: 3a1509a9-7827-401a-938c-239d3401ab58
+    at bL.queryWithCache (.next/server/chunks/ssr/_046a7074._.js:38:38631)
+    at async (.next/server/chunks/ssr/_046a7074._.js:38:41337)
+    at async (.next/server/chunks/ssr/_084c5a76._.js:175:148973)
+    at async (.next/server/chunks/ssr/_084c5a76._.js:175:149423)
+    at async h (.next/server/chunks/ssr/src_d60433a5._.js:1:1349)
+    at async k (.next/server/chunks/ssr/src_d60433a5._.js:1:2126)
+    at async k (.next/server/chunks/ssr/[root-of-the-server]__8532e805._.js:2:1443) {
+  query: 'select distinct "permission"."id", "permission"."code", "permission"."resource", "permission"."action", "permission"."title", "permission"."description", "permission"."created_at", "permission"."updated_at" from "role_permission" inner join "permission" on "role_permission"."permission_id" = "permission"."id" where "role_permission"."role_id" in ($1)',
+  params: [Array],
+  digest: '1156348253',
+  [cause]: i: MaxClientsInSessionMode: max clients reached - in Session mode max clients are limited to pool_size
+      at V (.next/server/chunks/ssr/_046a7074._.js:15:2313)
+      at <unknown> (.next/server/chunks/ssr/_046a7074._.js:15:3350)
+      at Socket.aQ (.next/server/chunks/ssr/_046a7074._.js:15:3354) {
+    code: 'XX000',
+    severity_local: 'FATAL',
+    severity: 'FATAL'
+  }
+}
+```
+
+> 这是一个数据库连接池耗尽的问题。错误信息 MaxClientsInSessionMode: max clients reached 表明在 Vercel serverless 环境中，数据库连接数超过了连接池限制。让我先查看数据库连接相关的代码。
+
+检查修改vercel的环境变量
+
+Key: DB_SINGLETON_ENABLED
+值改为true
+Value: true
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6ed4b1db91076a7a.jpg" alt="image" />
+
+再重新部署下：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0ee1e85d42ec124a.jpg" alt="image" />
+
+部署成功后再访问看看
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/174ba84d11dbb007.jpg" alt="image" />

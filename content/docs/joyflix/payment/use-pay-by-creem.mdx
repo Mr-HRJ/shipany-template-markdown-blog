@@ -1,0 +1,457 @@
+---
+title: '写在前面：'
+---
+
+
+
+> 2026-04-12 在陪跑中发现Creem 不开放注册了（Creem 「邀请制 + 排队」模式），邀请才能注册使用(我不是活跃Creem商家所以不能邀请)，可以去闲鱼找找解法或者试试下面直接发邮件给Creem：
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/fe0e3cf56409612c.jpg" alt="image" />
+
+```
+
+We are building a SaaS product targeting global users.
+
+Currently looking for a reliable payment solution to replace Stripe.
+
+
+
+Expected monthly volume: $3k-$10k initially
+
+Tech stack: Next.js + Supabase
+
+
+
+We are ready to integrate immediately once approved.
+
+```
+
+
+
+
+
+> 这个可以没有港卡，你可以使用Creem+Wise+国内银行卡组合的方式收钱+让钱回来闭环
+
+
+
+> Creem对页面有更新，教程中如果截图不准（有时候我更新没那么及时），请尝试在页面中找对应步骤的关键词
+
+
+
+[未办理港卡看过来，试试Creem+Wise组合](/docs/joyflix/payment/how-to-use-creem-wise)
+
+
+
+如果你有港卡，那更方便。
+
+
+
+
+
+## 接入 Creem 支付
+
+
+
+### 开通 Creem 商户
+
+
+
+登录 [Creem 控制台](https://www.creem.io/sign-in)，创建一个商户
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a09c888d12ca47d7.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c84bdbe582e1048e.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/702ff35c76da39e3.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/13afd151f76aab71.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4c6ea684ce18d203.jpg" alt="image" />
+
+
+
+
+
+
+
+
+
+### 创建 API 密钥
+
+
+
+
+
+> 你可以在 Creem 控制台左侧，Developers 按钮旁边，点击 Test mode 开关，进入测试环境，创建测试用的 API Key。
+
+
+
+进入 [Developers](https://www.creem.io/dashboard/developers) 页面
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/02f6208997c32f1e.jpg" alt="image" />
+
+
+
+
+
+查看你的 API Key，复制 API Key 先粘贴到你本地一个地方。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3456f459953fd0a4.jpg" alt="image" />
+
+
+
+
+
+### 创建 Creem 支付产品
+
+
+
+根据你的价格表配置，为每个价格方案创建对应的支付产品。
+
+
+
+比如，价格表配置中的其中一个按月支付的方案为：
+
+
+
+```
+
+{
+
+  "title": "Standard",
+
+  "description": "Ship Fast with your SaaS Startups.",
+
+  "interval": "month",
+
+  "amount": 16900,
+
+  "currency": "USD",
+
+  "price": "$169",
+
+  "unit": "/ month",
+
+  "product_id": "standard-monthly",
+
+  "product_name": "ShipAny Boilerplate Standard Monthly",
+
+  "group": "monthly"
+
+  // ...
+
+}
+
+```
+
+
+
+在 Creem 控制台，进入 [Products](https://www.creem.io/dashboard/products) 页面，点击 Create Product 按钮，创建支付产品。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f48ec48a981b4314.jpg" alt="image" />
+
+
+
+
+
+>  查看或者修改src/config/locale/messages/en/pages/pricing.json
+
+
+
+
+
+- Name 商品名称，跟价格方案的 product_name 对应，可适当修改。
+
+- Return URL 支付成功后的跳转地址，无需填写。
+
+- Description 商品描述，跟价格方案的 description 对应，可适当修改。
+
+
+
+
+
+> 下图为月度支付配置示例
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5c099356276a7ed5.jpg" alt="image" />
+
+
+
+> Payment Details 里面的 Currency / Pricing / Subscription interval 必须跟价格方案的 currency / amount / interval 对应。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3b82d55634579889.jpg" alt="image" />
+
+
+
+
+
+
+
+填写完产品信息后，点击 Create Product 按钮，创建支付产品。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f96079e7efb29f83.jpg" alt="image" />
+
+
+
+
+
+然后继续录入json中的月度和年度产品
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6af85308cf4176af.jpg" alt="image" />
+
+
+
+
+
+### 配置 Creem 支付
+
+
+
+
+
+在咱们项目的admin路由下，进入 Settings -> Payment -> Creem 面板，
+
+
+
+
+
+> 在项目管理后台的 Settings -> Payment -> Basic Payment 面板，开启 Select Payment Method Enabled 开关，允许用户选择支付方式。或者把 Default Payment Provider 设置为 Creem，默认使用 Creem 支付。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/72339da1fdeaf1c1.jpg" alt="image" />
+
+
+
+
+
+
+
+> 在 Creem API Key 字段填入第 2 步复制的 API Key
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d2418d53e4a6f7fc.jpg" alt="image" />
+
+
+
+
+
+
+
+> 在 Creem Product IDs Mapping 字段填入第 3 步价格方案的 product_id 与支付产品 ID 的映射关系。
+
+
+
+在 Products 页面，选择刚创建的支付产品，点击右侧下拉菜单的 Copy Product ID，复制支付产品 ID。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f2338460439d095b.jpg" alt="image" />
+
+
+
+下面只是示例 不能完全复制
+
+
+
+```
+
+{
+
+  "credits-package": "prod_5iuvQTtXoRu4gJdSLArI3i",
+
+  "starter-monthly": "prod_7Vo8xBQSMyk0TROTO76T65",
+
+  "premium-yearly":"prod_5pQCXxDR25T92UJbBYxmxL"
+
+}
+
+```
+
+
+
+
+
+- Creem Enabled Creem 支付开关，点击打开
+
+- Creem Environment Creem 支付环境。本地测试时，选择 Sandbox 环境（对应 Creem 后台的 Test Mode）；正式上线时，选择 Production 环境。
+
+- Creem Signing Secret 支付通知签名密钥，可在后续步骤配置完支付通知后，再来填写。
+
+
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/aebd7bc30a85b3a0.jpg" alt="image" />
+
+
+
+
+
+
+
+点击 Save 按钮，保存 Creem 支付配置。
+
+
+
+### 支付验证
+
+
+
+访问咱们项目的 /pricing 页面：http://localhost:3000/pricing
+
+查看默认的价格表，选择一个价格方案，点击 Creem 下单按钮。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8bea9763aded5586.jpg" alt="image" />
+
+
+
+
+
+如果能正常跳转到 Creem 支付页面，说明支付配置成功。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b724c666ac000ac8.jpg" alt="image" />
+
+
+
+
+
+如果上一步填入的是测试 API 密钥，可以复制一个 [Creem 测试卡号](https://docs.creem.io/getting-started/test-mode#testing-payments) 进行支付验证。
+
+
+
+# 配置支付回调
+
+
+
+> 配置支付回调（Webhook）主要有以下几个核心作用，这是保证你的计费系统正常运转的关键：
+
+1、防止掉单（异常处理）：如果用户在支付平台付款成功后，没有等页面自动跳回你的网站就直接关掉了浏览器，前台的回调就不会触发。此时 Webhook 作为服务器之间的异步通知，能做兜底保障，确保订单状态更新并为用户发放权益。
+
+2、处理订阅的自动续费：对于按月/按年扣费的订阅计划，用户后续周期的自动扣款是静默发生的（无需用户干预）。Stripe/Creem 会通过 Webhook 通知你的系统扣款成功，你的系统才会给用户延长订阅周期并下发新周期的积分。
+
+3、同步订阅状态变更：当由于用户信用卡到期导致续费扣款失败，或者用户主动取消了订阅时，平台会通过 Webhook 通知你的系统，以便你及时冻结或更新对应用户的订阅状态。
+
+4、安全性：Webhook 请求会携带需要用 Signing secret 验证的签名。这能防止黑客通过伪造前台的成功跳转链接来“免费”获取你的产品权益。
+
+
+
+- 明确你的线上生产域名，例如 `https://yourdomain.com`。请将下方教程中的 `你的域名` 替换为真实的线上域名。
+
+- 确保你的应用已经成功部署并且可以公网访问。
+
+
+
+## Creem Webhook 配置步骤
+
+
+
+1. 登录进入 Creem 管理控制台。
+
+2. 导航到开发者或者 Webhooks 设置相关页面，添加一个新的 Webhook。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5cc38b62e4021055.jpg" alt="image" />
+
+3. 在 Webhook URL 对应的输入框中，填写：
+
+   `https://你的域名/api/payment/notify/creem`
+
+4. 在需要监听的事件 (Event types) 列表中，务必勾选以下事件：
+
+   - `checkout.completed` 
+
+   - `subscription.paid`
+
+   - `subscription.update`
+
+   - `subscription.paused`
+
+   - `subscription.active`
+
+   - `subscription.canceled`<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d8edc9c2db2bdb66.jpg" alt="image" />
+
+
+
+5. 点击保存后，平台会生成一个 Webhook 签名密钥。
+
+   <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6e8697772830095f.jpg" alt="image" />
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1b76236b6f77fa67.jpg" alt="image" />
+
+
+
+7. 复制该签名密钥，填写到项目的后台管理系统对应的 Creem 配置项中 (字段：`Creem Signing Secret`)。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9fee63b926647013.jpg" alt="image" />
+
+
+
+
+
+## 测试验证
+
+
+
+1. 确保签名密钥已经正确保存并在应用中生效。
+
+2. 配置完成后，建议使用真实账号发起一笔小额测试交易。
+
+3. 也可以直接通过 Creem 提供的测试事件发送功能触发测试 Webhook。
+
+4. 如果回调状态为 `200 OK`，说明签名无误且逻辑运转正常。如果返回 `500` 等报错，请首先检查前后端填写的 Signing secret 是否一致。
+
+
+
+## 额外扩展
+
+
+
+[ShipanyTwo视频实战课程：AI 壁纸生成器开发视频教学（含Creem支付）](/docs/joyflix/video-tutorials/ai-wallpaper-tutorial)

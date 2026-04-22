@@ -3,6 +3,7 @@ import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 
 import { i18n } from '@/core/docs/source';
 import { envConfigs } from '@/config';
+import { DynamicAppName } from '@/components/docs/dynamic-app-name';
 
 export function baseOptions(locale: string): BaseLayoutProps {
   return {
@@ -18,7 +19,7 @@ export function baseOptions(locale: string): BaseLayoutProps {
             className=""
           />
           <span className="text-primary text-lg font-bold">
-            {envConfigs.app_name}
+            <DynamicAppName fallback={envConfigs.app_name} />
           </span>
         </>
       ),

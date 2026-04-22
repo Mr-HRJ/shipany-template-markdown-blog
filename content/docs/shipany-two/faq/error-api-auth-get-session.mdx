@@ -1,0 +1,293 @@
+---
+title: '[2025-12-13] /api/auth/get-session刷起来了'
+---
+
+# 写在前面
+
+
+
+该bug的对应版本：最低版本为 2025-12-5 (v1.5.1) 最高版本为2025-12-13(v1.6.0)
+
+
+
+首次访问请求还算正常：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/602fa48e59b3a6bb.jpg" alt="image" />
+
+
+
+
+
+一旦刷新页面/api/auth/get-session就刷起来了：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/68ce9957324db697.jpg" alt="image" />
+
+
+
+
+
+询问Claude后：
+
+
+
+分析：根据代码分析和截图，这是 better-auth 库的默认行为导致的。better-auth/react 的 useSession hook 默认会进行轮询检查 session 状态。
+
+better-auth 的 useSession() 内部会在多种情况下触发 session 请求（window focus、组件重新渲染等），加上你的 Supabase 数据库连接延迟较高（6543 端口是 pooler），导致请求堆积。
+
+
+
+- better-auth 的 useSession() 默认会在客户端进行 session 轮询
+
+- 每次浏览器刷新或 focus 时，可能会触发 session 检查
+
+- 数据库连接到 Supabase 的延迟（6543 端口是 Supabase 的 pooler 端口）也会让请求变慢
+
+
+
+根源在 better-auth 的内部机制；
+
+
+
+// 解决办法：修改 better-auth 客户端配置+ 添加了一个请求去重机制（request deduplication）
+
+
+
+// src/core/auth/client.ts
+
+```
+
+import { oneTapClient } from 'better-auth/client/plugins';
+
+import { createAuthClient } from 'better-auth/react';
+
+
+
+import { envConfigs } from '@/config';
+
+
+
+// Request deduplication map to prevent concurrent identical requests
+
+const pendingRequests = new Map<string, Promise<any>>();
+
+
+
+// Custom fetch wrapper with request deduplication
+
+const debouncedFetch: typeof fetch = async (input, init?) => {
+
+  const url = typeof input === 'string' ? input : (input as any).url;
+
+  const method = init?.method || 'GET';
+
+  const requestKey = `${method}:${url}`;
+
+
+
+  // If there's already a pending request for this endpoint, return it
+
+  if (pendingRequests.has(requestKey)) {
+
+    console.log(`[Auth] Deduplicating request: ${requestKey}`);
+
+    return pendingRequests.get(requestKey)!;
+
+  }
+
+
+
+  // Create new request and store it
+
+  const requestPromise = fetch(input, init).finally(() => {
+
+    // Clean up after request completes
+
+    pendingRequests.delete(requestKey);
+
+  });
+
+
+
+  pendingRequests.set(requestKey, requestPromise);
+
+  return requestPromise;
+
+};
+
+
+
+// create default auth client, without plugins
+
+export const authClient = createAuthClient({
+
+  baseURL: envConfigs.auth_url,
+
+  fetchOptions: {
+
+    // Use custom fetch with request deduplication
+
+    customFetchImpl: debouncedFetch,
+
+    // Disable automatic refetching on window focus to prevent request storms
+
+    refetchOnWindowFocus: false,
+
+    // 禁用网络重连时的自动刷新
+
+    refetchOnReconnect: false,
+
+    // 禁用自动后台轮询（这是最关键的）
+
+    refetchInterval: false,
+
+    // 设置 5 分钟的数据新鲜时间，期间不会自动重新请求
+
+    staleTime: 5 * 60 * 1000,
+
+    // 设置 10 分钟的缓存时间
+
+    cacheTime: 10 * 60 * 1000,
+
+    // Use exponential backoff retry strategy to prevent rapid retries when requests are pending
+
+    retry: {
+
+      type: 'exponential', // 指定使用指数退避策略
+
+      attempts: 2, //最多重试 2 次
+
+      baseDelay: 5000, // 基础延迟 5 秒
+
+      maxDelay: 10000, // 最大延迟 10 秒
+
+    },
+
+  },
+
+});
+
+
+
+// export default auth client methods
+
+export const { useSession, signIn, signUp, signOut } = authClient;
+
+
+
+// get auth client with plugins
+
+export function getAuthClient(configs: Record<string, string>) {
+
+  const authClient = createAuthClient({
+
+    baseURL: envConfigs.auth_url,
+
+    plugins: getAuthPlugins(configs),
+
+    fetchOptions: {
+
+      // Use custom fetch with request deduplication
+
+      customFetchImpl: debouncedFetch,
+
+      // Disable automatic refetching on window focus to prevent request storms
+
+      refetchOnWindowFocus: false,
+
+      // Disable automatic refetching on network reconnect
+
+      refetchOnReconnect: false,
+
+      // Disable automatic background refetching
+
+      refetchInterval: false,
+
+      // Set stale time to prevent automatic refetching (5 minutes)
+
+      staleTime: 5 * 60 * 1000,
+
+      // Cache time for inactive queries (10 minutes)
+
+      cacheTime: 10 * 60 * 1000,
+
+      // Use exponential backoff retry strategy to prevent rapid retries when requests are pending
+
+      retry: {
+
+        type: 'exponential',
+
+        attempts: 2,
+
+        baseDelay: 2000, // 2 seconds base delay
+
+        maxDelay: 10000, // 10 seconds max delay
+
+      },
+
+    },
+
+  });
+
+
+
+  return authClient;
+
+}
+
+
+
+// get auth plugins with configs
+
+function getAuthPlugins(configs: Record<string, string>) {
+
+  const authPlugins: any[] = [];
+
+
+
+  // google one tap plugin
+
+  if (configs.google_client_id && configs.google_one_tap_enabled === 'true') {
+
+    authPlugins.push(
+
+      oneTapClient({
+
+        clientId: configs.google_client_id,
+
+        // Optional client configuration:
+
+        autoSelect: false,
+
+        cancelOnTapOutside: false,
+
+        context: 'signin',
+
+        additionalOptions: {
+
+          // Any extra options for the Google initialize method
+
+        },
+
+        // Configure prompt behavior and exponential backoff:
+
+        promptOptions: {
+
+          baseDelay: 1000, // Base delay in ms (default: 1000)
+
+          maxAttempts: 1, // Only attempt once to avoid multiple error logs (default: 5)
+
+        },
+
+      })
+
+    );
+
+  }
+
+
+
+  return authPlugins;
+
+}
+
+```

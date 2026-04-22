@@ -1,0 +1,177 @@
+---
+title: 'How Use Paypal Cn'
+---
+
+按照 [Paypal.cn现在支持个人收款了](/docs/joyflix/payment/paypal-cn-person) 
+
+
+
+咱们注册了Paypal.cn后需要后台配置才能正常使用，但是按照shipany官方的文档[https://shipany.ai/zh/docs/payment/paypal ](https://shipany.ai/zh/docs/payment/paypal),他是基于（paypal.com）
+
+
+
+并不完全适用于paypal.cn.下面基于我跑通的闭环给大家写下教程
+
+
+
+## 配置 Paypal 支付
+
+
+
+访问 https://www.paypal.cn/sign-in 登录成功 ，点击首页顶部导航的下图
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1e3504d468691eab.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a867319cd2072b6e.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/30611b7ac340602d.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/21cffd1dea1dae3d.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/82dedeec931c8afc.jpg" alt="image" />
+
+
+
+将沙箱的API密钥、密钥分别配置到对应项目admin配置中，对一个项目路由：admin/settings/payment
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/59ab7bf61c16abbb.jpg" alt="image" />
+
+
+
+注意下图中选择环境：沙箱
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5f5efea1e7447875.jpg" alt="image" />
+
+
+
+然后保存。
+
+
+
+## 设置webhook
+
+
+
+https://developer.paypal.com/dashboard/applications/live
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/98ffc7cbefddcbd1.jpg" alt="image" />
+
+
+
+拉到页面最底部，点击下图按钮
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e4d9b1717fc0f60f.jpg" alt="image" />
+
+
+
+Webhook URL 输入接收通知的地址。必须是可以公网访问的 https 地址。格式为：
+
+```
+
+https://{your-domain.com}/api/payment/notify/paypal
+
+```
+
+
+
+把 `{your-domain.com}` 替换为你的项目域名，可以是根域名，也可以是子域名。
+
+
+
+Event types 点击 `All Events` 选择全部事件
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/99acded5114d2630.jpg" alt="image" />
+
+
+
+填写完配置后，点击 Save 按钮。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/77fae4055944416f.jpg" alt="image" />
+
+
+
+创建完支付通知地址后，复制下图中`Webhook ID`，这是支付通知的签名密钥。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/bae5c1fe1195ea6f.jpg" alt="image" />
+
+
+
+### 配置支付通知签名密钥
+
+
+
+在项目管理后台，进入` Settings -> Payment -> Paypal `面板，在 `Paypal Webhook ID` 字段填入上一步复制的支付通知签名密钥。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d2a57aaeac569e68.jpg" alt="image" />
+
+
+
+
+
+## 使用沙箱测试支付
+
+
+
+访问： https://developer.paypal.com/dashboard/ （如果需要登录就使用注册paypal.cn的邮箱密码登录下）
+
+
+
+获取沙箱下的测试用户（注意：非商家测试账号）
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/78a554d91a696c20.jpg" alt="image" />
+
+
+
+点击后
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/eef62803e1c00074.jpg" alt="image" />
+
+
+
+然后访问你项目的前台项目支付，跳转到Paypal后登录下上图（邮箱和密码）
+
+
+
+然后跳转到下图
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/de15f40dfbdfe8c3.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0dead24135e20750.jpg" alt="image" />
+
+
+
+稍等片刻就支付成功了，到这里就是沙箱的支付测试闭环

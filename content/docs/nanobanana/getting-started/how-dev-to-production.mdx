@@ -1,0 +1,601 @@
+---
+title: 'Stitch SaaS 落地页 - 设计系统与指南'
+---
+
+> 有不少买家上来就「AI 一把梭」，这样不太好，AI有时候不能完全按你想象的来导致结果让人很不满意。这时候就需要通过AI工具输出设计稿+规范详细的告诉AI 应该怎么给我实现。
+
+
+
+> 这里不说需求讨论和技术方案实现等等，只说设计+落地。
+
+
+
+在这篇文章的闭环里，每个东西只干一件事：
+
+
+
+| 组件                      | 角色定位         | 干什么             |
+
+| ----------------------- | ------------ | --------------- |
+
+| **ShipanyTwo**          | 工程底座         | 路由、SEO、页面结构、数据层 |
+
+| **Google Stitch**       | 结构型 UI 设计    | 页面布局、区块拆分       |
+
+| **ui-ux-pro-max-skill** | 设计审美 & UX 决策 | 配色、间距、视觉等级      |
+
+| **Claude / Gemini**     | 项目大脑         | 需求拆解、规范生成、代码落地  |
+
+
+
+>Stitch 管“长什么样”
+
+ui-ux-pro-max 管“好不好看、合不合理”
+
+Claude / Gemini 管“怎么把它做成网站”
+
+ShipanyTwo 管“上线能跑、能 SEO、能变现”
+
+  > [之前分享的如何使用AI能力设计美化网页](/docs/nanobanana/others/how-desgin-webpage)
+
+
+
+## 整体思路
+
+
+
+```
+
+想法 / 需求
+
+  ↓
+
+页面结构（Stitch）
+
+  ↓
+
+视觉 & UX（ui-ux-pro-max）
+
+  ↓
+
+实现开发（Claude / Gemini）
+
+  ↓
+
+ShipanyTwo 页面落地
+
+  ↓
+
+上线 + SEO + 迭代
+
+
+
+```
+
+
+
+## 阶段 1：需求 → 页面结构（Google Stitch）
+
+
+
+访问：https://stitch.withgoogle.com/
+
+
+
+例如：将下面发给Stitch （不要直接复制粘贴，根据你的实际需求情况来告诉Stitch，这里只是示例）
+
+
+
+```
+
+Build a SaaS landing page for:
+
+- Target: indie developers
+
+- Goal: collect emails + paid subscription
+
+- Sections: hero, features, use cases, pricing, faq
+
+- Style: modern, clean, developer-first
+
+```
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e14838cec377c2cb.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c0ef5a2d55a8bd3e.jpg" alt="image" />
+
+
+
+如果这一步Stitch已经设计到你心坎上了， 可以略过下一步（阶段2），直接复制代码粘贴给你的AI IDE（下面我会使用Antigravity操作）
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e1ec84547069bd4e.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c4626c04e2f15734.jpg" alt="image" />
+
+
+
+
+
+## 阶段 2：结构 → 好看（ui-ux-pro-max-skill）
+
+
+
+这一步是建立在`还不确定好不好看` → 那么你需要用 ui-ux-pro-max-skill，产出一套tokens + 组件规范。
+
+
+
+这一阶段，才是「美化设计 Skill」真正发力的地方。
+
+
+
+这里咱们不是让它“从 0 设计页面”，而是让它优化 Stitch 的结构。（当然你也可以不使用Stitch，直接使用ui-ux-pro-max-skill）
+
+
+
+ ### 1、先让你的AI IDE安装下ui-ux-pro-max-skill，把下面的话发给AI，他就会自己安装了。
+
+
+
+```
+
+你安装下ui-ux-pro-max-skill，
+
+官方给的命令是：uipro init --ai antigravity
+
+如果不可用，你访问下：https://www.uupm.cc/、https://github.com/nextlevelbuilder/ui-ux-pro-max-skill ，然后进行安装
+
+```
+
+
+
+成功安装后，AI会告诉你：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/117792739d5738f8.jpg" alt="image" />
+
+
+
+### 2、使用skill
+
+
+
+不直接发整份代码，而是给它这三样：
+
+
+
+- 页面结构（Section 列表）【可使用AI将上面Stitch的设计稿提炼下】
+
+
+
+- 目标（转化/用户/定位）
+
+
+
+- 现有设计方向（dark、developer-first 等）
+
+
+
+可选再加：
+
+
+
+- 你担心的地方（“按钮不够突出”、“层级不清楚”）
+
+
+
+- 关键组件片段（比如 Button/Card/Input 的 Tailwind class）
+
+
+
+什么时候才“发代码”？（也不要整份贴，贴关键组件就够了（Button/Card/Input/Section wrapper））
+
+
+
+- 你希望它对具体 Tailwind class 给修改建议
+
+- 你希望它输出可直接替换的 class / token
+
+
+
+下面是Prompt示例，根据自身实际情况修改下。
+
+
+
+```
+
+你是 ui-ux-pro-max，你要利用UI/UX Pro Max Skill 能力，最后将结果输出到src/desgin.md
+
+
+
+背景：
+
+我有一个Stitch 的 SaaS 产品落地页设计，布局尚可接受。
+
+我希望你在不改变整体结构的前提下，改进视觉系统和用户体验清晰度。
+
+
+
+目标用户：独立开发者
+
+目标：邮件订阅 + 付费订阅
+
+风格方向：深色模式、现代风格、开发者优先、高对比度
+
+
+
+页面板块：
+
+- 首页（标题、副标题、邮件输入框 + 主要行动号召按钮、代码预览）
+
+- 功能介绍（4 张卡片）
+
+- 功能列表（4 张卡片）
+
+- 定价（3 个级别，重点突出 Pro 版）
+
+- 常见问题解答
+
+- 页脚
+
+
+
+任务：
+
+1) 定义设计系统：颜色、字体、间距、圆角、阴影
+
+2) 提供各板块的层级结构指导（视觉上应该突出哪些元素）
+
+3) 提供组件规范：按钮、输入框、卡片、徽章、链接
+
+4) 提供深色 UI 中常见的陷阱
+
+
+
+输出：
+
+- 使用结构化格式（标记/规范）
+
+- 无需重新设计、无需新增板块、无需提供模型
+
+```
+
+
+
+输出示例（仅仅是示例，不要复制粘贴使用）：
+
+
+
+```
+
+# Stitch SaaS 落地页 - 设计系统与指南
+
+
+
+## 1. 设计原则 (Design Principles)
+
+- **风格**: 深色模式 (Dark Mode)、现代风格、开发者优先、高对比度
+
+- **目标用户**: 独立开发者
+
+- **目标**: 邮件订阅 + 付费订阅
+
+
+
+---
+
+
+
+## 2. 颜色系统 (Color System - Tailwind CSS)
+
+
+
+避免使用纯黑 `#000000`。使用丰富的中性色作为背景，并通过高饱和度的主色进行点缀。
+
+
+
+| 类别 | 色值 / Tailwind | 用途 |
+
+| :--- | :--- | :--- |
+
+| **背景 (Background)** | `#09090B` (zinc-950) | 页面主背景（深邃但不死板） |
+
+| **表面 (Surface)** | `#18181B` (zinc-900) | 卡片背景、输入框背景 |
+
+| **边框 (Border)** | `#27272A` (zinc-800) | 默认边框颜色 |
+
+| **主色 (Primary)** | `#6366F1` (indigo-500) | 按钮、链接、关键高亮（兼具专业与活力） |
+
+| **主色-悬停 (Hover)** | `#4F46E5` (indigo-600) | 交互状态 |
+
+| **文字-主要 (Text-Pri)** | `#FAFAFA` (zinc-50) | 标题、主要正文 |
+
+| **文字-次要 (Text-Sec)** | `#A1A1AA` (zinc-400) | 副标题、说明文案、页脚 |
+
+| **代码背景 (Code Bg)** | `#1E1E2E` | 代码块专用背景色 |
+
+
+
+---
+
+
+
+## 3. 字体系统 (Typography System)
+
+
+
+混合使用无衬线字体（UI）和等宽字体（代码/强调），以此建立“开发者工具”的品牌心智。
+
+
+
+- **UI 字体 (标题 & 正文)**: `Inter` 或 `Manrope`
+
+  - *特点*: 现代、几何感、易读。
+
+- **代码字体 (代码 & 数字)**: `JetBrains Mono` 或 `Fira Code`
+
+  - *特点*: 支持连字 (Ligatures)、技术感强。
+
+
+
+### 层级 (Hierarchy)
+
+- **H1 (Hero 标题)**: `text-5xl md:text-6xl font-extrabold tracking-tight text-white`
+
+- **H2 (板块标题)**: `text-3xl md:text-4xl font-bold text-white`
+
+- **H3 (卡片标题)**: `text-xl font-semibold text-zinc-100`
+
+- **正文 (Body)**: `text-base leading-relaxed text-zinc-400`
+
+- **标签/徽章 (Badge)**: `text-xs font-mono uppercase tracking-wider`
+
+
+
+---
+
+
+
+## 4. 布局与间距 (Layout & Spacing)
+
+
+
+- **圆角 (Radius)**: 
+
+  - `rounded-lg` (8px): 按钮、输入框、小组件。
+
+  - `rounded-xl` (12px): 卡片、代码块。
+
+  - *注意*: 避免使用全圆角（Pill shape），保持技术硬朗感。
+
+- **间距 (Spacing)**:
+
+  - `py-24` (96px): 主要板块间的最小垂直间距。
+
+  - 留白要大方，让内容呼吸。
+
+
+
+---
+
+
+
+## 5. 组件规范 (Component Specifications)
+
+
+
+### 🔘 按钮 (Buttons)
+
+- **主按钮 (Primary CTA)**
+
+  - 背景: `bg-indigo-600` hover: `bg-indigo-500`
+
+  - 文字: `text-white font-medium`
+
+  - 特效: `shadow-[0_0_20px_rgba(99,102,241,0.5)]` (微弱辉光，增加现代感)
+
+- **次按钮 (Secondary)**
+
+  - 背景: `bg-zinc-900` hover: `bg-zinc-800`
+
+  - 边框: `border border-zinc-700`
+
+  - 文字: `text-zinc-300`
+
+
+
+### ⌨️ 输入框 (Inputs)
+
+- **默认态**: `bg-zinc-950/50`, `border-zinc-800`, `text-white`
+
+- **聚焦态 (Focus)**: `ring-2 ring-indigo-500/50 border-indigo-500` (高对比度反馈)
+
+- **占位符 (Placeholder)**: `text-zinc-600` (可见但不要喧宾夺主)
+
+
+
+### 🃏 卡片 (Cards - 玻璃拟态)
+
+- **风格**: 微弱的玻璃效果配上细边框。
+
+- **CSS**:
+
+  background: rgba(24, 24, 27, 0.4); /* Zinc-900 带透明度 */
+
+  backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255, 255, 255, 0.08); /* 等同于 Zinc-800 */
+
+  
+
+- **悬停 (Hover)**: 亮化边框 `border-zinc-600` 或稍微提亮背景。
+
+
+
+### 🏷️ 徽章 (Badges)
+
+- **样式**: `bg-indigo-500/10 text-indigo-400 border border-indigo-500/20`
+
+- **字体**: 等宽字体 (Monospace)、大写、字号小。
+
+
+
+---
+
+
+
+## 6. 视觉层级指导 (Visual Hierarchy Guide)
+
+
+
+### ⚡ Hero 板块 (转化核心)
+
+1.  **H1 标题**: `text-white`。对关键词使用 **渐变色** (`bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent`)。
+
+2.  **副标题**: `max-w-2xl`, `text-zinc-400`。
+
+3.  **CTA 区域**: 视觉重心最高。输入框和按钮即使在暗色背景下也应“跳”出来。
+
+4.  **代码预览**: 
+
+    - 添加“彩色辉光”背景: `shadow-2xl shadow-indigo-500/20`。
+
+    - 使用与品牌一致的语法高亮颜色。
+
+
+
+### 🛠️ 功能介绍 (网格布局)
+
+- **图标**: **描边 (Outline)** 风格 SVG 图标 (Lucide/Heroicons)。不要使用实心背景。
+
+- **卡片**: 2x2 网格。背景要弱，主要依靠边框和悬停效果来区分。
+
+
+
+### 💎 定价 (3 个级别)
+
+1.  **Pro 版 (中间/高亮)**:
+
+    - **视觉锚点**: `border-indigo-500` (实线边框)。
+
+    - **背景**: `bg-zinc-900`。
+
+    - **标签**: 顶部边缘添加 "Most Popular" (最受欢迎)。
+
+    - **按钮**: 实心主色样式 (Solid Primary)。
+
+2.  **基础版/企业版**:
+
+    - `border-zinc-800` (深色边框)。
+
+    - `bg-transparent` (透明背景)。
+
+    - **按钮**: 描边样式 (Outline)。
+
+
+
+---
+
+
+
+## 7. 深色 UI 避坑指南 (Dark UI Pitfalls) 🚨
+
+
+
+1.  **文字对比度不足**:
+
+    - ❌ 错误: 在深灰背景上使用深灰文字 (`text-gray-600` on `bg-gray-900`)。
+
+    - ✅ 修正: 最暗的正文颜色应为 `text-zinc-400`。重要信息必须是 `text-zinc-100` 或纯白。
+
+
+
+2.  **阴影不可见**:
+
+    - ❌ 错误: 在黑色背景上使用黑色投影，这是看不见的。
+
+    - ✅ 修正: 使用 **边框 (Borders)** 和 **背景色差 (Surface Color)** 区分层级。如果必须用阴影，使用带颜色的辉光 (Colored Glows) 或更亮的背景层。
+
+
+
+3.  **大面积高饱和度背景**:
+
+    - ❌ 错误: 使用高饱和度的蓝色/紫色作为大背景，导致视觉疲劳。
+
+    - ✅ 修正: 背景保持低饱和度 (灰/黑)，高饱和度颜色仅用于按钮、链接和图标。
+
+
+
+4.  **丢失 Focus 状态**:
+
+    - ❌ 错误: 移除默认 outline 但未添加自定义 focus 样式。
+
+    - ✅ 修正: 这是一个针对开发者的产品，键盘可访问性至关重要。确保所有可交互元素在 Focus 时有清晰的光圈 (`ring-2`)。
+
+```
+
+
+
+## 阶段3：将设计稿代码 -> Claude/Gemini
+
+
+
+将Stitch的复制代码 结合`ui-ux-pro-max-skill`上面给你的设计规范 发给Claude/Gemini。
+
+
+
+```
+
+下面代码基于 Stitch 设计生成，然后结合ui-ux-pro-max-skill给的设计规范`src/desgin.md` 实现代码，请勿重新设计用户界面。
+
+
+
+任务：
+
+- 重构时要符合`shipany-template项目`的页面结构，对应修改shipany-template/src下的前台首页；
+
+- 转换为 React + Tailwind（如有需要）
+
+- 提升代码质量和复用性
+
+- 保留布局和视觉层次结构
+
+
+
+<!DOCTYPE html>
+
+....
+
+</html>
+
+```
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/58cd342c59d872dd.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1de875ec66d2b66e.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3f6ef013a1d3ffbb.jpg" alt="image" />
+
+
+
+
+
+这时候就等Claude/Gemini修改操作，然后改后看效果，不满意的地方再截图给Claude/Gemini微调。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d8a6c6d4fdd0c50c.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/52a96155247eec0d.jpg" alt="image" />

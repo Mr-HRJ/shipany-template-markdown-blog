@@ -1,0 +1,494 @@
+---
+title: '新页面(还得有路由)怎么做？'
+---
+
+以http://localhost:3000/create 为例，
+
+## 先在src/app/[locale]/(landing)/create/page.tsx （没有就新建，注意是page.tsx 不是index.tsx）
+
+```
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+
+import { getThemePage } from '@/core/theme';
+import { ImageGenerator } from '@/shared/blocks/generator';
+import { getMetadata } from '@/shared/lib/seo';
+import { DynamicPage } from '@/shared/types/blocks/landing';
+
+export const generateMetadata = getMetadata({
+  metadataKey: 'pages.create.metadata',
+  canonicalUrl: '/create',
+});
+
+export default async function CreatePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ prompt?: string }>;
+}) {
+  const { locale } = await params;
+  const { prompt: promptKey } = await searchParams;
+  setRequestLocale(locale);
+
+  // get ai image data
+  const t = await getTranslations('pages.create');
+
+  // get landing page data
+  const tl = await getTranslations('landing');
+
+  // build page sections
+  const page: DynamicPage = {
+    sections: {
+      "features": {
+        "block": "custom-features",
+        title: t.raw('page.title'),
+        description: t.raw('page.description'),
+      },
+      generator: { // 这块走的自定义组件
+        component: <ImageGenerator srOnlyTitle={t.raw('generator.title')} promptKey={promptKey} />,
+      },
+    },
+  };
+
+  // load page component
+  const Page = await getThemePage('dynamic-page');
+
+  return <Page locale={locale} page={page} />;
+}
+```
+
+## 在src/config/locale/messages/en/pages/create.json（没有就新建）中配置json
+
+```
+{
+  "metadata": {
+    "title": "Nano Banana Image Editing",
+    "description": "Edit and generate images with Nano Banana Pro model."
+  },
+  "page": {
+    "title": "Nano Banana Pro Image Editing",
+    "description": "Edit and generate images with Nano Banana Pro model."
+  },
+  "generator": {
+    "title": "Nano Banana Pro Image Editing",
+    "description": "Edit and generate images with Nano Banana Pro model.",
+    "tabs": {
+      "text-to-image": "Text to Image",
+      "image-to-image": "Image to Image"
+    },
+    "form": {
+      "provider": "Provider",
+      "model": "Model",
+      "select_provider": "Select Provider",
+      "select_model": "Select Model",
+      "prompt": "Prompt",
+      "prompt_placeholder": "Describe the details of the image, such as color, shape, texture, etc.",
+      "reference_image": "Reference Image",
+      "reference_image_placeholder": "Upload reference images, support multiple images",
+      "some_images_failed_to_upload": "Some images failed to upload, please delete them and re-upload",
+      "prompt_too_long": "Prompt is too long, please delete some content"
+    },
+    "generate": "Generate Images",
+    "checking_account": "Checking Account...",
+    "loading": "Loading...",
+    "generating": "Generating...",
+    "sign_in_to_generate": "Sign In to Generate Image",
+    "credits_cost": "Cost {credits} credits",
+    "credits_remaining": "Remaining {credits} credits",
+    "buy_credits": "Buy Credits",
+    "progress": "Progress",
+    "generated_images": "Image Preview",
+    "ready_to_generate": "Ready to Generate",
+    "ready_for_generating": "Ready for Generating",
+    "no_images_generated": "No Images Generated"
+  }
+}
+
+```
+
+## 在src/config/locale/index.ts中增加新增的页面路由
+
+```
+import { envConfigs } from '..';
+
+export const localeNames: any = {
+  en: 'English',
+  // zh: '中文',
+};
+
+export const locales = ['en'];
+
+export const defaultLocale = envConfigs.locale;
+
+export const localePrefix = 'as-needed';
+
+export const localeDetection = false;
+
+export const localeMessagesRootPath = '@/config/locale/messages';
+
+export const localeMessagesPaths = [
+  'common',
+  'landing',
+  'showcases',
+  'blog',
+  'pricing',
+  'settings/sidebar',
+  'settings/profile',
+  'settings/security',
+  'settings/billing',
+  'settings/payments',
+  'settings/credits',
+  'settings/apikeys',
+  'admin/sidebar',
+  'admin/users',
+  'admin/roles',
+  'admin/permissions',
+  'admin/categories',
+  'admin/posts',
+  'admin/prompts',
+  'admin/payments',
+  'admin/subscriptions',
+  'admin/credits',
+  'admin/settings',
+  'admin/apikeys',
+  'admin/ai-tasks',
+  'admin/chats',
+  'admin/showcases',
+  'ai/music',
+  'ai/chat',
+  'ai/image',
+  'ai/video',
+  'activity/sidebar',
+  'activity/ai-tasks',
+  'activity/chats',
+  'pages/create', // 这一行是新增的
+  'hairstyles',
+];
+
+```
+
+# 基础动态页（前台）
+
+```
+// src/config/locale/messages/en/landing.json
+"logos": {
+    "hidden": true // 配置该项隐藏，开发时发现直接删除会报错，增加hidden参数实现
+  },
+  "introduce": {
+    "hidden": true
+  },
+  "benefits": {
+    "hidden": true
+  },
+  "usage": {
+    "hidden": true
+  },
+  "features": {
+    "id": "features",
+    "title": "Key Features of Nano Banana Pro",
+    "description": "Everything you need to generate and refine visuals with Nano Banana Pro, the leading AI image editing model powered by Nano Banana.",
+    "items": [
+      {
+        "title": "Natural Language Editing",
+        "description": "Edit any photo with conversational prompts. Nano Banana Pro interprets complex directions and applies precise transformations with Nano Banana's advanced AI.",
+        "icon": "RiMagicLine"
+      },
+      {
+        "title": "Character Consistency",
+        "description": "Preserve faces, outfits, and poses across every revision with Nano Banana Pro's identity-aware pipeline. Nano Banana delivers consistent character representation.",
+        "icon": "RiUserStarLine"
+      },
+      {
+        "title": "Scene Preservation",
+        "description": "Blend edits seamlessly into original backgrounds for photorealistic results with Nano Banana Pro. Experience professional-grade scene preservation powered by Nano Banana.",
+        "icon": "RiLandscapeLine"
+      },
+      {
+        "title": "Multi-Image Remix",
+        "description": "Blend elements from multiple reference images to create new scenes, match styles, or preserve continuity across frames.",
+        "icon": "Layers"
+      },
+      {
+        "title": "Aspect Ratio Control",
+        "description": "Choose from presets like 1:1, 16:9, or 4:5 to generate perfectly framed images for social feeds, hero banners, or print layouts.",
+        "icon": "RiAspectRatioLine"
+      },
+      {
+        "title": "Instant Variations",
+        "description": "Request fresh variations in seconds and iterate through lighting, color, and composition ideas without starting over.",
+        "icon": "RiFlashlightLine"
+      }
+    ]
+  },
+```
+
+# 基础动态页（后台）
+
+```
+// src/config/locale/messages/en/admin/showcases.json
+{
+  "title": "Showcases",
+  "description": "Manage your showcases here.",
+  "add": "Add", 
+  "edit": "Edit",
+  "delete": "Delete",
+  "form": { // 表单配置
+    "title": "Title",
+    "description": "Description",
+    "prompt": "Prompt",
+    "image": "Image",
+    "tags": "Tags",
+    "createdAt": "Created At"
+  }
+}
+
+```
+
+
+# 高阶动态页（1）
+
+```
+// src/config/locale/messages/en/showcases.json
+{
+  "metadata": {
+    "title": "Nano Banana Pro Prompts & Showcases",
+    "description": "Awesome projects built with Nano Banana Pro"
+  },
+   "showcases-flow": { // 这里使用showcases-flow配置瀑布流（
+// 默认组件满足不了，已经替换为自定义瀑布流组件）
+// 见src/app/[locale]/(landing)/page.tsx <ShowcasesFlowDynamic组件代码实现
+    "id": "showcases-flow",
+    "sr_only_title": "Showcases",
+    "title": "Nano Banana Pro Prompts",
+    "description": "Representative editing and generation cases powered by Nano Banana Pro",
+    "items": [ // 这里是不依赖后端数据库的前端配置写法（项目中保留了这块配置，实际是走的数据库查询）
+      {
+        "title": "Vertical fisheye selfie",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/1.jpeg",
+          "alt": "AI SaaS Showcase 1"
+        },
+        "prompt": "vertical-fisheye-selfie"
+      },
+      {
+        "title": "AI SaaS Showcase 2",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/2.jpeg",
+          "alt": "AI SaaS Showcase 2"
+        },
+        "prompt": "3d-digital-human-comics"
+      },
+      {
+        "title": "AI SaaS Showcase 3",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/3.jpeg",
+          "alt": "AI SaaS Showcase 3"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 4",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/4.jpeg",
+          "alt": "AI SaaS Showcase 4"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 5",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/5.jpeg",
+          "alt": "AI SaaS Showcase 5"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 6",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/6.jpeg",
+          "alt": "AI SaaS Showcase 6"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 7",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/7.jpeg",
+          "alt": "AI SaaS Showcase 7"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 8",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/8.jpeg",
+          "alt": "AI SaaS Showcase 8"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 9",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/9.jpeg",
+          "alt": "AI SaaS Showcase 9"
+        }
+      },
+      {
+        "title": "AI SaaS Showcase 10",
+        "description": "AI SaaS Showcase",
+        "image": {
+          "src": "/imgs/showcases/10.jpeg",
+          "alt": "AI SaaS Showcase 10"
+        }
+      }
+    ]
+  }
+}
+
+```
+
+# 高阶动态页（2）
+
+```
+// src/config/locale/messages/en/hairstyles.json
+{
+  "metadata": {
+    "title": "AI Hairstyle Generator | Nano Banana Pro",
+    "description": "Nano Banana Pro is the second generation of Nano Banana, also the flagship AI image editing model. Provide the best-in-class image editing experience."
+  },
+  "page": {
+    "title": "AI Hairstyle Generator",
+    "description": "Generate hairstyles with Nano Banana Pro model."
+  },
+   "showcases-flow": { // 这里使用showcases-flow配置瀑布流（默认组件满足不了，已经替换为自定义瀑布流组件）// 见src/app/[locale]/(landing)/page.tsx <ShowcasesFlowDynamic组件代码实现
+    "id": "showcases-flow",
+    "groups": [ // Tabs配置
+      {
+        "name": "all",
+        "title": "All Hairstyles"
+      },
+      {
+        "name": "men",
+        "title": "Men Hairstyles"
+      },
+      {
+        "name": "women",
+        "title": "Women Hairstyles"
+      },
+      {
+        "name": "animal",
+        "title": "Animal Hairstyles"
+      }
+    ],
+    "sr_only_title": "Hairstyles",
+    "title": "AI Hairstyle Generator",
+    "description": "Generate hairstyles with Nano Banana Pro model.",
+    "buttons": [
+      {
+        "title": "Generate Now",
+        "url": "/create?prompt=hairstyles",
+        "target": "_self",
+        "variant": "default",
+        "size": "default",
+        "icon": "Wand"
+      }
+    ],
+    "items": [ // 这里是不依赖后端数据库的前端配置写法（项目中保留了这块配置，实际是走的数据库查询）
+      {
+        "title": "Classic Business Cut",
+        "description": "Professional men's hairstyle",
+        "group": "men",
+        "image": {
+          "src": "/imgs/showcases/1.jpeg",
+          "alt": "Men's Business Hairstyle"
+        }
+      },
+      {
+        "title": "Modern Fade",
+        "description": "Trendy fade haircut",
+        "group": "men",
+        "image": {
+          "src": "/imgs/showcases/2.jpeg",
+          "alt": "Men's Fade Hairstyle"
+        }
+      },
+      {
+        "title": "Long Wavy Hair",
+        "description": "Elegant women's hairstyle",
+        "group": "women",
+        "image": {
+          "src": "/imgs/showcases/3.jpeg",
+          "alt": "Women's Long Wavy Hair"
+        }
+      },
+      {
+        "title": "Bob Cut",
+        "description": "Classic bob hairstyle",
+        "group": "women",
+        "image": {
+          "src": "/imgs/showcases/4.jpeg",
+          "alt": "Women's Bob Cut"
+        }
+      },
+      {
+        "title": "Pixie Cut",
+        "description": "Short and stylish",
+        "group": "women",
+        "image": {
+          "src": "/imgs/showcases/5.jpeg",
+          "alt": "Women's Pixie Cut"
+        }
+      },
+      {
+        "title": "Lion Mane",
+        "description": "Majestic lion hairstyle",
+        "group": "animal",
+        "image": {
+          "src": "/imgs/showcases/6.jpeg",
+          "alt": "Lion Mane Style"
+        }
+      },
+      {
+        "title": "Poodle Curls",
+        "description": "Fluffy poodle hairstyle",
+        "group": "animal",
+        "image": {
+          "src": "/imgs/showcases/7.jpeg",
+          "alt": "Poodle Curls Style"
+        }
+      },
+      {
+        "title": "Undercut Style",
+        "description": "Edgy undercut",
+        "group": "men",
+        "image": {
+          "src": "/imgs/showcases/8.jpeg",
+          "alt": "Men's Undercut"
+        }
+      },
+      {
+        "title": "Beach Waves",
+        "description": "Natural beach waves",
+        "group": "women",
+        "image": {
+          "src": "/imgs/showcases/9.jpeg",
+          "alt": "Women's Beach Waves"
+        }
+      },
+      {
+        "title": "Giraffe Pattern",
+        "description": "Unique giraffe-inspired style",
+        "group": "animal",
+        "image": {
+          "src": "/imgs/showcases/10.jpeg",
+          "alt": "Giraffe Pattern Style"
+        }
+      }
+    ]
+  }
+}
+
+```

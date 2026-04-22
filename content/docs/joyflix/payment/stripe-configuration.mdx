@@ -1,0 +1,789 @@
+---
+title: '写在前面：首先你得有个港卡或者非国内卡，可以开通Stripe'
+---
+
+
+
+如何办理港卡，请阅读： [项目关于支付的延伸：香港主流银行开户攻略 ](/docs/joyflix/payment/hk-bank-account-guide)
+
+
+
+开通Stripe的教程，请阅读：
+
+1、[无需公司！手把手教你注册 Stripe 个人账户，轻松搞定全球收款 (2026-01)](/docs/joyflix/payment/stripe-registration-guide-no-company)
+
+2、[项目关于支付的延伸：如何用大陆护照+个人港卡注册Stripe个人账户（2025年10月最新教程）](/docs/joyflix/payment/stripe-registration-guide)
+
+
+
+# 如果你没有上面的卡，短时间还想上站，可以看看wise（不用跑到香港开卡，在线开，不过这个我没有跑闭环）
+
+
+
+Wise开通的美元账号是可以绑定到PayPal的，并且可以成功提现。
+
+PayPal开通的是美区(没有提交SSN进行认证)，Wise是国内证件开通，如此可以打通PayPal美区到Wise香港账号。
+
+同理，也可以通过其他方式比如香港转数快转入Wise并在PayPal中消费。
+
+
+
+请阅读：[项目支付延伸：wise在线开卡](/docs/joyflix/payment/wise-card-guide)
+
+
+
+[未办理港卡看过来，试试Creem+Wise组合](/docs/joyflix/payment/how-to-use-creem-wise)
+
+
+
+
+
+# 接入 Stripe 支付
+
+
+
+## 开通 Stripe 商户
+
+
+
+参考 [Stripe 商家入驻指南](https://stripe.com/resources/more/merchant-onboarding-explained) 开通 Stripe 商户。
+
+
+
+你可以以个人身份或企业身份开通 Stripe 商户，绑定你的提现账户，设置商户基本信息。
+
+
+
+##  Stripe支持测试模式(方便本地调试) 和 生产模式（真实付费）
+
+
+
+
+
+
+
+# 咱们的步骤是 本地开发时，填入测试 API 密钥，等部署上线时，再填入正式的 API 密钥。
+
+
+
+## 查看测试模式的 API 密钥
+
+
+
+在 Stripe 管理后台进入你的商户页面，创建一个账户（这里点击后属于个人信息填写提交，不多介绍）
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2eebd4ae3aea96e0.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e671bd21aabbe277.jpg" alt="image" />
+
+
+
+然后按照下图进入测试模式
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9fd85cda716810b0.jpg" alt="image" />
+
+
+
+## 依次选择 Developers -> API keys -> 标准密钥，依次将公钥密钥复制粘贴到http://localhost:3000/admin/settings/payment。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/953288f26fc9e6d7.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/aa9cfdc988586740.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b9fa23c413b46eaa.jpg" alt="image" />
+
+
+
+## 保存成功后 
+
+
+
+访问http://localhost:3000/pricing 测试支付
+
+
+
+### 查看或者修改src/config/locale/messages/en/pages/pricing.json
+
+
+
+这个json文件就是咱们的定价配置
+
+
+
+```
+
+title: 价格方案标题。
+
+description: 价格方案描述。
+
+features_title: 价格方案特性列表标题。
+
+features: 价格方案特性列表。
+
+interval: 价格方案计费周期。可设置的值为 one-time（一次性支付）、month（按月订阅）、year（按年订阅）。
+
+amount: 价格方案金额。这个值用于请求 Stripe 下单，单位：分。
+
+currency: 价格方案货币。可设置的值为 USD（美元）、CNY（人民币）等。
+
+price: 价格方案显示的售价。
+
+original_price: 价格方案显示的原价。带下划线效果。
+
+unit: 价格方案显示的单位。比如 / month，/ year 等。
+
+is_featured: 是否为推荐价格方案。设置为 true 则会在价格表中默认显示。
+
+tip: 下单提示。
+
+button: 下单按钮。可自定义显示文本 title 和图标 icon，url 目前为占位符，无实际作用。
+
+product_id: 价格方案唯一标识。下单时后台接口根据此参数定位价格方案，请确保每个价格方案的 product_id 唯一。
+
+product_name: 价格方案名称。
+
+credits: 购买的积分数量。如果不是购买积分的场景，可以设置为 0.
+
+valid_days: 积分的有效天数。按月发放积分可以设置为 30，按年一次性发放积分可以设置为 365。
+
+group: 价格方案所属分组。跟 pricing.groups 中的 name 关联。
+
+product_id: 价格方案唯一标识。下单接口根据此参数定位价格方案。
+
+currency: 下单币种。可以由用户自行选择，默认 USD。
+
+locale: 下单语言。传递用户当前选择的页面 locale，下单接口根据此参数定位价格表配置。
+
+payment_provider: 支付提供商。
+
+metadata: 支付元数据。可以传递自定义参数。
+
+```
+
+
+
+> 注意：修改完价格表配置后，访问 /pricing 页面查看新的价格表。选择一个价格方案下单，支付成功后，在 /settings/payments 页面查看支付记录，检查支付金额、币种、付费周期，是否与配置的价格方案一致。 在 /settings/credits 页面查看积分发放记录，检查积分数量、过期时间（支付时间 + 有效天数），是否与配置的价格方案一致。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7b0da9af51afcac6.jpg" alt="image" />
+
+
+
+#### [点击查看Stripe的测试卡号](https://docs.stripe.com/testing#cards)
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3a168489aa44e4a6.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f492d157686b55e3.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1b0e437bf75b5fd9.jpg" alt="image" />
+
+
+
+由于是测试模式，你会直接支付成功，然后页面自动就会进入个人中心
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/96229749fa35958b.jpg" alt="image" />
+
+
+
+接下来你就是有积分可以生成图的用户了，此时需要确认是否配置成功了[✨项目中AI图片生成相关配置](/docs/joyflix/configuration/configuration-related-to-ai-image-generation-in-the-project)，如果已配置成功，那么就可以访问：[http://localhost:3000/create](http://localhost:3000/create)进行生图操作
+
+
+
+# 正式的 API 密钥
+
+
+
+还是刚才的Stripe页面，点击下图退出测试模式
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/db4d3720248da7b9.jpg" alt="image" />
+
+
+
+依次选择 Developers -> API keys -> Standard keys -> Create secret key 创建 API 密钥。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/30ae00cc46157ecc.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1cae783873f5edb7.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/394a227e00c9faf5.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3580eebee5d794e2.jpg" alt="image" />
+
+
+
+将下图的秘钥复制粘贴到 https://xxxx/admin/settings/payment (你生产环境的地址)
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/925b37996167a005.jpg" alt="image" />
+
+
+
+
+
+将公钥复制粘贴到 https://xxxx/admin/settings/payment (你生产环境的地址)
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/466e13166c8194db.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2c3211693dedebf6.jpg" alt="image" />
+
+
+
+保存后可以去https://xxxx/pricing  (你生产环境的地址) 测试生产环境的支付
+
+
+
+# 如何创建促销码做优惠（这一步选做，因为你不一定能用上，而且还挺麻烦），以测试模式为例
+
+
+
+## 先依次创建下面3个产品 和你的项目产品相对应
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/49c87729b30ffa2b.jpg" alt="image" />
+
+
+
+
+
+## 再创建优惠券 
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/19fbd56b3d31b3c4.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/15601479abb0f8b0.jpg" alt="image" />
+
+
+
+
+
+## 再在每个优惠券里面分别创建促销码
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/276663703a42bcc5.jpg" alt="image" />
+
+
+
+
+
+将促销码ID例如：promo_1Sc6orGrmvYHG623lvaqJFyG 先记录到记事本上；
+
+
+
+3个都创建完后（这里的3个是以NanoBanana的3个定价），得到下面的配置（仅供参考）
+
+
+
+注意下面的"credits-package"是 src/config/locale/messages/en/pages/pricing.json中的"product_id":值
+
+```
+
+{
+
+"credits-package":"promo_1Sc5zJGrmvYHG623uv4vK1MC",
+
+"starter-monthly": "promo_1Sc6orGrmvYHG623lvaqJFyG",
+
+"premium-yearly": "promo_1Sc5xqGrmvYHG623eiew4QLX"
+
+}
+
+```
+
+
+
+然后将其粘贴到 http://localhost:3000/admin/settings/payment
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f4b4c03501ea7ce0.jpg" alt="image" />
+
+
+
+
+
+保存成功后，再访问http://localhost:3000/pricing测试
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2b87503e0626b85d.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/96a2f6dcfa02a2a7.jpg" alt="image" />
+
+
+
+
+
+# 配置支付回调
+
+
+
+> 配置支付回调（Webhook）主要有以下几个核心作用，这是保证你的计费系统正常运转的关键：
+
+1、防止掉单（异常处理）：如果用户在支付平台付款成功后，没有等页面自动跳回你的网站就直接关掉了浏览器，前台的回调就不会触发。此时 Webhook 作为服务器之间的异步通知，能做兜底保障，确保订单状态更新并为用户发放权益。
+
+2、处理订阅的自动续费：对于按月/按年扣费的订阅计划，用户后续周期的自动扣款是静默发生的（无需用户干预）。Stripe/Creem 会通过 Webhook 通知你的系统扣款成功，你的系统才会给用户延长订阅周期并下发新周期的积分。
+
+3、同步订阅状态变更：当由于用户信用卡到期导致续费扣款失败，或者用户主动取消了订阅时，平台会通过 Webhook 通知你的系统，以便你及时冻结或更新对应用户的订阅状态。
+
+4、安全性：Webhook 请求会携带需要用 Signing secret 验证的签名。这能防止黑客通过伪造前台的成功跳转链接来“免费”获取你的产品权益。
+
+
+
+- 明确你的线上生产域名，例如 `https://yourdomain.com`。请将下方教程中的 `你的域名` 替换为真实的线上域名。
+
+- 确保你的应用已经成功部署并且可以公网访问。
+
+
+
+## Stripe Webhook 配置步骤
+
+
+
+1. 登录进入 Stripe Dashboard 控制台。
+
+2. 在页面顶部或侧边栏进入**开发者 (Developers)** 页面。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ef89631536c62b30.jpg" alt="image" />
+
+
+
+3. 点击左侧菜单中的 **Webhooks** 选项卡。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/407fdd5b4e74c663.jpg" alt="image" />
+
+
+
+4. 点击页面中间紫色的 **+ Add destination** 按钮。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b0f3754c047c69e8.jpg" alt="image" />
+
+
+
+5. 此时会进入新增向导页面，第 1 步 **(Select events)** 选择需要监听的事件：<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2f7c3eaa8f6ce49f.jpg" alt="image" />
+
+
+
+   - 在页面下方的搜索框中逐一检索并勾选以下五个事件：<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3375854cf0dab1d2.jpg" alt="image" />
+
+
+
+     - `checkout.session.completed` (此事件用于处理一次性付款成功和订阅的首次付款)
+
+     - `invoice.payment_succeeded` (此事件用于处理订阅用户的周期性扣款成功)
+
+     - `invoice.payment_failed` (用于监听扣款失败)
+
+     - `customer.subscription.updated` (此事件用于处理订阅状态更新)
+
+     - `customer.subscription.deleted` (此事件用于处理订阅被取消)
+
+   - 勾选完毕后，点击右下角紫色的 **Continue** 按钮。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7a87f5bc7136479d.jpg" alt="image" />
+
+
+
+6. 第 2 步 **(Choose destination type)**，通常只需选择 **Webhook Endpoint** 相关选项，并点击继续。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/dc7b1b91b12262db.jpg" alt="image" />
+
+
+
+7. 第 3 步 **(Configure your destination)** 配置你的端点：
+
+   - 在**端点 URL (Endpoint URL)** 输入框中，严格按照以下格式填写：
+
+     `https://你的域名/api/payment/notify/stripe`<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1361614502aa24e7.jpg" alt="image" />
+
+
+
+8. 确认无误后点击底部的按钮（如 **Add endpoint** 或保存）完成创建。
+
+9. 创建成功后，你将进入该 Webhook 的端点详情页。在页面中找到 **签名密钥 (Signing secret)** 一栏，点击显示并复制该密钥。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e52e6d7fa7af1964.jpg" alt="image" />
+
+
+
+10. 将复制的签名密钥填写到项目的后台管理系统对应的 Stripe 配置项中 (`Stripe Signing Secret`)。
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/75c55b24d96af7fb.jpg" alt="image" />
+
+
+
+
+
+## 测试验证
+
+
+
+1. 确保签名密钥已经正确保存并在应用中生效。
+
+2. 配置完成后，建议使用真实账号发起一笔小额测试交易。
+
+3. 也可以直接通过 Stripe 提供的测试事件发送功能触发测试 Webhook。
+
+4. 如果回调状态为 `200 OK`，说明签名无误且逻辑运转正常。如果返回 `500` 等报错，请首先检查前后端填写的 Signing secret 是否一致。
+
+
+
+
+
+# Stripe 促销码配置问题修复
+
+
+
+## 问题描述
+
+
+
+错误信息：`This coupon cannot be redeemed because it does not apply to anything in this order.`
+
+
+
+这个错误表示 Stripe 促销码没有正确关联到购买的产品。
+
+
+
+## 问题原因
+
+
+
+你的应用使用了**动态价格创建**（`price_data`），而不是预定义的 Stripe 产品 ID。当使用动态价格时，Stripe 促销码必须设置为"适用于所有产品"，或者你需要改用预定义的产品。
+
+
+
+## 解决方案
+
+
+
+### 方案 1：修改 Stripe 促销码设置（快速方案）
+
+
+
+1. 登录 [Stripe Dashboard](https://dashboard.stripe.com/coupons)
+
+2. 找到每个促销码对应的优惠券（Coupon）
+
+3. 编辑优惠券，在 "Applies to" 部分选择 **"All products"**（适用于所有产品）
+
+4. 保存更改
+
+
+
+**注意**：这样设置后，该促销码可以用于任何产品，缺少限制。
+
+
+
+### 方案 2：使用预定义的 Stripe 产品（推荐方案）
+
+
+
+#### 步骤 1：在 Stripe 创建产品和价格
+
+
+
+1. 登录 [Stripe Dashboard - Products](https://dashboard.stripe.com/products)
+
+2. 为每个产品创建对应的产品和价格：
+
+
+
+   **Credits Package（一次性支付）：**
+
+   - Product Name: Credits Package
+
+   - Price: $29.90 USD
+
+   - Type: One-time
+
+   - 复制生成的 Price ID（格式：`price_xxxxx`）
+
+
+
+   **Starter Plan（月付订阅）：**
+
+   - Product Name: Starter Plan Monthly
+
+   - Price: $24.90 USD
+
+   - Type: Recurring - Monthly
+
+   - 复制生成的 Price ID
+
+
+
+   **Premium Plan（年付订阅）：**
+
+   - Product Name: Premium Plan Annually
+
+   - Price: $229.90 USD
+
+   - Type: Recurring - Yearly
+
+   - 复制生成的 Price ID
+
+
+
+#### 步骤 2：关联促销码到产品
+
+
+
+1. 回到 [Stripe Dashboard - Coupons](https://dashboard.stripe.com/coupons)
+
+2. 编辑每个优惠券：
+
+   - `promo_1Sc5zJGrmvYHG623uv4vK1MC` → 关联到 Credits Package 产品
+
+   - `promo_1Sc6orGrmvYHG623lvaqJFyG` → 关联到 Starter Plan 产品
+
+   - `promo_1Sc5xqGrmvYHG623eiew4QLX` → 关联到 Premium Plan 产品
+
+3. 在 "Applies to" 选择 **"Specific products"**，然后选择对应的产品
+
+
+
+#### 步骤 3：更新 pricing.json 配置
+
+
+
+我已经在 `src/config/locale/messages/en/pages/pricing.json` 中添加了 `payment_product_id` 字段。
+
+
+
+请将 `price_YOUR_STRIPE_PRICE_ID_HERE` 替换为你在步骤 1 中创建的实际 Price ID：
+
+
+
+```json
+
+{
+
+  "product_id": "credits-package",
+
+  "payment_product_id": "price_xxxxx",  // 替换为实际的 Price ID
+
+  ...
+
+}
+
+```
+
+
+
+对三个产品都进行相同的操作。
+
+
+
+## 重要：Product ID vs Price ID
+
+
+
+⚠️ **常见错误**：`payment_product_id` 必须是 **Price ID**（`price_xxx`），不是 Product ID（`prod_xxx`）！
+
+
+
+- ❌ 错误：`"payment_product_id": "prod_TZDaRCgSaPxuhY"`
+
+- ✅ 正确：`"payment_product_id": "price_1Sc5zJGrmvYHG623abc123"`
+
+
+
+## 获取正确的 Price ID
+
+
+
+运行脚本列出你的所有产品和价格：
+
+
+
+```bash
+
+STRIPE_SECRET_KEY="sk_test_..." npx tsx scripts/list-stripe-prices.ts
+
+```
+
+
+
+这个脚本会显示：
+
+- 所有产品及其价格
+
+- 每个价格的 Price ID（`price_xxx`）
+
+- 价格类型（一次性/订阅）
+
+- 金额和货币
+
+
+
+## 验证促销码配置
+
+
+
+运行验证脚本来检查你的促销码配置：
+
+
+
+```bash
+
+STRIPE_SECRET_KEY="sk_test_..." npx tsx scripts/check-promotion-codes.ts promo_xxx
+
+```
+
+
+
+这个脚本会：
+
+- 检查促销码是否存在
+
+- 显示促销码的详细信息
+
+- 检查促销码是否关联到产品
+
+- 检查促销码是否过期或达到使用上限
+
+
+
+## 配置对照表
+
+
+
+| Product ID | Promotion Code ID | Stripe Price ID (需要填写) |
+
+|-----------|-------------------|---------------------------|
+
+| credits-package | promo_1Sc5zJGrmvYHG623uv4vK1MC | price_xxxxx |
+
+| starter-monthly | promo_1Sc6orGrmvYHG623lvaqJFyG | price_xxxxx |
+
+| premium-yearly | promo_1Sc5xqGrmvYHG623eiew4QLX | price_xxxxx |
+
+
+
+## 测试流程
+
+
+
+1. 完成上述配置后，重启开发服务器
+
+2. 访问 http://localhost:3000/pricing
+
+3. 尝试购买任一产品
+
+4. 检查是否自动应用了促销码
+
+5. 完成支付流程
+
+
+
+## 常见问题
+
+
+
+**Q: 为什么不能直接使用动态价格？**
+
+A: Stripe 的促销码必须关联到具体的产品或适用于所有产品。使用预定义产品可以更精确地控制促销码的适用范围。
+
+
+
+**Q: 如果我想为不同货币设置不同的促销码怎么办？**
+
+A: 在 pricing.json 中使用 `currencies` 数组，为每个货币配置不同的 `payment_product_id`。
+
+
+
+**Q: 促销码配置后多久生效？**
+
+A: 立即生效，无需等待。
+
+
+
+## 相关文件
+
+
+
+- 促销码配置：`src/config/locale/messages/en/pages/pricing.json`
+
+- 支付逻辑：`src/app/api/payment/checkout/route.ts`
+
+- Stripe 提供商：`src/extensions/payment/stripe.ts`
+
+- 验证脚本：`scripts/verify-stripe-promotion-codes.ts`

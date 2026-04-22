@@ -1,0 +1,52 @@
+---
+title: '官方常见问题'
+---
+
+[官方常见问题解答](https://shipany.ai/zh/docs/guide/faq)
+
+# 我更新完`2025-12-18 （v1.6.3）`登录报错，进入admin也报错
+
+点击[更新日志](https://nanobanana2.16781678.xyz/docs/getting-started/update-logs) 查看解决办法
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0ab5b5c9c4b789f6.jpg" alt="image" />
+
+# 启动后访问页面展示`page not found`
+
+控制台能看到编译`/_not-found/page`
+
+大多数是在cloudfare分支项目切换到了vercel分支项目，没有删除node_modules后重新pnpm install，然后直接启动就会有这种错误
+
+# 启动后访问报font字体错误
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0588b31f0a681406.jpg" alt="image" />
+
+这种是因为你 魔法梯子没开，google字体加载不到报错，打开魔法后刷新页面再看
+
+# 开发时使用Supabase：出现Failed query错误
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/15c7654d2b1de174.jpg" alt="image" />
+
+```
+Error: Failed query: select distinct "permission"."id", "permission"."code", "permission"."resource", "permission"."action", "permission"."title", "permission"."description", "permission"."created_at", "permission"."updated_at" from "role_permission" inner join "permission" on "role_permission"."permission_id" = "permission"."id" where "role_permission"."role_id" in ($1)params: 93caa576-5177-4f29-93fe-f01fa1340a13
+```
+
+重新刷新页面，还是不行，魔法梯子更换节点，一般是网络问题导致查询异常；
+
+
+# 入库更新编辑报错
+
+提示我：Server Action "70b6666f57ea7873f7beddbb8aa4e1e5060c1b6542" was not found on the server. Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
+Server action not found. 
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d685b7aa9196e626.jpg" alt="image" />
+
+刷新后又好了
+
+答：你Cloudflare上有新的部署成功了，但是你页面没有及时刷新（当你修改文件时，Server Action 的 ID 会变化，但浏览器还持有旧的 ID。 ）
+
+# 使用Cloudflare git提交后自动部署方案，但是刷新页面后发现未生效
+
+这时候去Cloudflare上查看下最新部署是否成功，多半是出错了；
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cbd6d896ece9bf5d.jpg" alt="image" />

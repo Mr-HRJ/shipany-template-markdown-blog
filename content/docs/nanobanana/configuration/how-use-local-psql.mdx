@@ -1,0 +1,91 @@
+---
+title: '写在前面'
+---
+
+> 相信大伙在本地启动使用Supabase时经常会遇到一些网络连接问题导致的慢或者其他诡异问题，官方也是建议咱们在本地开发时连接本地psql数据库，提升开发效率
+
+## 安装 PostgreSQL（Mac）
+
+### 安装postgresql@16
+
+访问 [https://postgresapp.com/downloads.html](https://postgresapp.com/downloads.html) 下载
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cf9dcda0776eeed8.jpg" alt="image" />
+
+
+下载，安装完成后
+
+打开 Postgres.app-点击 "Initialize"
+
+然后终端添加到 PATH：
+```
+echo 'export PATH="/Applications/Postgres.app/Contents/Versions/latest/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### 创建数据库
+
+```
+createdb shipany_nanobanana_dev
+```
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9e379708ebb48ea6.jpg" alt="image" />
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/618970f91990f97c.jpg" alt="image" />
+
+### 配置.env.development
+
+
+```
+# database
+DATABASE_URL = "postgresql://你的电脑名@localhost:5432/shipany_nanobanana_dev"
+DATABASE_PROVIDER = "postgresql"
+DB_SINGLETON_ENABLED = "true"
+```
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6722ad267320f5df.jpg" alt="image" />
+
+
+此时，数据库已配置好，请返回[项目快速上手图文教程](/docs/nanobanana/getting-started/quick-start-guide#%E6%8C%89%E7%85%A7%E4%B8%8A%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%85%8D%E7%BD%AE%E5%A5%BD%E5%90%8E%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E8%A1%A8) 继续操作。
+
+测试发现：响应快很多，比魔法+Supabase快，提升开发效率
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4d4579660da25ae9.jpg" alt="image" />
+
+## 安装 PostgreSQL 官方安装器（Windwos）
+
+打开：[https://www.postgresql.org/download/windows/](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
+
+> 下载 EDB 安装器
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7edcb85a32b8cc2c.jpg" alt="image" />
+
+> 运行安装，记住设置的密码
+
+验证安装成功，打开 PowerShell 或 CMD
+```
+psql --version
+```
+如果能显示版本号，就说明好了，PATH也自动添加了。
+
+### 安装后操作
+
+打开 PowerShell 或 CMD
+创建数据库：
+
+> `shipany_nanobanana_dev` 为数据库名称，可以自行修改
+```
+createdb -U postgres shipany_nanobanana_dev
+```
+
+配置 .env.development：
+ 
+```
+DATABASE_URL = "postgresql://postgres:你的密码@localhost:5432/shipany_nanobanana_dev"
+```
+
+此时，数据库已配置好，请返回[项目快速上手图文教程](/docs/nanobanana/getting-started/quick-start-guide#%E6%8C%89%E7%85%A7%E4%B8%8A%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%85%8D%E7%BD%AE%E5%A5%BD%E5%90%8E%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E8%A1%A8) 继续操作

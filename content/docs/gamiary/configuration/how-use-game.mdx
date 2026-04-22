@@ -1,0 +1,99 @@
+---
+title: '导入预制数据'
+---
+
+
+
+> 项目启动后，只是基础表，但是没有数据，这时候咱们需要把game、game分类的表数据 导入到你的数据库中
+
+
+
+- shipany-template-gamiary/db/game.sql
+
+- shipany-template-gamiary/db/game_category.sql
+
+
+
+在Supabase或者neon中找到 `SQL Editor` 
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/49ddc0331adf56b6.jpg" alt="image" />
+
+
+
+然后分别将game.sql、game_category.sql粘贴执行Run 导入；
+
+
+
+
+
+# 登录进入后台维护
+
+
+
+## 管理游戏分类
+
+
+
+访问：http://localhost:3000/admin/games-categories
+
+
+
+这里咱们已经导入了比较全的分类，可以先不维护（如果你需要拓展分类，那么可以在此管理）
+
+
+
+
+
+## 管理游戏
+
+
+
+访问：http://localhost:3000/admin/games
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a4a709ce38f57e67.jpg" alt="image" />
+
+
+
+
+
+### games add
+
+
+
+注意：游戏的真实地址在技术上是通过iframe内嵌url实现的，这时候你需要找竞品的iframe url进行录入
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8d2cac2916a41c7c.jpg" alt="image" />
+
+
+
+保存
+
+
+
+> 2026-02-28 补充：
+
+> 如果你不知道从哪里弄小游戏资源，可以看下：https://www.crazygames.com/
+
+> 这个小游戏网站每个月6230万访问量，很多套壳小游戏网站都是从这里拿货。
+
+
+
+## 前台查看
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/11df984b5e0ed979.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e734313f5e4bfaeb.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/30e816881b13a841.jpg" alt="image" />

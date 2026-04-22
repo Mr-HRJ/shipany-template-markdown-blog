@@ -1,0 +1,113 @@
+---
+title: '2026-03-18 （v1.8.2）'
+---
+
+feat: 同步官方模板1.8.2 https://shipany.ai/updates
+
+
+
+# 2026-01-18 （v1.8.2）
+
+
+
+feat: 支持 Paypal 订阅扣费
+
+
+
+# 2025-12-27 （v1.8.0）
+
+feat: 支持 SQLite / Turso / MySQL 等数据库
+
+feat: 新增邮箱验证功能
+
+feat: 接口请求与性能优化
+
+feat: 新增 Agent Skills，支持氛围编程
+
+
+
+> cloudfare分支用户请注意：Cloudflare Workers 中 postgres-js 直接连接外部数据库的时候请求可能会报下面错误。请你务必启用 Hyperdrive（在教程中有如何配置启用Hyperdrive）
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d7ef0e3f7ec8c62f.jpg" alt="image" />
+
+
+
+```
+
+{
+
+  "level": "error",
+
+  "message": "Error: Failed query: select distinct \"permission\".\"id\", \"permission\".\"code\", \"permission\".\"resource\", \"permission\".\"action\", \"permission\".\"title\", \"permission\".\"description\", \"permission\".\"created_at\", \"permission\".\"updated_at\" from \"role_permission\" inner join \"permission\" on \"role_permission\".\"permission_id\" = \"permission\".\"id\" where \"role_permission\".\"role_id\" in ($1)\nparams: 93caa576-5177-4f29-93fe-f01fa1340a13",
+
+  "$workers": {
+
+    "event": {
+
+      "request": {
+
+        "url": "https://nanobananapro.16781678.xyz/admin/showcases",
+
+        "method": "GET",
+
+        "path": "/admin/showcases"
+
+      }
+
+    },
+
+```
+
+
+
+启用Hyperdrive成功后截图：
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f9dfbae5325d5c7d.jpg" alt="image" />
+
+
+
+
+
+# 2025-12-18 （v1.6.3）
+
+
+
+feat: 新增注册用户来源统计和数据库 Schema 切换功能
+
+feat: 升级依赖项并添加新的“更新”部分
+
+
+
+> 注意：之前已经写业务的项目想更新的话，需要在同步完代码后，执行下面的手动执行sql，因为你的数据库已经执行过`pnpm db:migrate`， drizzle 会跳过它（除非你执行`pnpm db:push`强推）。
+
+> 在 Supabase 控制台的 SQL Editor 中执行  `下面sql` 的内容即可（新增了 utm_source 和 ip、locale 字段)）（如下图）。
+
+
+
+```
+
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "utm_source" text DEFAULT '' NOT NULL;
+
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "ip" text DEFAULT '' NOT NULL;
+
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "locale" text DEFAULT '' NOT NULL;
+
+```
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/934298997ec4dcc0.jpg" alt="image" />
+
+
+
+
+
+# 2025-12-07 （v1.5.3）
+
+
+
+feat: 强力优化ShipAnyTwo网站指标干到了匹项全优，实现了“秒开”

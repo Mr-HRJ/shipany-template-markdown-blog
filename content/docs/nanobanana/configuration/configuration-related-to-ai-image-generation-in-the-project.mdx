@@ -1,0 +1,1867 @@
+---
+title: '写在前面'
+---
+
+
+
+### 1. 模型配置
+
+
+
+默认使用：Kie（他最便宜），第模型是 google/nano-banana-pro
+
+可选模型：9个模型（Nano Banana Pro、Seedream 4、Z-Image Turbo、Flux 2 Flex、Gemini 3 Pro等）
+
+支持4个provider：Replicate、Fal、Gemini、Kie
+
+
+
+**如果你有更好更便宜的供应商平台，可以更换，这里只是教程，中心思想：能最便宜就用最便宜的**
+
+
+
+| 平台 | 模型版本 | 定价详情 | 备注 | 官网链接 |
+
+| :--- | :--- | :--- | :--- | :--- |
+
+| **Kie.ai（Kie）** | Nano Banana Pro | 约 $0.09（1K/2K）– $0.12（4K）<br />（18 credits ≈ $0.09；24 credits ≈ $0.12） | 使用 credits 计费，有不同兑换率和批量折扣 | [kie.ai](https://kie.ai/nano-banana-pro?utm_source=chatgpt.com) |
+
+| **Replicate** | Nano Banana / Nano Banana Pro | 标准分辨率：≈ $0.14–$0.15 / 张<br />4K：常在 $0.24 左右 / 张 | 按运行时间或硬件计费，部分模型按输入/输出计费 | replicate.com |
+
+| **Fal.ai（Fal）** | Nano Banana（非 Pro） | 约 $0.039 / 张（1MP 标准化） | 平台托管不同版本，需区分普通版与 Pro 版 | - |
+
+| **Fal.ai（Fal）** | Nano Banana Pro / Gemini 3 Pro | 约 $0.15 / 张（标准）<br />4K 为双倍费率 | - | - |
+
+| **Google / Gemini 官方** | Nano Banana Pro | 标准：~$0.13–$0.14 / 张<br />4K：~ $0.24 / 张 | 有免费配额、学生或促销渠道，价格会有变动 | - |
+
+
+
+
+
+### 2. 注册用户默认积分
+
+
+
+通过数据库配置表动态控制
+
+配置项：
+
+initial_credits_enabled: 是否启用（需要在admin设置中开启）
+
+initial_credits_amount: 赠送积分数量（默认需配置）
+
+initial_credits_valid_days: 有效期天数
+
+initial_credits_description: 描述信息
+
+
+
+### 3. 每次生成消耗积分
+
+
+
+Text-to-image: 4积分、
+
+Image-to-image: 6积分
+
+
+
+
+
+### 4. Pricing套餐
+
+
+
+一次性购买: $29.9（原价$39.9）→ 400积分，有效期1年
+
+月付订阅: $24.9/月（原价$36.9）→ 400积分/月
+
+年付订阅: $229.9/年（原价$299.9）→ 4800积分/年（相当于$19.2/月，省23%）
+
+
+
+### 5. 图片压缩配置
+
+
+
+最大尺寸：1920px
+
+压缩质量：0.7（70%）
+
+格式：JPEG
+
+
+
+### 6. 生成超时设置
+
+轮询间隔：5秒
+
+生成超时：180秒（3分钟）
+
+Prompt最大长度：2000字符
+
+
+
+
+
+## AI 生成图片上传 R2 入库的完整链路：
+
+
+
+1. 生成请求 (/api/ai/generate)
+
+
+
+用户提交 prompt → 扣除积分 → 调用 AI provider (Replicate/Kie/Fal) → 创建 ai_task 记录
+
+
+
+2. 异步回调 (AI provider webhook)
+
+
+
+AI 完成生成 → 回调 /api/ai/notify/\{provider\} → 更新 ai_task 的 taskResult
+
+
+
+3. 轮询查询 (/api/ai/query)
+
+
+
+前端轮询查询任务状态 → 调用 provider.query() → 更新 ai_task 的 taskInfo 和 taskResult
+
+
+
+4. 展示结果 (image.tsx)
+
+
+
+解析 taskInfo 提取图片 URL → 展示给用户
+
+
+
+5. 保存到 showcase (saveShowcase)
+
+
+
+调用 /api/proxy/file 下载图片 → 调用 /api/upload 上传到 R2 → 保存 URL 到 showcase 表
+
+
+
+
+
+# Kie.ai（Kie） 配置启用AI生成图片
+
+
+
+## 使用须知：/admin/settings/ai 未配置点击生成会有Toast提示
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/61185fb913f2bf72.jpg" alt="image" />
+
+
+
+
+
+## 注册使用Kie.ai
+
+
+
+### 访问 [kie.ia](https://kie.ai/nano-banana-pro?utm_source=chatgpt.com)
+
+
+
+先登录，然后回到上面的页面，往下拉到下图，点击图中按钮获取API key：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/43082b271bf7117f.jpg" alt="image" />
+
+
+
+点击Create New Key
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2c77f04d7b85ea75.jpg" alt="image" />
+
+
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8401469c5d93e227.jpg" alt="image" />
+
+
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4719bba8406398f4.jpg" alt="image" />
+
+
+
+
+
+## 下面以本地开发举例（前提已经配置完超级管理员，可以进入admin）
+
+
+
+### 访问：http://localhost:3000/admin/settings/ai 
+
+
+
+拉到最下面，按下图配置（1为粘贴你上面复制的）
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4e204bb31adeb469.jpg" alt="image" />
+
+
+
+
+
+### 这时候AI图片就配置好了，但是还不能用，因为你没有积分（需要支付后才可以）
+
+
+
+支付请阅读[✨项目中关于Stripe支付相关配置](https://nanobanana2.16781678.xyz/docs/payment/stripe-configuration)
+
+
+
+另外，注意项目跑起来后及时支付Kie.ai（Kie）账单费用，避免停机造成用户流失
+
+
+
+
+
+# AI 配置与前台生效机制分析
+
+
+
+## 目录
+
+1. [支持的 AI 提供商](#支持的-ai-提供商)
+
+2. [配置方式](#配置方式)
+
+3. [前台生效机制](#前台生效机制)
+
+4. [模型配置](#模型配置)
+
+5. [工作流程](#工作流程)
+
+6. [配置示例](#配置示例)
+
+
+
+---
+
+
+
+## 支持的 AI 提供商
+
+
+
+项目支持 4 个 AI 提供商，每个提供商有不同的功能和特点：
+
+
+
+### 1. Kie (kie.ai)
+
+- **功能**: 音乐生成、图片生成、视频生成
+
+- **配置文件**: `src/extensions/ai/kie.ts`
+
+- **支持场景**:
+
+  - 音乐: 文本生成音乐 (V4, V5 模型)
+
+  - 图片: 文本生成图片、图片生成图片
+
+  - 视频: 文本生成视频、图片生成视频
+
+- **特性**: 支持自定义存储 (Custom Storage)
+
+
+
+### 2. Replicate (replicate.com)
+
+- **功能**: 图片生成、视频生成
+
+- **配置文件**: `src/extensions/ai/replicate.ts`
+
+- **支持场景**:
+
+  - 图片: 文本生成图片、图片生成图片
+
+  - 视频: 文本生成视频、图片生成视频
+
+- **特性**: 支持自定义存储、支持多种开源模型
+
+
+
+### 3. Fal (fal.ai)
+
+- **功能**: 图片生成、视频生成
+
+- **配置文件**: `src/extensions/ai/fal.ts`
+
+- **支持场景**:
+
+  - 图片: 文本生成图片、图片生成图片
+
+  - 视频: 文本生成视频、图片生成视频、视频生成视频
+
+- **特性**: 支持自定义存储、队列系统
+
+
+
+### 4. Gemini (Google AI)
+
+- **功能**: 图片生成
+
+- **配置文件**: `src/extensions/ai/gemini.ts`
+
+- **支持场景**:
+
+  - 图片: 文本生成图片、图片生成图片
+
+- **特性**: 同步生成、自动上传到自定义存储
+
+
+
+---
+
+
+
+## 配置方式
+
+
+
+### 环境变量配置
+
+
+
+可以在 `.env.development` 或 `.env.example` 中配置（但项目主要使用数据库配置）：
+
+
+
+```bash
+
+# Kie 配置
+
+KIE_API_KEY=your_kie_api_key
+
+KIE_CUSTOM_STORAGE=true
+
+
+
+# Replicate 配置
+
+REPLICATE_API_TOKEN=r8_xxx
+
+REPLICATE_CUSTOM_STORAGE=true
+
+
+
+# Fal 配置
+
+FAL_API_KEY=fal_xxx
+
+FAL_CUSTOM_STORAGE=true
+
+
+
+# Gemini 配置
+
+GEMINI_API_KEY=AIza...
+
+```
+
+
+
+### 数据库配置（推荐）
+
+
+
+项目使用数据库存储配置，通过后台管理界面配置：
+
+
+
+**配置表结构** (`config` 表):
+
+```typescript
+
+{
+
+  // Kie
+
+  kie_api_key: string
+
+  kie_custom_storage: 'true' | 'false'
+
+  
+
+  // Replicate
+
+  replicate_api_token: string
+
+  replicate_custom_storage: 'true' | 'false'
+
+  
+
+  // Fal
+
+  fal_api_key: string
+
+  fal_custom_storage: 'true' | 'false'
+
+  
+
+  // Gemini
+
+  gemini_api_key: string
+
+}
+
+```
+
+
+
+**配置位置**: `src/shared/services/settings.ts` (第 730-795 行)
+
+
+
+### 配置优先级
+
+
+
+```
+
+数据库配置 > 环境变量配置
+
+```
+
+
+
+配置读取逻辑在 `src/shared/models/config.ts`:
+
+```typescript
+
+export async function getAllConfigs(): Promise<Configs> {
+
+  // 1. 先读取环境变量
+
+  const envConfigs = getEnvConfigs();
+
+  
+
+  // 2. 再读取数据库配置（会覆盖环境变量）
+
+  const dbConfigs = await getConfigs();
+
+  
+
+  // 3. 合并配置
+
+  return { ...envConfigs, ...dbConfigs };
+
+}
+
+```
+
+
+
+---
+
+
+
+## 🔄 前台生效机制
+
+
+
+### 1. 初始化流程
+
+
+
+```
+
+用户访问页面
+
+    ↓
+
+前端调用 /api/ai/providers
+
+    ↓
+
+后端读取配置 (getAllConfigs)
+
+    ↓
+
+检查哪些 provider 配置了 API Key
+
+    ↓
+
+返回可用的 providers 列表
+
+    ↓
+
+前端根据可用 providers 过滤模型选项
+
+```
+
+
+
+### 2. Provider 检测逻辑
+
+
+
+**API 路由**: `src/app/api/ai/providers/route.ts`
+
+
+
+```typescript
+
+export async function GET(request: NextRequest) {
+
+  const configs = await getAllConfigs();
+
+  const availableProviders: string[] = [];
+
+
+
+  // 检查每个 provider 是否配置了 API Key
+
+  if (configs.kie_api_key) {
+
+    availableProviders.push('kie');
+
+  }
+
+  
+
+  if (configs.replicate_api_token) {
+
+    availableProviders.push('replicate');
+
+  }
+
+  
+
+  if (configs.fal_api_key) {
+
+    availableProviders.push('fal');
+
+  }
+
+  
+
+  if (configs.gemini_api_key) {
+
+    availableProviders.push('gemini');
+
+  }
+
+
+
+  return { providers: availableProviders };
+
+}
+
+```
+
+
+
+**关键点**: 
+
+- 只要配置了对应的 API Key，该 provider 就会被认为是可用的
+
+- 不验证 API Key 的有效性（在实际调用时才验证）
+
+
+
+### 3. 前端使用逻辑
+
+
+
+**图片生成器**: `src/shared/blocks/generator/image.tsx`
+
+
+
+```typescript
+
+// 1. 获取可用的 providers
+
+const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+
+
+
+useEffect(() => {
+
+  fetch('/api/ai/providers')
+
+    .then(res => res.json())
+
+    .then(data => {
+
+      const providers = data.data.providers || [];
+
+      setAvailableProviders(providers);
+
+      
+
+      // 设置默认 provider 和 model
+
+      if (providers.length > 0) {
+
+        const firstProvider = providers[0];
+
+        setProvider(firstProvider);
+
+        
+
+        // 找到第一个可用的模型
+
+        const availableModel = MODEL_OPTIONS.find(
+
+          option => 
+
+            option.scenes.includes(activeTab) && 
+
+            availableProviders.includes(option.provider)
+
+        );
+
+        if (availableModel) {
+
+          setModel(availableModel.value);
+
+        }
+
+      }
+
+    });
+
+}, []);
+
+
+
+// 2. 过滤可用的模型
+
+const filteredModels = MODEL_OPTIONS.filter(
+
+  option => 
+
+    option.scenes.includes(activeTab) && 
+
+    option.provider === provider &&
+
+    availableProviders.includes(option.provider)
+
+);
+
+
+
+// 3. 生成前检查
+
+const handleGenerate = async () => {
+
+  // 检查是否有可用的 providers
+
+  if (availableProviders.length === 0) {
+
+    toast.error('Please contact the administrator to configure AI models.');
+
+    return;
+
+  }
+
+  
+
+  // 检查当前 provider 是否可用
+
+  if (!availableProviders.includes(provider)) {
+
+    toast.error('Please contact the administrator to configure AI models.');
+
+    return;
+
+  }
+
+  
+
+  // 调用生成 API
+
+  await fetch('/api/ai/generate', {
+
+    method: 'POST',
+
+    body: JSON.stringify({
+
+      provider,
+
+      mediaType,
+
+      model,
+
+      prompt,
+
+      options,
+
+      scene
+
+    })
+
+  });
+
+};
+
+```
+
+
+
+### 4. 后端生成逻辑
+
+
+
+**API 路由**: `src/app/api/ai/generate/route.ts`
+
+
+
+```typescript
+
+export async function POST(request: Request) {
+
+  const { provider, mediaType, model, prompt, options, scene } = await request.json();
+
+  
+
+  // 1. 获取 AI 服务
+
+  const aiService = await getAIService();
+
+  
+
+  // 2. 获取指定的 provider
+
+  const aiProvider = aiService.getProvider(provider);
+
+  if (!aiProvider) {
+
+    throw new Error('invalid provider');
+
+  }
+
+  
+
+  // 3. 调用 provider 生成
+
+  const result = await aiProvider.generate({ params });
+
+  
+
+  // 4. 保存任务到数据库
+
+  await createAITask(newAITask);
+
+  
+
+  return result;
+
+}
+
+```
+
+
+
+### 5. AI 服务初始化
+
+
+
+**服务文件**: `src/shared/services/ai.ts`
+
+
+
+```typescript
+
+export function getAIManagerWithConfigs(configs: Configs) {
+
+  const aiManager = new AIManager();
+
+
+
+  // 根据配置动态添加 providers
+
+  if (configs.kie_api_key) {
+
+    aiManager.addProvider(
+
+      new KieProvider({
+
+        apiKey: configs.kie_api_key,
+
+        customStorage: configs.kie_custom_storage === 'true',
+
+      })
+
+    );
+
+  }
+
+
+
+  if (configs.replicate_api_token) {
+
+    aiManager.addProvider(
+
+      new ReplicateProvider({
+
+        apiToken: configs.replicate_api_token,
+
+        customStorage: configs.replicate_custom_storage === 'true',
+
+      })
+
+    );
+
+  }
+
+
+
+  if (configs.fal_api_key) {
+
+    aiManager.addProvider(
+
+      new FalProvider({
+
+        apiKey: configs.fal_api_key,
+
+        customStorage: configs.fal_custom_storage === 'true',
+
+      })
+
+    );
+
+  }
+
+
+
+  if (configs.gemini_api_key) {
+
+    aiManager.addProvider(
+
+      new GeminiProvider({
+
+        apiKey: configs.gemini_api_key,
+
+      })
+
+    );
+
+  }
+
+
+
+  return aiManager;
+
+}
+
+```
+
+
+
+**关键机制**:
+
+- `AIManager` 维护一个 `providers` 数组
+
+- 只有配置了 API Key 的 provider 才会被添加
+
+- 前端通过 `getProvider(name)` 获取特定 provider
+
+- 如果 provider 不存在，返回 `undefined`
+
+
+
+---
+
+
+
+## 🎨 模型配置
+
+
+
+### 图片生成模型
+
+
+
+**配置文件**: `src/shared/blocks/generator/image.tsx` (第 77-135 行)
+
+
+
+```typescript
+
+const MODEL_OPTIONS = [
+
+  // Kie 模型
+
+  {
+
+    value: 'nano-banana-pro',
+
+    label: 'Nano Banana Pro',
+
+    provider: 'kie',
+
+    scenes: ['text-to-image', 'image-to-image'],
+
+  },
+
+  
+
+  // Replicate 模型
+
+  {
+
+    value: 'google/nano-banana-pro',
+
+    label: 'Nano Banana Pro',
+
+    provider: 'replicate',
+
+    scenes: ['text-to-image', 'image-to-image'],
+
+  },
+
+  {
+
+    value: 'bytedance/seedream-4',
+
+    label: 'Seedream 4',
+
+    provider: 'replicate',
+
+    scenes: ['text-to-image', 'image-to-image'],
+
+  },
+
+  
+
+  // Fal 模型
+
+  {
+
+    value: 'fal-ai/nano-banana-pro',
+
+    label: 'Nano Banana Pro',
+
+    provider: 'fal',
+
+    scenes: ['text-to-image'],
+
+  },
+
+  {
+
+    value: 'fal-ai/nano-banana-pro/edit',
+
+    label: 'Nano Banana Pro',
+
+    provider: 'fal',
+
+    scenes: ['image-to-image'],
+
+  },
+
+  {
+
+    value: 'fal-ai/bytedance/seedream/v4/edit',
+
+    label: 'Seedream 4',
+
+    provider: 'fal',
+
+    scenes: ['image-to-image'],
+
+  },
+
+  {
+
+    value: 'fal-ai/z-image/turbo',
+
+    label: 'Z-Image Turbo',
+
+    provider: 'fal',
+
+    scenes: ['text-to-image'],
+
+  },
+
+  {
+
+    value: 'fal-ai/flux-2-flex',
+
+    label: 'Flux 2 Flex',
+
+    provider: 'fal',
+
+    scenes: ['text-to-image'],
+
+  },
+
+  
+
+  // Gemini 模型
+
+  {
+
+    value: 'gemini-3-pro-image-preview',
+
+    label: 'Gemini 3 Pro Image Preview',
+
+    provider: 'gemini',
+
+    scenes: ['text-to-image', 'image-to-image'],
+
+  },
+
+];
+
+```
+
+
+
+### 视频生成模型
+
+
+
+**配置文件**: `src/shared/blocks/generator/video.tsx` (第 71-168 行)
+
+
+
+```typescript
+
+const MODEL_OPTIONS = [
+
+  // Replicate 模型
+
+  {
+
+    value: 'google/veo-3.1',
+
+    label: 'Veo 3.1',
+
+    provider: 'replicate',
+
+    scenes: ['text-to-video', 'image-to-video'],
+
+  },
+
+  {
+
+    value: 'openai/sora-2',
+
+    label: 'Sora 2',
+
+    provider: 'replicate',
+
+    scenes: ['text-to-video', 'image-to-video'],
+
+  },
+
+  
+
+  // Fal 模型
+
+  {
+
+    value: 'fal-ai/kling-video/o1/text-to-video',
+
+    label: 'Kling Video O1',
+
+    provider: 'fal',
+
+    scenes: ['text-to-video'],
+
+  },
+
+  {
+
+    value: 'fal-ai/kling-video/o1/image-to-video',
+
+    label: 'Kling Video O1',
+
+    provider: 'fal',
+
+    scenes: ['image-to-video'],
+
+  },
+
+  
+
+  // Kie 模型
+
+  {
+
+    value: 'kling-video-o1',
+
+    label: 'Kling Video O1',
+
+    provider: 'kie',
+
+    scenes: ['text-to-video', 'image-to-video'],
+
+  },
+
+];
+
+```
+
+
+
+### 模型选择逻辑
+
+
+
+```typescript
+
+// 1. 根据场景和 provider 过滤模型
+
+const availableModels = MODEL_OPTIONS.filter(
+
+  option => 
+
+    option.scenes.includes(currentScene) && 
+
+    option.provider === selectedProvider &&
+
+    availableProviders.includes(option.provider)
+
+);
+
+
+
+// 2. 用户切换场景时自动切换模型
+
+const handleSceneChange = (newScene) => {
+
+  setActiveTab(newScene);
+
+  
+
+  const availableModels = MODEL_OPTIONS.filter(
+
+    option => 
+
+      option.scenes.includes(newScene) && 
+
+      option.provider === provider
+
+  );
+
+  
+
+  if (availableModels.length > 0) {
+
+    setModel(availableModels[0].value);
+
+  }
+
+};
+
+
+
+// 3. 用户切换 provider 时自动切换模型
+
+const handleProviderChange = (newProvider) => {
+
+  setProvider(newProvider);
+
+  
+
+  const availableModels = MODEL_OPTIONS.filter(
+
+    option => 
+
+      option.scenes.includes(activeTab) && 
+
+      option.provider === newProvider
+
+  );
+
+  
+
+  if (availableModels.length > 0) {
+
+    setModel(availableModels[0].value);
+
+  }
+
+};
+
+```
+
+
+
+---
+
+
+
+## 🔄 工作流程
+
+
+
+### 完整的 AI 生成流程
+
+
+
+```
+
+1. 用户打开生成器页面
+
+   ↓
+
+2. 前端调用 GET /api/ai/providers
+
+   ↓
+
+3. 后端检查配置，返回可用 providers: ['kie', 'fal']
+
+   ↓
+
+4. 前端根据可用 providers 过滤模型列表
+
+   - 只显示 provider 为 'kie' 或 'fal' 的模型
+
+   ↓
+
+5. 用户选择 provider: 'kie'
+
+   ↓
+
+6. 前端自动过滤并显示 kie 的模型
+
+   ↓
+
+7. 用户选择模型: 'nano-banana-pro'
+
+   ↓
+
+8. 用户输入 prompt 并点击生成
+
+   ↓
+
+9. 前端调用 POST /api/ai/generate
+
+   {
+
+     provider: 'kie',
+
+     mediaType: 'image',
+
+     model: 'nano-banana-pro',
+
+     prompt: '...',
+
+     scene: 'text-to-image',
+
+     options: { ... }
+
+   }
+
+   ↓
+
+10. 后端获取 AI 服务
+
+    - getAIService() 读取配置
+
+    - 初始化 AIManager
+
+    - 添加配置了的 providers
+
+   ↓
+
+11. 后端获取 kie provider
+
+    - aiService.getProvider('kie')
+
+   ↓
+
+12. 调用 kie provider 生成
+
+    - kieProvider.generate({ params })
+
+    - 调用 Kie API
+
+   ↓
+
+13. 保存任务到数据库
+
+    - createAITask(newAITask)
+
+   ↓
+
+14. 返回任务 ID 给前端
+
+   ↓
+
+15. 前端轮询查询任务状态
+
+    - POST /api/ai/query { taskId }
+
+   ↓
+
+16. 后端查询 provider 任务状态
+
+    - kieProvider.query({ taskId })
+
+   ↓
+
+17. 任务完成，返回结果
+
+    - 图片 URL
+
+    - 视频 URL
+
+    - 音乐 URL
+
+```
+
+
+
+### Custom Storage 流程
+
+
+
+当启用 `custom_storage` 时：
+
+
+
+```
+
+1. AI Provider 生成内容
+
+   ↓
+
+2. 获取 Provider 返回的临时 URL
+
+   ↓
+
+3. 调用 saveFiles() 函数
+
+   ↓
+
+4. 下载文件内容
+
+   ↓
+
+5. 上传到自定义存储 (R2/S3)
+
+   ↓
+
+6. 替换为自定义存储的 URL
+
+   ↓
+
+7. 返回给用户
+
+```
+
+
+
+**代码示例** (`src/extensions/ai/kie.ts`):
+
+
+
+```typescript
+
+// 查询任务结果
+
+const result = await queryImage({ taskId });
+
+
+
+// 如果启用了自定义存储
+
+if (taskStatus === AITaskStatus.SUCCESS && 
+
+    images && 
+
+    images.length > 0 && 
+
+    this.configs.customStorage) {
+
+  
+
+  // 准备要保存的文件
+
+  const filesToSave: AIFile[] = images.map((image, index) => ({
+
+    url: image.imageUrl,
+
+    contentType: 'image/png',
+
+    key: `kie/image/${getUuid()}.png`,
+
+    index: index,
+
+    type: 'image',
+
+  }));
+
+  
+
+  // 保存到自定义存储
+
+  const uploadedFiles = await saveFiles(filesToSave);
+
+  
+
+  // 替换 URL
+
+  uploadedFiles.forEach((file: AIFile) => {
+
+    if (file && file.url && file.index !== undefined) {
+
+      images[file.index].imageUrl = file.url;
+
+    }
+
+  });
+
+}
+
+```
+
+
+
+---
+
+
+
+## 📝 配置示例
+
+
+
+### 场景 1: 只配置 Kie
+
+
+
+**数据库配置**:
+
+```
+
+kie_api_key = "your_kie_key"
+
+kie_custom_storage = "true"
+
+```
+
+
+
+**前端效果**:
+
+- Provider 选择器只显示: Kie
+
+- 模型选择器只显示 Kie 的模型:
+
+  - Nano Banana Pro (图片)
+
+  - Kling Video O1 (视频)
+
+- 可以生成: 图片、视频、音乐
+
+
+
+### 场景 2: 配置 Kie + Fal
+
+
+
+**数据库配置**:
+
+```
+
+kie_api_key = "your_kie_key"
+
+kie_custom_storage = "true"
+
+fal_api_key = "your_fal_key"
+
+fal_custom_storage = "false"
+
+```
+
+
+
+**前端效果**:
+
+- Provider 选择器显示: Kie, Fal
+
+- 切换到 Kie 时显示 Kie 的模型
+
+- 切换到 Fal 时显示 Fal 的模型:
+
+  - Nano Banana Pro (图片)
+
+  - Z-Image Turbo (图片)
+
+  - Flux 2 Flex (图片)
+
+  - Kling Video O1 (视频)
+
+- Kie 生成的文件会保存到自定义存储
+
+- Fal 生成的文件使用 Fal 的 URL
+
+
+
+### 场景 3: 配置所有 Providers
+
+
+
+**数据库配置**:
+
+```
+
+kie_api_key = "your_kie_key"
+
+kie_custom_storage = "true"
+
+replicate_api_token = "your_replicate_token"
+
+replicate_custom_storage = "true"
+
+fal_api_key = "your_fal_key"
+
+fal_custom_storage = "true"
+
+gemini_api_key = "your_gemini_key"
+
+```
+
+
+
+**前端效果**:
+
+- Provider 选择器显示: Kie, Replicate, Fal, Gemini
+
+- 每个 provider 都有自己的模型列表
+
+- 用户可以自由选择任意 provider 和模型
+
+- 所有文件都保存到自定义存储
+
+
+
+### 场景 4: 未配置任何 Provider
+
+
+
+**数据库配置**:
+
+```
+
+(所有 API Key 都为空)
+
+```
+
+
+
+**前端效果**:
+
+- `/api/ai/providers` 返回空数组: `[]`
+
+- 前端检测到 `availableProviders.length === 0`
+
+- 用户点击生成时显示错误:
+
+  ```
+
+  "Please contact the administrator to configure AI models."
+
+  ```
+
+- 无法使用任何 AI 功能
+
+
+
+---
+
+
+
+## 🔍 关键代码位置
+
+
+
+### 配置相关
+
+- 配置模型: `src/shared/models/config.ts`
+
+- 配置读取: `src/shared/models/config.ts` - `getAllConfigs()`
+
+- 配置定义: `src/shared/services/settings.ts` (第 730-795 行)
+
+
+
+### AI 服务
+
+- AI Manager: `src/extensions/ai/index.ts`
+
+- AI 服务初始化: `src/shared/services/ai.ts`
+
+- Kie Provider: `src/extensions/ai/kie.ts`
+
+- Replicate Provider: `src/extensions/ai/replicate.ts`
+
+- Fal Provider: `src/extensions/ai/fal.ts`
+
+- Gemini Provider: `src/extensions/ai/gemini.ts`
+
+
+
+### API 路由
+
+- 获取可用 Providers: `src/app/api/ai/providers/route.ts`
+
+- 生成内容: `src/app/api/ai/generate/route.ts`
+
+- 查询任务: `src/app/api/ai/query/route.ts`
+
+
+
+### 前端组件
+
+- 图片生成器: `src/shared/blocks/generator/image.tsx`
+
+- 视频生成器: `src/shared/blocks/generator/video.tsx`
+
+- 模型选择器: `src/shared/components/ai-elements/model-selector.tsx`
+
+
+
+---
+
+
+
+## 💡 总结
+
+
+
+### 配置生效规则
+
+
+
+1. **Provider 可用性**: 只要配置了对应的 API Key，该 provider 就可用
+
+2. **模型过滤**: 前端根据可用 providers 自动过滤模型列表
+
+3. **动态切换**: 用户切换 provider 或场景时，自动切换到可用的模型
+
+4. **错误提示**: 如果没有配置任何 provider，显示友好的错误提示
+
+
+
+### 优势
+
+
+
+- **灵活配置**: 可以只配置需要的 providers
+
+- **动态加载**: 根据配置动态初始化 providers
+
+- **用户友好**: 自动过滤不可用的选项
+
+- **易于扩展**: 添加新 provider 只需实现 `AIProvider` 接口
+
+
+
+### 注意事项
+
+
+
+- 配置修改后需要重启服务器才能生效
+
+- API Key 的有效性在实际调用时才验证
+
+- Custom Storage 需要先配置存储服务 (R2/S3)
+
+- 不同 provider 的模型参数可能不同
+
+
+
+
+
+## 一些支付和积分的问答
+
+
+
+### 支付-如果是月付的话是会每个月扣钱然后加credits吗？
+
+
+
+答： 是的，月付会每个月扣钱然后加 Credits。
+
+从代码分析来看，项目确实支持订阅续费时自动扣款并发放 Credits。项目支持两种支付类型：
+
+- one_time: 一次性付款
+
+- subscription: 订阅付款（包括月付、年付等）
+
+
+
+> 总结
+
+
+
+| 场景         | 扣款               | Credits 发放               | Credits 过期时间               |
+
+|--------------|--------------------|---------------------------|-------------------------------|
+
+| 首次订阅     | 立即扣款           | 立即发放 creditsAmount     | 当前订阅周期结束（currentPeriodEnd） |
+
+| 订阅续费（月付/年付） | 每个周期自动扣款   | 每次续费成功后自动发放     | 新的订阅周期结束               |
+
+| 一次性付款   | 立即扣款           | 立即发放                   | 按 creditsValidDays 计算       |
+
+
+
+
+
+> 数据表结构
+
+
+
+- **subscription 表**：存储订阅信息，包括 creditsAmount、creditsValidDays、interval（月/年）、currentPeriodStart、currentPeriodEnd
+
+- **credit 表**：存储每次发放/消费的 Credits 记录，包括 remainingCredits、expiresAt
+
+- **order 表**：每次支付（包括续费）都会创建订单记录
+
+
+
+
+
+简而言之：月付确实是每个月自动扣款，成功后系统会自动发放新的 Credits，这些 Credits 在下个扣款周期结束时过期。
+
+
+
+### Stripe、Creem、Paypal等支付都是这样的么？
+
+
+
+答： 是的，Stripe、Creem、PayPal 都是统一的处理逻辑
+
+项目采用了统一的支付抽象层设计，所有支付提供商都实现了相同的 PaymentProvider接口。
+
+```
+
+┌─────────────────────────────────────────────────────────┐
+
+│              统一的业务处理层 (payment.ts)                │
+
+│  handleCheckoutSuccess / handleSubscriptionRenewal      │
+
+└─────────────────────────────────────────────────────────┘
+
+                           ▲
+
+                           │ 统一的 PaymentSession
+
+┌─────────────────────────────────────────────────────────┐
+
+│                 Webhook 路由 (notify/[provider])         │
+
+│     根据 provider 参数选择对应的支付提供商处理              │
+
+└─────────────────────────────────────────────────────────┘
+
+                           ▲
+
+         ┌─────────────────┼─────────────────┐
+
+         ▼                 ▼                 ▼
+
+┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+
+│ StripeProvider │ │ CreemProvider  │ │ PayPalProvider │
+
+│  mapStripeEvent│ │  mapCreemEvent │ │   (暂未完善)   │
+
+└────────────────┘ └────────────────┘ └────────────────┘
+
+```
+
+>  各提供商的事件映射
+
+
+
+| 统一事件类型       | Stripe 原始事件                  | Creem 原始事件          |
+
+|--------------------|----------------------------------|-------------------------|
+
+| CHECKOUT_SUCCESS   | checkout.session.completed       | checkout.completed      |
+
+| PAYMENT_SUCCESS    | invoice.payment_succeeded        | subscription.paid       |
+
+| SUBSCRIBE_UPDATED  | customer.subscription.updated    | subscription.update     |
+
+| SUBSCRIBE_CANCELED | customer.subscription.deleted    | subscription.canceled   |
+
+
+
+
+
+>  关键点
+
+
+
+1. **统一处理逻辑**：无论是 Stripe 还是 Creem，收到续费成功的 webhook 时：
+
+   - 被映射为 `PaymentEventType.PAYMENT_SUCCESS`
+
+   - 若 `subscriptionCycleType === SubscriptionCycleType.RENEWAL`
+
+   - 都会调用 `ts handleSubscriptionRenewal()` 发放新的 Credits
+
+
+
+2. **PayPal 目前不完整**：从代码看，PayPal 的 `ts getPaymentEvent` 返回的 `paymentSession` 是 `undefined`，说明 PayPal 的订阅续费功能尚未实现完整。
+
+
+
+3. **Credits 发放时机**：
+
+   - 首次订阅：`CHECKOUT_SUCCESS` → `ts handleCheckoutSuccess()`
+
+   - 续费：`PAYMENT_SUCCESS + RENEWAL` → `ts handleSubscriptionRenewal()`
+
+
+
+
+
+>  结论
+
+
+
+Stripe 和 Creem 的月付/年付逻辑完全一致：
+
+- ✅ 每个周期自动扣款
+
+- ✅ 扣款成功后自动发放 Credits
+
+- ✅ Credits 在当前周期结束时过期
+
+
+
+PayPal 的订阅续费功能目前未完全实现，只有一次性支付和首次订阅可用。

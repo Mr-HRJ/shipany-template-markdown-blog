@@ -1,0 +1,135 @@
+---
+title: '未办理港卡的同学看过来-试试Creem+Wise组合'
+---
+
+> Wise之前说过，现在大陆可以身份证就能过。
+
+那么咱们可以尝试 Creem+Wise组合，这个需要自己试下，我没有走闭环。
+
+
+
+
+
+Creem直接提现到支付宝，99%的人会卡在这里：
+
+- ❌ 直接绑支付宝 → 触发人工审核，要求提供合同/发票（大概率失败）
+
+- ❌ 申请香港银行卡 → 时间成本，需亲自赴港
+
+- ✅ Wise中转 → 免审核，1分钟到账，全程线上操作
+
+
+
+这是实测3次后的稳定方案，目前 **Creem → Wise → 支付宝** 全链路已跑通。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/938fd591200b3fe8.jpg" alt="image" />
+
+
+
+## 操作流程
+
+### 一、Wise账号注册
+
+1. 注册地址：[https://wise.com/](https://wise.com/invite/dic/w0kjyex)，[Wise在线开卡教程](/docs/shipany-two/payment/wise-card-guide)
+
+2. 注册完成后在页面**添加货币**，核心需添加**欧元账户**，建议同时添加人民币、美元、港币账户。
+
+> Tips: 我一开始注册完是有点懵的，界面太简洁了，一时不知道怎么操作。我以为应该有添加银行卡之类的东西，但是在这里其实是按货币区分的，一类货币就代表一张虚拟卡。
+
+
+
+3. 账户审核：人民币、欧元、美元账户**无需审核直接通过**；港卡审核周期极长，我是发邮件怼他们才给我通过的港卡。
+
+4. 查看欧元账户详情：在主账户找到欧元账户，点击账户id即可查看，
+
+   <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/426bfc1ebfb022c6.jpg" alt="image" />
+
+需获取**IBAN代码、swift id、银行名称和地址**（Creem转账必备信息）。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6ee516f835c1d68c.jpg" alt="image" />
+
+    - Wise欧元账户银行信息：Wise, Rue du Trone 100, 3rd floor, Brussels, 1050, Belgium
+
+    - SEPA汇出（国内）无手续费。
+
+
+
+### 二、Creem添加Payout收款账号
+
+核心操作路径：**Creem Dashboard → Balance → Payout Account → Update Account**
+
+1. 打开Creem商店，进入侧边栏`Balance`，找到`Payout Account`并点击`Update Account`。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1e5c6c4e811f0874.jpg" alt="image" />
+
+
+
+2. 找到需要更新账户的store，点击**Set up verifications**（Creem界面更新频繁，按最新版操作）。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/71c7434ef1460181.jpg" alt="image" />
+
+
+
+3. 在弹窗中点击**bank payout verification**的`view`按钮，在跳转页面添加新账户。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e4c6985eebf6b6ed.jpg" alt="image" />
+
+
+
+4. 填写账户基础信息：国家选择**Belgium（比利时）**，货币选择**EUR（欧元）**，转账方式选**Bank account**，点击next。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/945cc380d87560c4.jpg" alt="image" />
+
+
+
+5. 填写账户详情：输入Wise欧元账户的**IBAN代码**（回车可自动检测账户信息），按Wise账户详情填写**账户持有人姓名**（拼音顺序可能与中文不同，按Wise显示填写）。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8aa3d63c9bd2c7be.jpg" alt="image" />
+
+
+
+6. 按页面提示完成付款账户添加，将Wise虚拟欧元账户绑定为Creem的收款账户。
+
+7. 发起提现：回到Creem余额页面请求提现，Creem会在提现周期内将资金打入Wise欧元账户，**Wise绑定邮箱会收到收款邮件**，代表资金到账。
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d6c33a77daa54b4e.jpg" alt="image" />
+
+
+
+### 三、Wise资金转到支付宝
+
+1. 资金到账Wise后，操作与Creem无关，可自由划转；在Wise欧元账户中点击**汇款**。
+
+2. 首次汇款需添加收款人：选择目标货币为**人民币**，收款方式选**电子钱包**，关联支付宝/微信（输入Alipay/WeChat Pay ID）。
+
+    - 电子钱包汇款限额：50,000元人民币*
+
+    - 银联卡汇款限额：33,000元人民币* <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/75f9bffb247ba076.jpg" alt="image" />
+
+
+
+3. 填写转账原因：选择**储蓄**即可。<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/683459c253980fed.jpg" alt="image" />
+
+
+
+4. 完成转账：实测**不到1分钟**支付宝即可收到跨境闪速收款，资金成功到账。
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4d5fbe71d0553789.jpg" alt="image" />
+
+
+
+
+
+## 常见问题（FAQ）
+
+### 1. 为什么选择Wise欧元账户，其他账户可行吗？
+
+未实测美元/港元账户，因Creem付款周期15天较长未做尝试，**理论上美元、港元账户也可实现**，可自行测试。
+
+
+
+### 2. 能否转到微信？
+
+可以。资金到账Wise后可自由选择划转方式，支付宝/微信均支持，操作流程与支付宝一致。
+
+
+
+### 3. 手续费如何收取？
+
+- 首次从Wise转到支付宝**无手续费**；
+
+- 后续转账会收取手续费，**Wise新人有一定额度的免手续费福利**。

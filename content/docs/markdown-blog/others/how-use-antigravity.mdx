@@ -1,0 +1,597 @@
+---
+title: 'How Use Antigravity'
+---
+
+如果你想使用 Google 的 **Gemini 3** 或 **Antigravity**，却不知道从哪里开始，那么这篇文章就是为你准备的。
+
+
+
+> 2026-03-16 更新
+
+> 最近使用很拉胯，不光是Claude使用后直接7d等待，Geminii模型也是经常失败，还得重试，失败率很高，现在我将Antigravity作为备选了，Codex Cli成为主力
+
+
+
+> 2026-02-24 更新
+
+> 过完年后打开Antigravity后发现Pro掉了，虽然我买了1年闲鱼售后的，但是这次是google大面积封杀，没办法（这次给我的教训是后面在闲鱼不买长期的），我又通过[谷歌又整活了，免费白嫖 3 个月 AI Pro 权限](https://mp.weixin.qq.com/s/-ujEOxZwYCsN9uaseOl-lA)  续了3个月。【这个渠道需要一个海外卡，我用招行全币种Visa卡直接提示“无法订阅”，然后关闭了支付资料，重新点击的“开始使用”，再闲鱼买了个虚拟卡支付才OK】
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/64818f24a59bd82d.jpg" alt="image" />
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0084a447ae7d4d9d.jpg" alt="image" />
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/fd6034014999bb90.jpg" alt="image" />
+
+
+
+
+
+>2026-01-22 更新
+
+>当天下午打开IDE后出现Loading models
+
+><img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/52c431891b255544.jpg" alt="image" />
+
+>解释如下：
+
+><img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ad6cc206b8839382.jpg" alt="image" />
+
+
+
+
+
+> 2026-01-07 更新
+
+> 前提：你能正常使用Antigravity，只不过你是免费用户，额度6天一刷新不够用；
+
+> 我跑通一个路子需要花钱￥30-40左右：闲鱼搜”家庭组google一年“或者”家庭组gemini一年“,然后购买后加入家庭组，可以享受Antigravity 5小时刷新的额度请求
+
+> 在购买之前问清楚：质保一年？加入时和主账号不在同一地区怎么办？加入时必须什么节点？能否用Antigravity ？
+
+> 我的过程：美国纯净节点、我的账号地区（查看账号地区：https://policies.google.com/terms） 和主账号不在同一地区，**使用下面办法成功加入家庭组**
+
+> 如果你在购买后通过邮箱进入家庭组的时候
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/efe3c1975f1e4ac5.jpg" alt="image" />
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8066f8714776700e.jpg" alt="image" />
+
+> 这时候，你需要关闭你的账号支付资料（注意：关闭支付资料的同时会需要关闭你的adsense、cloud云，考虑好再决定是否关闭）
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c88a5f145881dd45.jpg" alt="image" />
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5f8550011a7720f4.jpg" alt="image" />
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/81e8b689202ae5ff.jpg" alt="image" />
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/aa63ea58578a97c0.jpg" alt="image" />
+
+
+
+
+
+> 关闭支付资料后就可以加入了，这时候可以换回你平时的节点，正常打开使用Antigravity
+
+> 这里需要用到一个神器Antigravity Tools（专业的 Antigravity 账号管理与切换工具、看使用额度，API反代）：https://github.com/lbjlaq/Antigravity-Manager
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ff600959f92a967b.jpg" alt="image" />
+
+
+
+> 如果说上面的你还是不够用，就多弄几个google账号，都进入家庭组，使用Antigravity Tools 做账号切换，这样就编程模型使用自由了
+
+> 截止到2026-01-20 发现：Claude Opus 模型消耗很快，而且他的刷新时间不是5小时了，感觉是根据你的请求而定的，如果你只有一个google家庭组账号的话就省着点用，只用他来处理棘手的问题，其他的普通问题用Gemini
+
+
+
+
+
+只要跟着下面的步骤操作，无需技术背景，也可以顺利申请到一整年的 **Google AI Pro 免费资格**（学生优惠）。
+
+
+
+而有了 **Antigravity** 之后，可以免费使用：
+
+- Claude Opus 4.5
+
+- Sonnet 4.5
+
+- Gemini 3 Pro 模型
+
+
+
+目前 Antigravity 的会员和 Google AI 会员是互通的。在申请了 Google AI 会员之后，可以获得更多的模型使用额度。
+
+
+
+---
+
+
+
+## 全流程共 5 步：
+
+
+
+1. 准备非中国区 Google 账号  
+
+2. 订阅 Google AI 会员 / 学生优惠  
+
+3. 绑定支付方式  
+
+4. 订阅后取消自动续费  
+
+5. 安装使用 Antigravity  
+
+
+
+---
+
+
+
+### 一、准备一个“非中国区”的 Google 账号
+
+
+
+Gemini 和 Antigravity 并未向中国大陆开放，所以你首先需要一个地区不在中国的 Google 账号。
+
+
+
+你有两种方式选择：
+
+
+
+#### 方式一：将已有 Google 账号改为其他地区
+
+
+
+1. 打开 Google 账号归属地查询网站：  
+
+   [https://policies.google.com/country-association-form](https://policies.google.com/country-association-form)
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0feed9183512999d.jpg" alt="image" />
+
+
+
+
+
+2. 操作注意点：
+
+   - 开启科学上网，并切换到目标地区（推荐美国，因为有些地区无法申请学生优惠，如中国香港、新加坡不行）。
+
+   - 理由选择最后一个：“其他”。
+
+   - 说明示例：“我想使用 Antigravity，但该应用未在我当前地区开放，因此申请更改地区。”
+
+3. 提交后等待审核即可。
+
+
+
+#### 方式二：重新注册一个 Google 账号（更推荐）
+
+
+
+1. 注册前先把 VPN 切换到目标地区，**强烈推荐选择美国**。
+
+2. 注册要点：
+
+   - 生日必须设置为 **18 岁以上**（未成年会影响 Gemini 和 Antigravity 使用）。
+
+   - 可以使用中国手机号注册，不影响地区判断。
+
+   - 在手机上注册可直接接收 Google 验证短信，成功率更高（电脑注册可能需扫码并发送海外短信，容易失败）。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/67ecd40d7e2c87a2.jpg" alt="image" />
+
+
+
+
+
+**如果你赶时间，推荐直接注册新账号，更省心。**
+
+
+
+---
+
+
+
+### 二、订阅 Google AI 会员（含学生优惠）
+
+
+
+获取 Google AI 会员共有 3 种方式，按需选择：
+
+
+
+#### 方式一：直接购买 Google AI Pro / Ultra
+
+
+
+- 官网：[https://one.google.com/about/google-ai-plans/](https://one.google.com/about/google-ai-plans/)
+
+- 
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/10e0ea7c99f8f6aa.jpg" alt="image" />
+
+
+
+
+
+- 大多数用户购买 Pro 已足够。
+
+- 费用：
+
+  - 首月免费
+
+  - 之后 19.9 美元/月（约 141 元/月）
+
+- 后续需绑定 Visa 信用卡。
+
+
+
+#### 方式二：申请学生优惠（1 年 Pro 免费）✅【最划算】
+
+
+
+- 官网：[https://gemini.google/students](https://gemini.google/students)
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d32d410beccc9a18.jpg" alt="image" />
+
+
+
+
+
+- 特点：
+
+  - 可获得一年 Google AI Pro 免费试用
+
+  - 第二年起恢复 19.9 美元/月
+
+  - 仅支持 Pro，不支持 Ultra
+
+  - 活动将于 **2026 年 1 月 30 日结束**
+
+- 申请需上传：
+
+  - 学生证（需有姓名）
+
+  - 在读证明或含学籍时间的账单文件
+
+
+
+📌 **如果没有真实学籍怎么办？**
+
+
+
+1. 使用网友分享的验证工具（涉及破解，仅限内部教程分享）
+
+2. 在闲鱼购买“Google 学生认证”，费用约 **10-40 元左右**
+
+
+
+#### 方式三：在淘宝上购买 Google AI 会员
+
+
+
+- 当前价格（浮动区间）：
+
+  - 一年 Pro 会员约 100–150 元
+
+- 优点：比官网便宜，适合不想折腾的用户
+
+- 注意事项：
+
+  - 属于灰色服务，请自行评估风险
+
+  - 不建议与账号绑定大量个人信息
+
+
+
+---
+
+
+
+### 三、绑定支付方式（非常关键）
+
+
+
+Google 在订阅时会要求绑定支付方式。分三种情况处理：
+
+
+
+#### 情况一：你有中国发行的 Visa 信用卡
+
+
+
+很多人遇到提示“卡不可用”。
+
+
+
+✅ 正确做法：
+
+
+
+1. 打开「Google 账号管理」
+
+2. 进入「付款与订阅」
+
+3. 在「付款方式」中先添加 Visa 卡
+
+4. 再回到订阅页面刷新即可正常使用
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cced0cf663c85a27.jpg" alt="image" />
+
+
+
+
+
+🔗 若仍失败，尝试在 Google Wallet 中绑定：  
+
+[https://wallet.google.com/wallet/paymentmethods](https://wallet.google.com/wallet/paymentmethods)
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9a7b75b43f55f08d.jpg" alt="image" />
+
+
+
+
+
+#### 情况二：你没有信用卡
+
+
+
+可选择：
+
+
+
+- 在闲鱼购买一张 VCC 虚拟信用卡（20–30 元）
+
+- 卡内通常自带 1 美元，用于验证即可
+
+- ❌ 千万不要往里面充值（虚拟卡非本人信息，存在风险）
+
+
+
+#### 情况三：使用 Google 礼品卡
+
+
+
+- 适合长期付费用户
+
+- ❌ 不推荐用于“免费试用/学生优惠”，因为充值金额不能退回
+
+
+
+---
+
+
+
+### 四、订阅成功后取消自动续费
+
+
+
+支付方式绑定完成后即可顺利订阅。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7cd89b7c498aa713.jpg" alt="image" />
+
+
+
+
+
+⚠️ 如果只想使用免费期，**务必第一时间关闭自动续费！**
+
+
+
+📍 关闭路径：
+
+> “管理 Google 账号” → “付费与订阅” → “订阅” → “取消订阅”
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c4d98b101975c8d4.jpg" alt="image" />
+
+
+
+
+
+✅ 取消后：
+
+- 免费试用时间仍可继续使用
+
+- 到期不会扣钱
+
+- 之后需要时可再重新订阅
+
+
+
+📌 这是防止误扣费的关键一步！
+
+
+
+---
+
+
+
+### 五、安装使用 Antigravity
+
+
+
+- 官网：[https://antigravity.google/](https://antigravity.google/)
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/62a36e66efde8966.jpg" alt="image" />
+
+
+
+
+
+#### 常见问题：登录 Google 账号之后没反应
+
+
+
+很多用户会遇到：浏览器完成 Google 登录，返回 Antigravity 时无反应、无提示。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/afd93748b72ab675.jpg" alt="image" />
+
+
+
+
+
+🔍 原因分析：
+
+
+
+1. Antigravity 对可使用地区有限制（中国大陆和香港无法使用）
+
+2. Google 账号未满 18 岁
+
+3. Google 账号归属地不对
+
+
+
+#### 解决方案：
+
+
+
+- **账号年龄问题**：重新注册最快（修改年龄常不成功）
+
+- **归属地问题**：参考第一章修改账号归属地
+
+- **地区限制问题**：开启科学上网软件的 **TUN 模式**
+
+
+
+💡 什么是 TUN 模式？
+
+
+
+TUN 模式是“把你手机上所有 App 的网络流量都通过你的梯子来走”的一种工作模式。
+
+
+
+一般代理工具默认只代理浏览器等部分 App，而像 Antigravity 这类应用可能会绕过代理。
+
+
+
+TUN 模式的作用就是：**强制让 Antigravity 必须走代理线路**，从而绕过地区限制，正常登录使用。
+
+
+
+🔧 推荐工具：
+
+
+
+若你的软件没有 TUN 模式，可下载 **Clash Verge**：
+
+
+
+👉 下载地址：[https://github.com/clash-verge-rev/clash-verge-rev/releases](https://github.com/clash-verge-rev/clash-verge-rev/releases)
+
+
+
+配置好后，开启“虚拟网页模式”（即 TUN 模式），然后重新登录即可成功进入。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/167dcb3cdcb7450c.jpg" alt="image" />
+
+
+
+
+
+---
+
+
+
+#### 常见问题：如何将 Antigravity 设置为中文？
+
+
+
+在 Antigravity 侧边栏的「扩展」中搜索 `chinese`，选择第一个安装即可。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/544bcd5eac7b9cc8.jpg" alt="image" />
+
+
+
+
+
+## Antigravity Tools
+
+
+
+[https://github.com/lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager)
+
+
+
+这是一个把 Antigravity 里面的模型转成标准 API，给 Claude Code 等 Coding Agent 接入的智能代理项目。提供多账号管理、协议转换和智能请求调度等功能，让你能稳定、低成本地在 Claude Code、Codex 中使用 gemini / claude 系列模型。
+
+
+
+如何使用？
+
+
+
+1. 访问 Antigravity Tools 代码仓库，按照指示安装 Antigravity Tools 桌面软件
+
+2. 在 Antigravity Tools 桌面软件添加账号，打开浏览器通过谷歌账号登录 Antigravity
+
+3. 在终端配置环境变量，让 Claude Code 使用自定义的 API 端点
+
+
+
+```bash
+export ANTHROPIC_API_KEY="sk-xxx"
+
+export ANTHROPIC_BASE_URL="http://127.0.0.1:8045"
+
+```
+
+
+4. 打开 Claude Code 发送指令，开始使用 CC
+
+
+
+有哪些限制？
+
+
+
+在 Antigravity Tools  里可以添加多个 Google 账号，每个账号都有一定的 Antigravity 模型额度，如果额度不够了，可以点击切换账号，智能切换到额度足够的账号。
+
+
+
+可以为你添加的账号升级 Antigravity 高级套餐，获得更高的额度，既能在 Antigravity 编辑器使用，也能在 Claude Code、Codex 使用，相当于一次充值，同时分配给多个编程智能体用。
+
+
+
+可以用哪些模型？
+
+
+
+Antigravity 免费账号主要支持的是 gemini / claude 系列模型，不支持 gpt 模型，如果在 Codex 接入，需要加一个模型映射，比如把 gpt-5-codex 映射到 gemini-3-pro-high
+
+
+
+这个项目目前只提供桌面版软件，不支持 Web 应用，不能通过服务器部署做 API 中转站，仅供自己在本地使用，一定程度降低了对 Claude、ChatGPT 的账号依赖，仅需一个 Google 账号，即可使用 Antigravity、Claude Code、Codex、Gemini Cli 等编程智能体。
+
+
+
+有兴趣的可以试试。
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/800ddf2ddd73138a.jpg" alt="image" />

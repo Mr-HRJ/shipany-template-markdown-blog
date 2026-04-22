@@ -1,0 +1,14 @@
+---
+title: 'I Have Some Questions'
+---
+
+## 本地开发使用本地数据，部署到Cloudflare使用的是Neon数据库，部署成功后，访问就报错
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/114b5db1f70d2ca7.jpg" alt="报错截图" />
+
+原因：忘记了对数据库执行了
+
+```
+pnpm db:generate
+pnpm db:migrate
+```

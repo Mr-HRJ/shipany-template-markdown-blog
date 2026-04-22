@@ -197,6 +197,8 @@ export function BlogDetail({
                       {prevPost ? (
                         <Link
                           href={prevPost.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="group flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-6 transition-all hover:border-primary hover:bg-muted/50"
                         >
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -215,6 +217,8 @@ export function BlogDetail({
                       {nextPost && (
                         <Link
                           href={nextPost.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="group flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-6 text-right transition-all hover:border-primary hover:bg-muted/50"
                         >
                           <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">

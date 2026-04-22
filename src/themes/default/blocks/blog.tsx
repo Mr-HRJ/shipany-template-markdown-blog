@@ -335,6 +335,7 @@ export function Blog({
                       key={`${item.id}-${idx}`}
                       href={item.url || ''}
                       target={item.target || '_blank'}
+                      rel="noopener noreferrer"
                       className={cn(
                         'block overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md',
                         viewMode === 'list' && 'flex flex-col gap-4 sm:flex-row'

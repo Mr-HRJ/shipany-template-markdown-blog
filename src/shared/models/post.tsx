@@ -3,6 +3,7 @@ import { and, count, desc, eq, like, sql } from 'drizzle-orm';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import moment from 'moment';
 
+import { envConfigs } from '@/config';
 import { db } from '@/core/db';
 import { pagesSource, postsSource } from '@/core/docs/source';
 import { generateTOC } from '@/core/docs/toc';
@@ -211,6 +212,13 @@ export async function getPost({
   postPrefix?: string;
 }): Promise<BlogPostType | null> {
   let post: BlogPostType | null = null;
+
+  // Skip the DB lookup when no database is configured — avoids a thrown
+  // `DATABASE_URL is not set` that clutters the server console on every
+  // blog-detail render in local/static setups. Local MDX is the fallback.
+  if (!envConfigs.database_url) {
+    return getLocalPost({ slug, locale, postPrefix });
+  }
 
   try {
     // get post from database
@@ -666,6 +674,13 @@ export async function getAdjacentPosts({
   prevPost: { title: string; url: string } | null;
   nextPost: { title: string; url: string } | null;
 }> {
+  // Adjacent posts rely on post categories stored in the DB. With no DB
+  // configured there's nothing to compute — skip and let the UI hide
+  // prev/next rather than surfacing a caught DATABASE_URL error.
+  if (!envConfigs.database_url) {
+    return { prevPost: null, nextPost: null };
+  }
+
   try {
     // Get current post from database to find its category
     const currentPost = await findPost({ slug, status: PostStatus.PUBLISHED });

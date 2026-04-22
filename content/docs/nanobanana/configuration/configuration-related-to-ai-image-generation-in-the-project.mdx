@@ -21,17 +21,11 @@ title: '写在前面'
 
 
 | 平台 | 模型版本 | 定价详情 | 备注 | 官网链接 |
-
 | :--- | :--- | :--- | :--- | :--- |
-
 | **Kie.ai（Kie）** | Nano Banana Pro | 约 $0.09（1K/2K）– $0.12（4K）<br />（18 credits ≈ $0.09；24 credits ≈ $0.12） | 使用 credits 计费，有不同兑换率和批量折扣 | [kie.ai](https://kie.ai/nano-banana-pro?utm_source=chatgpt.com) |
-
 | **Replicate** | Nano Banana / Nano Banana Pro | 标准分辨率：≈ $0.14–$0.15 / 张<br />4K：常在 $0.24 左右 / 张 | 按运行时间或硬件计费，部分模型按输入/输出计费 | replicate.com |
-
 | **Fal.ai（Fal）** | Nano Banana（非 Pro） | 约 $0.039 / 张（1MP 标准化） | 平台托管不同版本，需区分普通版与 Pro 版 | - |
-
 | **Fal.ai（Fal）** | Nano Banana Pro / Gemini 3 Pro | 约 $0.15 / 张（标准）<br />4K 为双倍费率 | - | - |
-
 | **Google / Gemini 官方** | Nano Banana Pro | 标准：~$0.13–$0.14 / 张<br />4K：~ $0.24 / 张 | 有免费配额、学生或促销渠道，价格会有变动 | - |
 
 
@@ -1725,13 +1719,9 @@ gemini_api_key = "your_gemini_key"
 
 
 | 场景         | 扣款               | Credits 发放               | Credits 过期时间               |
-
 |--------------|--------------------|---------------------------|-------------------------------|
-
 | 首次订阅     | 立即扣款           | 立即发放 creditsAmount     | 当前订阅周期结束（currentPeriodEnd） |
-
 | 订阅续费（月付/年付） | 每个周期自动扣款   | 每次续费成功后自动发放     | 新的订阅周期结束               |
-
 | 一次性付款   | 立即扣款           | 立即发放                   | 按 creditsValidDays 计算       |
 
 
@@ -1807,15 +1797,10 @@ gemini_api_key = "your_gemini_key"
 
 
 | 统一事件类型       | Stripe 原始事件                  | Creem 原始事件          |
-
 |--------------------|----------------------------------|-------------------------|
-
 | CHECKOUT_SUCCESS   | checkout.session.completed       | checkout.completed      |
-
 | PAYMENT_SUCCESS    | invoice.payment_succeeded        | subscription.paid       |
-
 | SUBSCRIBE_UPDATED  | customer.subscription.updated    | subscription.update     |
-
 | SUBSCRIBE_CANCELED | customer.subscription.deleted    | subscription.canceled   |
 
 

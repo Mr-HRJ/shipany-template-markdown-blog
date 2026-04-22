@@ -319,7 +319,6 @@ Semrush的Keyword Magic Tool常用来查看：
 | 总关键词数 | 总搜索量   | 平均难度 |
 | ----- | ------ | ---- |
 | 3.5K  | 46,040 | 55%  |
-
 | Keyword                | Intent | Volume | Pot. Traffic | KD% |
 | ---------------------- | ------ | ------ | ------------ | --- |
 | seo strategy           | I      | 6.6K   | 2.4K         | 81  |

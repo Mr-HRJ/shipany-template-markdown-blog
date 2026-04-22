@@ -1,0 +1,8 @@
+{
+  "title": "1000UserGuide",
+  "root": true,
+  "pages": [
+    "index",
+    "update"
+  ]
+}

@@ -42,13 +42,19 @@ End-to-end pipeline for adopting another `doc.16781678.xyz/<site>` handbook into
    ```
    Idempotent — already-uploaded URLs are reused via `scripts/image_migration_manifest.json` (gitignored). Dead `github.com/user-attachments/...` links return 404 from source and stay external; everything else lands on R2.
 
-5. **Verify zero remaining external images for the new slug:**
+5. **Strip anchor-in-anchor in headings:**
+   ```bash
+   python scripts/fix_heading_links.py
+   ```
+   Source pages frequently have headings like `## 访问 http://localhost:3000` or `## [Vercel](https://vercel.com/new) 创建项目`. fumadocs wraps every heading in an `<a href="#anchor">` for the TOC; if the heading already contains an `<a>` (from GFM auto-link or markdown link), you get nested `<a>` and a hydration error. The script unwraps `[text](url)` to text and wraps bare URLs in `` `code` ``.
+
+6. **Verify zero remaining external images for the new slug:**
    ```bash
    python -c "import re,pathlib; root=pathlib.Path('content/docs/<slug>'); ext=[]; [ext.extend([(str(f),(m.group(1) or m.group(2))) for m in re.finditer(r'<img[^>]*src=\"(https?://[^\"]+)\"|!\[[^\]]*\]\((https?://[^)\s]+)', f.read_text(encoding='utf-8')) if 'pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev' not in (m.group(1) or m.group(2))]) for f in root.rglob('*.mdx')]; print(len(ext))"
    ```
    Should print `0`.
 
-6. **Register the slug in 4 source files (all required):**
+7. **Register the slug in 4 source files (all required):**
 
    - `src/components/docs/dynamic-app-name.tsx` — append to `HANDBOOK_TITLES` so the header renders the Chinese title.
    - `src/middleware.ts` — append to the `isHandbookRoot` regex so the root redirect stays uncached.
@@ -57,7 +63,7 @@ End-to-end pipeline for adopting another `doc.16781678.xyz/<site>` handbook into
 
    All four are next to the existing handbooks (`shipany-two`, `joyflix`, `nanobanana`, `gamiary`, `blog`, `markdown-blog`). The two card lists are NOT auto-derived from docs metadata — if you skip them, the new handbook is browsable by URL but invisible in the home/blog landing card grid. **Don't skip.**
 
-7. **Local sanity check.**
+8. **Local sanity check.**
    ```bash
    # Kill any stale dev servers (Windows):
    taskkill //F //IM node.exe
@@ -67,7 +73,7 @@ End-to-end pipeline for adopting another `doc.16781678.xyz/<site>` handbook into
    ```
    Then `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/docs/<slug>/getting-started/readme` should be `200`. If a sibling handbook (e.g. `joyflix`) also 404s, you skipped the cache wipe.
 
-8. **Commit + push.** Vercel auto-deploys on push to `main`.
+9. **Commit + push.** Vercel auto-deploys on push to `main`.
    ```bash
    git add scripts/fetch_doc_sites.py \
            src/components/docs/dynamic-app-name.tsx \
@@ -93,6 +99,7 @@ End-to-end pipeline for adopting another `doc.16781678.xyz/<site>` handbook into
 | New handbook missing from home/blog card grid | Forgot the two `featuredDocs` arrays in step 6 | Add cards to both `(landing)/page.tsx` and `(landing)/blog/page.tsx` |
 | Local `/docs/<slug>/...` 404 (and joyflix etc. also 404) | Stale `.next` / `.source` after content tree added | `taskkill //F //IM node.exe && rm -rf .next .source && pnpm dev` |
 | Sidebar shows "AI 出海手册" / `must-read` / `ideas` instead of the handbook's own categories | `content/docs/<slug>/meta.json` missing `"root": true` — folder gets merged into parent tree | Add `"root": true` to the root `meta.json`; this is now done by `fetch_doc_sites.py` automatically |
+| Console: `<a> cannot be a descendant of <a>` / hydration error | Heading contains `[text](url)` or a bare URL → fumadocs TOC wraps it in another `<a>` | `python scripts/fix_heading_links.py` (always run after a fresh import) |
 
 ## Reference: site/category mapping
 

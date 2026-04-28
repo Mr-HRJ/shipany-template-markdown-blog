@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
   // Handbook root URLs redirect to their deep entry page, so we don't want
   // browsers / CDNs to cache the interim HTML and trap users on a stale tree.
   const isHandbookRoot =
-    /^\/docs\/(shipany-two|joyflix|nanobanana|gamiary|blog|markdown-blog)\/?$/.test(
+    /^\/docs\/(shipany-two|joyflix|nanobanana|gamiary|blog|markdown-blog|gpt-image2)\/?$/.test(
       pathWithoutLocale
     );
 

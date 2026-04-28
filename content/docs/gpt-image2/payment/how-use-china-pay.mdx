@@ -1,0 +1,167 @@
+---
+title: 'How Use China Pay'
+---
+
+之前写了[国内支付没有企业资质营业执照如何用微信、支付宝来收款(2026-04)](payment/how-china-person-pay), 但是没有在当前项目落地， 现在趁着周末有时间，把功能闭环。
+
+
+
+## 注册链动小铺
+
+
+
+访问 https://pay.ldxp.cn/ 注册直至可以正常使用 支付宝（注册后就可以开通）、微信支付（得使用几天才能开通）
+
+
+
+## 配置开启
+
+
+
+> 注意：如果你是本地开发测试国内支付的话，将下面配置选择`沙箱`,然后另外新建3个商品其价格标注为0.01，然后在admin/payment中设置环境为沙箱然后配置对应链接+卡密，方便自己进行流程闭环
+
+> <img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ad62025d34524952.jpg" alt="image" />
+
+
+
+
+
+访问 `admin/settings/payment`路由
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e904d8ef17c9ba50.jpg" alt="image" />
+
+
+
+以`积分包支付链接`为例， 咱们先在`链动小铺`创建对应商品
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/45decebe3bb8edcb.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/aac8c8774497f7dd.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b7c8ff5fda9ed11f.jpg" alt="image" />
+
+
+
+保存成功后返回列表 就能拿到链接
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/590643a401c4de87.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/ddb57795445dc7d0.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/acba99d08ccb5d1f.jpg" alt="image" />
+
+
+
+配置卡密
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/62f8a03571548414.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e66a8ce329e0cda1.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2f09aecf8df92636.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/dbee9f20387d2887.jpg" alt="image" />
+
+
+
+回到项目
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0b746725c61261f4.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/894522fc069b18ee.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6a43feff1052a299.jpg" alt="image" />
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5a6d9af46aaa5308.jpg" alt="image" />
+
+
+
+回到链动小铺
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/102370bc09a938bf.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6cc125b9fea46e87.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/966412112b535694.jpg" alt="image" />
+
+
+
+然后记下来根据上面的步骤重复下面的2个卡密操作
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/af62e68fdbe5fe00.jpg" alt="image" />
+
+
+
+然后最后保存下
+
+
+
+然后此时可以去前台页面访问`/pricing`
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d61de2ea225f40e0.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/977f72c79ef7e51e.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0b2049985501730f.jpg" alt="image" />
+
+
+
+支付宝支付成功后
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/031129f0af91775c.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/395ccf5a1a3e2a60.jpg" alt="image" />
+
+
+
+提交成功后就会跳转到`settings/billing`(订阅)或者`settings/payments`（积分）,然后当前支付用户的积分会增加

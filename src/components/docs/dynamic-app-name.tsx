@@ -9,6 +9,7 @@ const HANDBOOK_TITLES: Record<string, string> = {
   gamiary: 'Gamiary 手册',
   blog: 'Blog 手册',
   'markdown-blog': 'Markdown Blog 手册',
+  'gpt-image2': 'GPT Image 2 手册',
 };
 
 export function DynamicAppName({ fallback }: { fallback: string }) {

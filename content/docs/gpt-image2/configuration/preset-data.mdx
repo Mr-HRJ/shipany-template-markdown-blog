@@ -1,0 +1,89 @@
+---
+title: '写在前面'
+---
+
+
+
+如果你不想一个个录入一些预制数据，那么你可以试试直接导入我的sql表数据（非表结构），导入后就是有一些基础案例和Prompt数据
+
+
+
+> 注意点：
+
+（1）下面4个表数据中图片为我的R2图库，如果你感觉有点别扭，就一个个自行上传；
+
+（2）`shipany-template-gpt-image2/db`下user_rows.sql 是我写的一个专门给showcase、prompt中user_id使用的demo user
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/89fdb57b0b139612.jpg" alt="image" />
+
+
+
+上图导入顺序（切记下面1、2已经要按顺序导入数据库）：
+
+
+
+1、user_rows.sql
+
+2、taxonomy_rows.sql
+
+3、prompt_rows.sql
+
+4、showcase_rows.sql
+
+
+
+
+
+## 如何导入到Supabase
+
+
+
+### 打开Supabase 打开下图：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1dde66fbf9d3ed8b.jpg" alt="image" />
+
+
+
+
+
+### 打开下载到本地的sql文件，全选复制：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/b0998c909e6c9798.jpg" alt="image" />
+
+
+
+
+
+### 粘贴到Supabase
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a8d4db43eb9867d0.jpg" alt="image" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8cee4acecb8552f1.jpg" alt="image" />
+
+
+
+验证下表数据
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1e2110894f7becf8.jpg" alt="image" />

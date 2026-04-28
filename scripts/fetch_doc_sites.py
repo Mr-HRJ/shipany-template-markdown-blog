@@ -95,6 +95,7 @@ SITE_TITLES = {
     "gamiary": "Gamiary 手册",
     "blog": "Blog 手册",
     "markdown-blog": "Markdown Blog 手册",
+    "gpt-image2": "GPT Image 2 手册",
 }
 
 

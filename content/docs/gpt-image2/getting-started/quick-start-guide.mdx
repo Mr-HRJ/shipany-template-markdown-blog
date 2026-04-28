@@ -1,0 +1,753 @@
+---
+title: '如果你要将新项目提交到自己github仓库，需要做下面动作，上面的Clone会把源代码的.git远程仓库也Clone下来了，需要按照下面执行下命令，要不然你提交不上去'
+---
+
+## 初始化项目
+
+
+
+### 通过`shipany-template-gpt-image2`源码 去新建项目
+
+
+
+下面命令中的`my-shipany-project`是你新项目名字，注意改下
+
+
+
+#### 下面命令是要部署在Vercel、阿里云等服务器上的Clone项目命令 
+
+
+
+```
+
+git clone git@github.com:template-code-team/shipany-template-gpt-image2 my-shipany-project
+
+```
+
+
+
+#### 下面命令是要部署在Cloudflare上的Clone项目命令 
+
+
+
+> 此分支基于 [Next.js 15.5.5](https://nextjs.org/docs/15/app/getting-started/project-structure)，暂不支持 Next.js 16。
+
+
+
+```
+
+git clone -b cf git@github.com:template-code-team/shipany-template-gpt-image2 my-shipany-project
+
+```
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2d2e1bb0f4d0fe72.png" alt="" />
+
+
+
+clone完毕后进入项目
+
+
+
+```
+
+cd my-shipany-project
+
+```
+
+
+
+### 安装依赖
+
+
+
+```
+
+pnpm install
+
+```
+
+
+
+### 启动开发服务器
+
+
+
+```
+
+pnpm dev
+
+```
+
+
+
+#### 点击输出的 Local 地址，在浏览器打开网页：[http://localhost:3000](http://localhost:3000) ，即可预览项目
+
+
+
+
+
+
+
+# 如果你要将新项目提交到自己github仓库，需要做下面动作，上面的Clone会把源代码的.git远程仓库也Clone下来了，需要按照下面执行下命令，要不然你提交不上去
+
+
+
+```
+
+rm -rf .git
+
+```
+
+```
+
+git init
+
+```
+
+```
+
+git add -A
+
+```
+
+```
+
+git commit -m "feat: first commit"
+
+```
+
+
+
+> 下面：xxx/xxxxx 为 gitub username/you project name【就是你的github用户名 和 你的私有仓库（一般github新建了仓库，在仓库页面就能看到）】
+
+> 例如：git remote add origin https://github.com/boomer1678/gpt-img2.git
+
+
+
+```
+
+git remote add origin git@github.com:xxx/xxxxx.git
+
+```
+
+```
+
+git branch -M main
+
+```
+
+```
+
+git push -u origin main
+
+```
+
+
+
+## 修改网站配色
+
+
+
+### 选择一个 shadcn 主题调试器
+
+
+
+#### 在下面url中可以修改字体颜色等等
+
+
+
+[https://tweakcn.com/editor/theme](https://tweakcn.com/editor/theme)
+
+
+
+当前项目使用的是`Claude`主题：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a5f1d9e077637a57.png" alt="" />
+
+
+
+
+
+[https://ui.shadcn.com/themes](https://ui.shadcn.com/themes)
+
+
+
+### 为你的项目调制一套主题配色：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c804efe020433294.png" alt="" />
+
+
+
+
+
+> Shipany 使用 tailwindcss4，请使用 oklch 颜色格式，复制主题样式
+
+
+
+### 粘贴主题样式到项目文件：`src/config/style/theme.css`
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/15909c38ce98c39f.png" alt="" />
+
+
+
+
+
+### 重新进入项目预览页面，即可看到你定制的主题
+
+
+
+
+
+## 配置环境变量
+
+
+
+```
+
+cp .env.example .env.development
+
+```
+
+
+
+> 注意：登录、AI等配置不在这里，那些在管理后台页面，后面会有介绍
+
+
+
+```
+
+# app
+
+NEXT_PUBLIC_APP_URL = "http://localhost:3000"
+
+NEXT_PUBLIC_APP_NAME = "GPT Image2"
+
+
+
+# theme
+
+NEXT_PUBLIC_THEME = "default"
+
+
+
+# appearance
+
+NEXT_PUBLIC_APPEARANCE = "dark"
+
+
+
+# database
+
+DATABASE_URL = ""
+
+DATABASE_PROVIDER = "postgresql"
+
+DB_SINGLETON_ENABLED = "true"
+
+
+
+# auth secret
+
+# 将 `openssl rand -base64 32` 复制粘贴到你的终端然后回车，就会生成一段值，复制粘贴到下面
+
+AUTH_SECRET = ""
+
+```
+
+
+
+## 数据库
+
+
+
+### 下图为使用Supabase获取DATABASE_URL值截图
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/522af77c487e2045.png" alt="" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/7dc4b0227f8c3485.png" alt="" />
+
+
+
+
+
+> 注意：复制粘贴内容中[YOUR-PASSWORD] 是你要替换的内容，把[]要删除了，要不然连不上
+
+
+
+> DATABASE_URL 示例
+
+```
+
+DATABASE_URL="postgresql://postgres.tsjbzbpzwilbxnrqkqzp:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+
+```
+
+
+
+### 下图为使用Neon获取DATABASE_URL值截图
+
+
+
+[项目如何配置使用neon数据库](/docs/gpt-image2/configuration/how-use-db-neon)
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/a0e28785e38031cb.jpg" alt="image" />
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d78af466c823973d.jpg" alt="image" />
+
+
+
+> 粘贴到上面的.env.development中
+
+
+
+> DATABASE_URL 示例（部分值做了xxx处理）
+
+```
+
+DATABASE_URL="postgresql://neondb_owner:xxx@ep-soft-credit-xxxx-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require ”
+
+```
+
+
+
+### 按照上面环境变量配置好后，迁移数据表
+
+
+
+#### 项目下终端运行下面命令：
+
+
+
+
+
+##### 第一步：
+
+
+
+```
+
+pnpm db:generate
+
+```
+
+
+
+##### 第二步：
+
+
+
+```
+
+pnpm db:migrate
+
+```
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9dd4c1661854d406.png" alt="" />
+
+
+
+
+
+## 配置登录鉴权
+
+
+
+###  管理后台RBAC初始化
+
+
+
+```
+
+pnpm rbac:init
+
+```
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/460541b9b58681d5.png" alt="" />
+
+
+
+
+
+### 注册管理员账户
+
+
+
+访问 `http://localhost:3000/admin` 进入后台管理系统，由于没有登录会遇到登录拦截，重定向到 /sign-in 登录页面。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/429b8e07575d32d0.png" alt="" />
+
+
+
+
+
+你需要先注册一个账户，比如 `admin@xxx.com`。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e620de058156f5bd.png" alt="" />
+
+
+
+### 分配超级管理员权限
+
+
+
+注册成功后，在终端执行
+
+
+
+> admin@xxx.com 更换成你注册的账户邮箱
+
+
+
+```
+
+pnpm rbac:assign -- --email=admin@xxx.com --role=super_admin
+
+```
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c8dc09269ab02a9c.png" alt="" />
+
+
+
+
+
+### 访问管理后台
+
+
+
+再次访问 `http://localhost:3000/admin`，即可进入管理后台。
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e5b5f4cfd6b1ba0d.png" alt="" />
+
+
+
+
+
+
+
+### 配置google登录 
+
+
+
+访问[https://console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f1154521f29be0f5.png" alt="" />
+
+
+
+
+
+#### 注意：如果没有Project的，先创建个Project！
+
+
+
+##### 下图为创建Project截图，要选择外部！
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8ba5f941c9a341ec.png" alt="" />
+
+
+
+#### 创建客户端
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9b6d8a1b78915838.jpg" alt="image" />
+
+
+
+
+
+#### 配置用到的（注意：生产环境的还得单独重新再配一个）：
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9f0e225581c85f50.jpg" alt="image" />
+
+
+
+> http://localhost:3000
+
+
+
+> http://localhost:3000/api/auth/callback/google
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8ecd1f8ae6ef2a5b.png" alt="" />
+
+
+
+
+
+下图为生产配置时截图（仅供参考）：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/45b0a1ea58c856b1.png" alt="" />
+
+
+
+
+
+#### 然后访问：http://localhost:3000/zh/admin/settings/auth
+
+
+
+##### 将google给你的复制粘贴到下图：
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1ae321e1ce88fa2f.png" alt="" />
+
+
+
+
+
+#### 然后回到项目首页：http://localhost:3000
+
+
+
+##### 下图为第1种登录方式：OneTap生效
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2f5d61d8ce731b26.png" alt="" />
+
+
+
+
+
+
+
+##### 下图为第2中登录方式：Auth生效
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3e4bbfed605013e7.png" alt="" />
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0e1dfe6c10420e2c.png" alt="" />
+
+
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cfd9f9329e9605c5.png" alt="" />
+
+
+
+
+
+##### google成功后跳回首页：
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8dfd65d396059262.png" alt="" />
+
+
+
+
+
+##### 最后如果配完生产后是下面这样（2个）
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f48cfc96c77488d6.png" alt="" />
+
+
+
+
+
+### github登录太简单了，就不写过程了，
+
+
+
+我把官方文档放这里了,需要的自己点击去看下
+
+
+
+[Github 登录](https://shipany.ai/zh/docs/auth/github)
+
+
+
+
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c314606b205fdfa8.png" alt="" />
+
+
+
+
+
+## 字体图标使用
+
+
+
+项目中使用了[lucide-react](https://lucide.dev/icons/)、react-icons 中的 [Remix Icon](https://react-icons.github.io/react-icons/icons/ri/)。如果有需要图标，可在这里查找
+
+
+
+## 页面构建器
+
+
+
+[静态页面构建](https://shipany.ai/zh/docs/page-builder/static-page)
+
+
+
+[动态页面构建](https://shipany.ai/zh/docs/page-builder/dynamic-page)
+
+
+
+## 导入预制数据
+
+
+
+[✨项目可导入的表预制数据](/docs/gpt-image2/configuration/preset-data)
+
+
+
+## 配置AI生图等
+
+
+
+[✨项目使用性价比可以的生图API供应商](/docs/gpt-image2/getting-started/gpt-image-prompt)
+
+[✨项目如何管理多供应商、showcase、prompt、prompt分类、任务数据](/docs/gpt-image2/configuration/showcases-management)
+
+
+
+首页看板：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/18be0cae6f6f20e5.jpg" alt="image" />
+
+
+
+AI生图任务：
+
+<img src="https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/991e6d2c96ed8aef.jpg" alt="image" />
+
+
+
+
+
+# 支付
+
+
+
+## Stripe支付
+
+
+
+点击查看：
+
+[✨项目中关于Stripe支付相关配置](/docs/gpt-image2/payment/stripe-configuration)
+
+
+
+## Creem支付
+
+
+
+[项目中关于Creem支付相关配置](/docs/gpt-image2/payment/use-pay-by-creem)
+
+
+
+# 部署
+
+
+
+## 部署到 Vercel
+
+
+
+点击查看：
+
+[项目部署到Vercel](/docs/gpt-image2/deployment/deploy-to-vercel)
+
+
+
+## 部署到Cloudflare
+
+
+
+点击查看：
+
+[项目部署到 Cloudflare Workers](/docs/gpt-image2/deployment/deploy-to-cloudflare-mac)
+
+
+
+## 部署到Dokploy
+
+
+
+这个部署我没有做，大家可以看[部署到Dokploy-官方文档](https://shipany.ai/zh/docs/deploy/dokploy)

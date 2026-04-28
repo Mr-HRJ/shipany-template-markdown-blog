@@ -1,0 +1,14 @@
+{
+  "title": "配置指南",
+  "pages": [
+    "how-change-video-background",
+    "how-to-config-img",
+    "how-use-local-psql",
+    "newuser-credit",
+    "preset-data",
+    "project-timetask",
+    "r2-storage-configuration",
+    "share-about-dbbackup",
+    "showcases-management"
+  ]
+}

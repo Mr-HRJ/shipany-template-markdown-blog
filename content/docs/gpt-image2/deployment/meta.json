@@ -1,0 +1,9 @@
+{
+  "title": "部署指南",
+  "pages": [
+    "deploy-to-cloudflare-mac",
+    "deploy-to-cloudflare-windows",
+    "deploy-to-vercel",
+    "how-to-view-project-logs-vercel-cloudflare"
+  ]
+}

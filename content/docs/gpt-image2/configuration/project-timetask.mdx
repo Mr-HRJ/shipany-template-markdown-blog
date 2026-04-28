@@ -1,0 +1,74 @@
+---
+title: 'Project Timetask'
+---
+
+### src 中的 2 个定时任务路由
+
+1. `/api/payment/subscription/cancel-pending`
+
+- 文件：`src/app/api/payment/subscription/cancel-pending/route.ts`
+- 触发方式：`GET`
+- 鉴权方式：
+  - Vercel Cron：通过 `x-vercel-cron` 请求头放行
+  - 非 Vercel Cron：要求 `Authorization: Bearer <PAYMENT_CRON_SECRET>`，也兼容 `CRON_SECRET`
+- 实际执行：
+  - 调用 `executePendingSubscriptionCancellations(50)`
+- 作用：
+  - 执行待取消订阅的批量取消处理
+- 缘由：
+  - 这类任务主要是为 `Creem`、`PayPal` 这类“用户先取消自动续期，但订阅要到当前计费周期结束时才真正终止”的场景准备的
+  - 用户侧操作后，系统会先把订阅标记为 pending cancel / cancel at period end；等到到期日到了，再由定时任务统一执行最终取消，避免订阅在应结束时仍继续保持 active
+
+2. `/api/ai/storage/retry-r2`
+
+- 文件：`src/app/api/ai/storage/retry-r2/route.ts`
+- 触发方式：`GET`
+- 鉴权方式：
+  - Vercel Cron：通过 `x-vercel-cron` 请求头放行
+  - 非 Vercel Cron：要求 `Authorization: Bearer <AI_STORAGE_CRON_SECRET>`
+  - 也兼容回退到 `CRON_SECRET`、`PAYMENT_CRON_SECRET`
+- 实际执行：
+  - 调用 `retryFailedR2Migrations(100)`
+- 作用：
+  - 重试失败的 AI 文件迁移到 R2 的任务
+- 缘由：
+  - AI 生成结果落库后，文件迁移到 R2 可能因为网络、对象存储临时异常或上游资源不可用而失败；定时任务用于做异步补偿，减少文件长期停留在失败状态，保证资源最终尽量迁移成功
+
+### vercel.json 中配置的定时任务
+
+文件：`vercel.json`
+
+1. `/api/payment/subscription/cancel-pending`
+
+- schedule：`0 16 * * *`
+- 说明：
+  - 每天 UTC 16:00 执行一次
+  - 按中国时间是每天 00:00
+
+2. `/api/ai/storage/retry-r2`
+
+- schedule：`0 16 * * *`
+- 说明：
+  - 每天 UTC 16:00 执行一次
+  - 按中国时间是每天 00:00
+
+### wrangler.toml 中配置的定时任务
+
+文件：`wrangler.toml`
+
+- 配置位置：`[env.production.triggers]`
+- cron：`0 16 * * *`
+- 注释：`# Beijing 00:00 = UTC 16:00`
+
+### 当前代码层面的对应关系说明
+
+- `vercel.json` 明确配置了 2 个 cron，并且都直接对应到了具体 API path：
+  - `/api/payment/subscription/cancel-pending`
+  - `/api/ai/storage/retry-r2`
+- `wrangler.toml` 当前只配置了 1 条 cron 表达式：`0 16 * * *`
+- 仅从当前仓库代码看：
+  - 能明确看到 Cloudflare 配了“会触发定时器”
+  - 但没有在仓库里看到额外的自定义代码，明确把这 1 条 Cloudflare cron 再分发到上面 2 个 API 路由
+- 所以当前可确认的事实是：
+  - Vercel：2 个定时任务都已明确配置
+  - Cloudflare：只看到 1 条 cron 配置；它最终如何对应到具体路由，要结合 OpenNext Cloudflare 的运行时行为一起确认

@@ -5,7 +5,7 @@ description: Use when the user pastes a doc.16781678.xyz URL (e.g. /joyflix, /gp
 
 # Import doc.16781678.xyz Handbook → R2 → Vercel
 
-End-to-end: a `https://doc.16781678.xyz/<slug>` URL turns into a fully wired, publicly browsable handbook on the production blog. The two scripts (`fetch_doc_sites.py`, `migrate_images.py`, `fix_heading_links.py`) do the heavy lifting — this skill is the **must-do checklist around them**, because every step that's *not* in a script has been forgotten at least once and broken the page.
+End-to-end: a `https://doc.16781678.xyz/<slug>` URL turns into a fully wired, publicly browsable handbook on the production blog. Three scripts (`fetch_doc_sites.py`, `migrate_images.py`, `fix_heading_links.py`) do the heavy lifting — this skill is the **must-do checklist around them**, because every step that's *not* in a script has been forgotten at least once and broken the page.
 
 ## TL;DR — one-shot path
 
@@ -54,7 +54,7 @@ SITE_TITLES = {
 }
 ```
 
-The script falls back to `slug.title()` if missing, but the Chinese title shows up in `meta.json` and the UI, so add it.
+If the slug isn't in `SITE_TITLES`, the script falls back to using the raw slug as the section title (`SITE_TITLES.get(site, site)`) — `meta.json` ends up with `"title":"gpt-image2"` and the sidebar shows the English slug. Always register a Chinese title.
 
 ## Phase 3 — Fetch, transform, migrate, sanitize
 

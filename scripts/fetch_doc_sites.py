@@ -258,8 +258,13 @@ def process_site(site: str) -> None:
         written_subcats.append(local_folder)
         print(f"  [{local_folder}] {len(page_slugs)} page(s)")
 
+    # `root: true` makes fumadocs treat this folder as an independent sidebar
+    # root. Without it, the folder's tree gets merged into the parent docs tree
+    # and the sidebar on every page under this site falls back to the full
+    # `content/docs/` tree (showing AI 出海手册 categories instead of this
+    # handbook's own categories).
     (out_root / "meta.json").write_text(
-        json.dumps({"title": section_title, "pages": written_subcats}, ensure_ascii=False, indent=2) + "\n",
+        json.dumps({"title": section_title, "root": True, "pages": written_subcats}, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     if fail:

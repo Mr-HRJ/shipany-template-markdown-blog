@@ -92,6 +92,7 @@ End-to-end pipeline for adopting another `doc.16781678.xyz/<site>` handbook into
 | Header shows English slug not Chinese title | Forgot step 6 (`HANDBOOK_TITLES`) | Add the entry, push again |
 | New handbook missing from home/blog card grid | Forgot the two `featuredDocs` arrays in step 6 | Add cards to both `(landing)/page.tsx` and `(landing)/blog/page.tsx` |
 | Local `/docs/<slug>/...` 404 (and joyflix etc. also 404) | Stale `.next` / `.source` after content tree added | `taskkill //F //IM node.exe && rm -rf .next .source && pnpm dev` |
+| Sidebar shows "AI 出海手册" / `must-read` / `ideas` instead of the handbook's own categories | `content/docs/<slug>/meta.json` missing `"root": true` — folder gets merged into parent tree | Add `"root": true` to the root `meta.json`; this is now done by `fetch_doc_sites.py` automatically |
 
 ## Reference: site/category mapping
 

@@ -133,6 +133,16 @@ export default async function BlogPage({
       target: '_self',
       isRecommended: true,
     },
+    {
+      id: 'docs-gpt-image2',
+      slug: 'docs-gpt-image2',
+      title: 'GPT Image 2 手册',
+      description:
+        'AI 图像生成站（GPT Image 2）模板的快速上手、配置指南、Stripe/Creem 支付、部署与常见问题指南。',
+      url: '/docs/gpt-image2/getting-started/readme',
+      target: '_self',
+      isRecommended: true,
+    },
   ];
   posts = [...featuredDocs, ...posts];
 

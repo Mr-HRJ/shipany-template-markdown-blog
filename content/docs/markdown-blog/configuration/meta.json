@@ -1,8 +1,8 @@
 {
   "title": "配置指南",
   "pages": [
-    "how-use-post",
     "r2-storage-configuration",
+    "how-use-post",
     "share-about-dbbackup"
   ]
 }

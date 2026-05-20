@@ -1,16 +1,16 @@
 {
   "title": "其他",
   "pages": [
-    "buy-cheap-domain",
-    "chatgpt-one-year",
-    "how-desgin-webpage",
-    "how-use-ai-ide",
-    "how-use-antigravity",
-    "how-use-claude-code",
-    "how-use-clawdbot",
-    "how-use-mofa",
-    "ide-rules",
     "neon-or-supabase",
-    "what-is-skills"
+    "how-use-claude-code",
+    "buy-cheap-domain",
+    "how-use-antigravity",
+    "how-desgin-webpage",
+    "chatgpt-one-year",
+    "what-is-skills",
+    "how-use-ai-ide",
+    "how-use-clawdbot",
+    "ide-rules",
+    "how-use-mofa"
   ]
 }

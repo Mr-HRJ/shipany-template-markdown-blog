@@ -1,10 +1,10 @@
 {
   "title": "快速开始",
   "pages": [
-    "how-dev-to-production",
-    "quick-start-guide",
     "readme",
+    "quick-start-guide",
     "update-logs",
-    "video-prompt"
+    "video-prompt",
+    "how-dev-to-production"
   ]
 }

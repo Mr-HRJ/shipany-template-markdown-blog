@@ -1,6 +1,7 @@
 {
   "title": "其他",
   "pages": [
+    "share-zhonghzuan-api",
     "neon-or-supabase",
     "how-use-claude-code",
     "buy-cheap-domain",
@@ -13,6 +14,6 @@
     "how-use-clawdbot",
     "ide-rules",
     "how-use-mofa",
-    "saas-payment-ban-creem-database-leak-postmortem"
+    "how-use-china-server"
   ]
 }

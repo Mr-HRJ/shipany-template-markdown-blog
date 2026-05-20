@@ -1,13 +1,13 @@
 {
   "title": "配置指南",
   "pages": [
-    "configuration-related-to-ai-image-generation-in-the-project",
-    "dynamic-page-configuration",
     "how-use-local-psql",
-    "newuser-credit",
+    "showcases-management",
+    "configuration-related-to-ai-image-generation-in-the-project",
     "preset-data",
     "r2-storage-configuration",
-    "share-about-dbbackup",
-    "showcases-management"
+    "dynamic-page-configuration",
+    "newuser-credit",
+    "share-about-dbbackup"
   ]
 }

@@ -91,6 +91,7 @@ CATEGORY_ORDER = [
 
 # Site slug → display title (shown as the section title on the docs sidebar).
 SITE_TITLES = {
+    "shipany-two": "ShipAny Two 手册",
     "joyflix": "JoyFlix 手册",
     "nanobanana": "Nano Banana 手册",
     "gamiary": "Gamiary 手册",

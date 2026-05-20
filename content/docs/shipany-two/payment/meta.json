@@ -11,10 +11,11 @@
     "how-set-stripe-radar",
     "saas-pay-calc",
     "stripe-jiqiao",
-    "how-use-paypal-cn",
-    "paypal-world-china-person",
     "paypal-cn-person",
+    "paypal-world-china-person",
+    "how-use-paypal-cn",
     "how-china-person-pay",
-    "how-test-pay"
+    "how-test-pay",
+    "saas-payment-ban-creem-database-leak-postmortem"
   ]
 }

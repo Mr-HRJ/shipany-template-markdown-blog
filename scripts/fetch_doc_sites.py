@@ -17,6 +17,7 @@ fresh.
 """
 
 from __future__ import annotations
+import html as _html
 import json
 import re
 import sys
@@ -219,6 +220,42 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s.strip())
 
 
+_SIDEBAR_ANCHOR_RE = re.compile(r'<a[^>]*href="(/[^"]+)"[^>]*>(.*?)</a>', re.S)
+_STRIP_TAGS_RE = re.compile(r"<[^>]+>")
+
+
+def harvest_sidebar_titles(
+    site: str, grouped: dict[str, list[tuple[str, str]]]
+) -> dict[tuple[str, str], str]:
+    """For each category, fetch its first article's leaf page and read sidebar
+    anchor text. The source site renders link text only for the currently-
+    expanded category on a leaf page, so we probe one leaf per category to
+    cover everything. Returns {(cat_seg, slug): label}.
+    """
+    result: dict[tuple[str, str], str] = {}
+    for cat_seg, articles in grouped.items():
+        if not articles:
+            continue
+        _, probe_path = articles[0]
+        try:
+            page_html = fetch_html(f"{BASE}{probe_path}")
+        except Exception as e:
+            print(f"  [sidebar-probe] skip {probe_path}: {e}")
+            continue
+        for m in _SIDEBAR_ANCHOR_RE.finditer(page_html):
+            href = m.group(1).rstrip("/")
+            parts = href.strip("/").split("/")
+            if len(parts) < 3 or parts[0] != site or parts[1] != cat_seg:
+                continue
+            slug = parts[2]
+            text = _html.unescape(_STRIP_TAGS_RE.sub("", m.group(2))).strip()
+            text = re.sub(r"\s+", " ", text)
+            if text and (cat_seg, slug) not in result:
+                result[(cat_seg, slug)] = text
+        time.sleep(0.2)
+    return result
+
+
 def strip_leading_title(md: str, title: str) -> str:
     """Remove a leading `# <title>` line from the body so fumadocs doesn't
     render the same heading twice (once as DocsTitle, once from MDX)."""
@@ -277,6 +314,13 @@ def process_site(site: str) -> None:
         if seg not in url_seg_order:
             url_seg_order.append(seg)
 
+    # Probe one leaf per category to scrape the real sidebar labels. Without
+    # this we'd write the body H1 (or slug-titlecase fallback) into frontmatter,
+    # which makes the sidebar show generic strings like "写在前面" for any
+    # article whose body starts with that heading.
+    sidebar_titles = harvest_sidebar_titles(site, grouped)
+    print(f"  scraped {len(sidebar_titles)} sidebar label(s)")
+
     for cat_seg in url_seg_order:
         local_folder, cat_title = CATEGORY_MAP.get(
             cat_seg, (cat_seg, cat_seg.replace("-", " ").title())
@@ -297,8 +341,14 @@ def process_site(site: str) -> None:
                 fail.append((url, str(e)))
                 continue
 
-            title = detect_title(md, slug)
-            md = strip_leading_title(md, title)
+            detected = detect_title(md, slug)
+            sidebar = sidebar_titles.get((cat_seg, slug))
+            title = sidebar or detected
+            # Only strip the body H1 when we're using it AS the title — keeping
+            # it in the body otherwise prevents the page heading from getting
+            # lost when sidebar text overrides title.
+            if not sidebar:
+                md = strip_leading_title(md, title)
             body = rewrite_internal_links(md, site)
             body = rewrite_remote_images(body)
             body = rewrite_fence_langs(body)

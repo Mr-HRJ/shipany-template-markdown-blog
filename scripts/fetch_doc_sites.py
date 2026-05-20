@@ -102,37 +102,100 @@ SITE_TITLES = {
 # ---------- URL harvest ----------
 
 def harvest_urls(site: str) -> list[str]:
-    """Collect all `/<site>/<cat>/<slug>` URLs from the site root AND one page
-    per discovered category (to pick up sidebar entries not on the landing)."""
+    """Collect all `/<site>/<cat>/<slug>` URLs in source sidebar order.
+
+    Strategy: in fumadocs SSR the full sidebar is rendered before the article
+    body in document order, so the order in which URLs first appear in a leaf
+    page's HTML matches the sidebar's authored order. We probe one leaf per
+    discovered category and keep first-appearance order. Sorting alphabetically
+    here would scramble the author's intent.
+    """
     pattern = re.compile(rf"/{re.escape(site)}/[a-z0-9\-][a-z0-9\-/]*")
 
-    def harvest_page(url: str) -> set[str]:
+    def harvest_page(url: str) -> list[str]:
         try:
             html = fetch_html(url)
         except Exception as e:
             print(f"  [harvest] skip {url}: {e}")
-            return set()
-        hits = set()
+            return []
+        seen_local: set[str] = set()
+        ordered: list[str] = []
         for m in pattern.findall(html):
             u = m.rstrip("/")
-            if u.count("/") < 3:  # /site/cat (no slug) — skip
+            if u.count("/") < 3 or "/search" in u:
                 continue
-            if "/search" in u:
+            if u in seen_local:
                 continue
-            hits.add(u)
-        return hits
+            seen_local.add(u)
+            ordered.append(u)
+        return ordered
 
-    # First pass: landing page.
-    urls = harvest_page(f"{BASE}/{site}")
-    # Second pass: one URL per category to catch any missing siblings.
-    per_cat: dict[str, str] = {}
-    for u in urls:
+    # Pass 1: handbook root URL — its set of slugs is the source of truth
+    # (only published articles are linked from the root), but URLs may be
+    # truncated in hero/preview cards and the across-category order is the
+    # only reliable signal here.
+    landing = harvest_page(f"{BASE}/{site}")
+    site_prefix = f"/{site}/"
+
+    # Pass 2: probe one leaf for full (un-truncated) URLs and the canonical
+    # within-category order. Leaf may also surface stale sidebar entries
+    # (404 slugs) and cross-handbook "related" links — we whitelist using
+    # landing later.
+    leaf_list: list[str] = []
+    for probe in landing:
+        result = harvest_page(f"{BASE}{probe}")
+        candidates = [u for u in result if u.startswith(site_prefix)]
+        if len(candidates) >= max(len(landing) - 5, 1):
+            leaf_list = candidates
+            break
+    if not leaf_list:
+        leaf_list = [u for u in landing if u.startswith(site_prefix)]
+
+    # Expand truncated landing URLs to their full leaf counterpart.
+    leaf_set = set(leaf_list)
+    valid: set[str] = set()
+    for u in landing:
+        if not u.startswith(site_prefix):
+            continue
+        if u in leaf_set:
+            valid.add(u)
+        else:
+            # Truncated landing URL like /payment/how-to-tran — pick the
+            # shortest leaf URL that starts with it.
+            matches = sorted(
+                (f for f in leaf_set if f.startswith(u)),
+                key=len,
+            )
+            if matches:
+                valid.add(matches[0])
+
+    # Take within-category order from leaf_list (skipping URLs not in valid),
+    # then re-order categories by first appearance in landing.
+    by_cat: dict[str, list[str]] = {}
+    seen_in_cat: dict[str, set[str]] = {}
+    for u in leaf_list:
+        if u not in valid:
+            continue
+        parts = u.strip("/").split("/")
+        if len(parts) < 3:
+            continue
+        cat = parts[1]
+        if u in seen_in_cat.setdefault(cat, set()):
+            continue
+        seen_in_cat[cat].add(u)
+        by_cat.setdefault(cat, []).append(u)
+
+    cat_order_from_landing: dict[str, int] = {}
+    for i, u in enumerate(landing):
         parts = u.strip("/").split("/")
         if len(parts) >= 3:
-            per_cat.setdefault(parts[1], u)
-    for cat, probe_url in per_cat.items():
-        urls |= harvest_page(f"{BASE}{probe_url}")
-    return sorted(urls)
+            cat_order_from_landing.setdefault(parts[1], i)
+
+    cats_sorted = sorted(
+        by_cat,
+        key=lambda c: cat_order_from_landing.get(c, len(landing) + 1),
+    )
+    return [u for c in cats_sorted for u in by_cat[c]]
 
 
 # ---------- Title detection ----------

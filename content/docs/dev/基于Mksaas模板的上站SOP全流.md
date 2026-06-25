@@ -2,18 +2,13 @@
 title: '基于Mksaas模板的上站SOP全流程'
 ---
 
-> 这篇文章梳理了我基于 **mksaas 模板** 的一套“快速上站 SOP”。目标不是一次性把产品做完，而是：**尽早上线、尽早被搜索引擎感知、尽早拿到真实流量反馈，再逐步打磨功能和变现**。这套流程强调顺序和节奏，避免常见的“功能没做完不敢上线”“做了一堆结果部署不过”的低效问题，适合工具站、SaaS、AI站点的冷启动阶段。
-
-
 我现在做站基本都会遵循一个原则：
 
 **能早一天上线，就不要晚一天。**
 
 下面这套 SOP，是我基于 mksaas 模板反复跑下来之后，总结出的一套相对稳定、可复用的流程。
 
-> mksaas 可用闲鱼App扫码购买，通过本页面扫码购买的，拍完告诉我一声，额外赠送Mkdirs导航模板
-> 5个仓库（包含：mksaas-template、mksaas-app、mksaas-blog、mksaas-haitang、mksaas-outfit，[如果不了解5个仓库是什么，点击快速了解官网解释](https://mksaas.com/zh/docs/codebase)
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/911974adf10b65cc.jpg)
+> Mksaas模板购买：https://www.tplcode.cc/templates/mksaas
 
 ---
 
@@ -182,6 +177,8 @@ title: '基于Mksaas模板的上站SOP全流程'
 ---
 
 ## 总结
+
+> Mksaas模板购买：https://www.tplcode.cc/templates/mksaas
 
 这套 SOP 的核心不是技术，而是节奏：
 

@@ -52,6 +52,15 @@ export default async function DocsContentPage(props: {
   const params = await props.params;
   const slug = encodeSlug(params.slug);
 
+  // Root /docs lands on the "网站出海必读" readme instead of the sparse index
+  // page, matching the source site whose handbook root shows the readme.
+  if (!slug || slug.length === 0) {
+    redirect({
+      href: `/docs/must-read/${encodeURIComponent('网站出海必读')}`,
+      locale: (params.locale || 'en') as 'en' | 'zh',
+    });
+  }
+
   // fumadocs skips a root folder's index.mdx, so /docs/<handbook> can't be
   // matched by searchPath and the sidebar falls back to the full tree. Send
   // visitors straight to the first real page instead. Use next-intl's redirect

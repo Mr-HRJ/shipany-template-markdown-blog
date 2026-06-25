@@ -1,5 +1,7 @@
 ---
 title: 'AI 网站出海的学习路线'
+date: '2026-05-26'
+updated: '2026-05-26'
 ---
 
 ![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e972313b54b90ce6.jpg)

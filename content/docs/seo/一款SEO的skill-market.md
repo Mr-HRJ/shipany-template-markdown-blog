@@ -1,5 +1,7 @@
 ---
 title: '一款SEO的skill-marketingskills'
+date: '2026-04-15'
+updated: '2026-04-15'
 ---
 
 > 了解更全面的点击这里：https://skills.yangsir.net/en/domains/marketing

@@ -32,9 +32,14 @@ article .prose strong {
   --color-fd-primary: #07c160;
 }
 
-/* All H1 in docs article — centered, green, with underline */
-article h1,
-article > h1,
+/* Page title (DocsTitle) — left-aligned, default foreground color, like the
+   reference site. Body H1s are stripped into the title, so `article h1`
+   effectively only matches DocsTitle here. */
+article h1 {
+  text-align: left;
+}
+
+/* Body H1 (only if a heading survives in content) — centered, green, underline */
 article .prose h1 {
   color: var(--color-fd-primary) !important;
   border-bottom: 2px solid var(--color-fd-primary);
@@ -42,9 +47,6 @@ article .prose h1 {
   text-align: center !important;
   margin-bottom: 1rem;
   display: block;
-}
-
-article .prose h1 {
   font-size: 1.875em;
 }
 

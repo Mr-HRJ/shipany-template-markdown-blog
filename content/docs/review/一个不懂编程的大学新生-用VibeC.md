@@ -1,5 +1,7 @@
 ---
 title: '一个不懂编程的大学新生，用VibeCoding在1个月内构建了月收入1.7W美元的App'
+date: '2026-02-11'
+updated: '2026-02-13'
 ---
 
 用 Vibe Coding 1 个月做出月入 1.7 万美元 App

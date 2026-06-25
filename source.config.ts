@@ -1,7 +1,17 @@
-import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
+import { defineConfig, defineDocs, frontmatterSchema } from 'fumadocs-mdx/config';
+import { z } from 'zod';
 
 export const docs = defineDocs({
   dir: 'content/docs',
+  docs: {
+    // Extend the default frontmatter so /sea articles can carry the source
+    // site's published/updated dates (shown under the title). Optional, so
+    // handbooks without dates are unaffected.
+    schema: frontmatterSchema.extend({
+      date: z.string().optional(),
+      updated: z.string().optional(),
+    }),
+  },
 });
 
 export const pages = defineDocs({

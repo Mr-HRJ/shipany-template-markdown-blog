@@ -1,5 +1,7 @@
 ---
 title: 'Stripe Checkout 自动应用优惠配置'
+date: '2026-02-02'
+updated: '2026-02-02'
 ---
 
 > 这篇文章是我在接 Stripe Checkout 时，怎么做到“用户下单时自动带上优惠”，让用户**不用手动输入优惠码**。核心做法分两种：一种是开放输入框（`allow_promotion_codes=true`），用户自己填；另一种是我更常用的自动应用，在创建 Checkout Session 时直接传 `discounts` 并指定优惠对象 ID。需要特别注意：**`discounts` 和 `allow_promotion_codes` 不能同时开**，否则创建 Session 会直接报错，导致支付流程起不来。

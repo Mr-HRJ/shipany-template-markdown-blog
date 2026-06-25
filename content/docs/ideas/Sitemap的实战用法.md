@@ -1,5 +1,7 @@
 ---
 title: 'Sitemap的实战用法'
+date: '2026-02-01'
+updated: '2026-02-03'
 ---
 
 很多人一提到 Sitemap，第一反应就是：

@@ -1,5 +1,7 @@
 ---
 title: '为什么我开始从 Next.js 迁移到 TanStack'
+date: '2026-06-07'
+updated: '2026-06-07'
 ---
 
 > 过去很长一段时间里，我的新项目几乎都采用 Next.js + Vercel 方案。但随着项目数量增加，我逐渐发现性能、部署成本和基础设施管理成为新的问题。最近连续使用 TanStack Start 一段时间后，我开始将新站点逐步迁移到 TanStack + Cloudflare 体系。

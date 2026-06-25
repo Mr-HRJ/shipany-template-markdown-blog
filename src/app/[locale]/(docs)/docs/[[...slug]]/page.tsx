@@ -39,6 +39,13 @@ const HANDBOOK_ROOTS = new Set([
   'markdown-blog',
 ]);
 
+// ISO `2026-06-16` -> `06/16/2026` to match the source site's date format.
+function formatDate(iso?: string) {
+  if (!iso) return undefined;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : iso;
+}
+
 export default async function DocsContentPage(props: {
   params: Promise<{ slug?: string[]; locale?: string }>;
 }) {
@@ -68,6 +75,10 @@ export default async function DocsContentPage(props: {
   const tree = (source.pageTree as any)[params.locale || 'en'];
   const neighbour = findNeighbour(tree, page.url);
 
+  // Source-site publish/update dates (only /sea articles carry these).
+  const created = formatDate((page.data as { date?: string }).date);
+  const updated = formatDate((page.data as { updated?: string }).updated);
+
   return (
     <DocsPage
       toc={page.data.toc}
@@ -78,6 +89,12 @@ export default async function DocsContentPage(props: {
       footer={{ items: neighbour }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
+      {created && (
+        <div className="mb-6 flex justify-between text-sm text-fd-muted-foreground">
+          <div>Created: {created}</div>
+          {updated && <div className="sm:text-right">Updated: {updated}</div>}
+        </div>
+      )}
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <MDXContent

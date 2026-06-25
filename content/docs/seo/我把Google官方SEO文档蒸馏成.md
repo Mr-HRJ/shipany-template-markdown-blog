@@ -1,5 +1,7 @@
 ---
 title: '我把Google官方SEO文档蒸馏成了一个SEO.skill'
+date: '2026-04-13'
+updated: '2026-04-13'
 ---
 
 # 一、为什么要蒸馏 Google SEO 文档

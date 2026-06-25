@@ -1,5 +1,7 @@
 ---
 title: '打造专属 AI 数据分析师：Google Analytics MCP 完整配置指南'
+date: '2026-03-03'
+updated: '2026-03-03'
 ---
 
 在日常的独立开发和业务运营中，数据复盘是一项高频且耗时的基础工作。如果每次都需要手动打开统计后台寻找具体的流量面板，会极大地打断工作心流。这篇文章我们将探讨如何基于官方方案（相关技术文档：[https://github.com/googleanalytics/google-analytics-mcp](https://github.com/googleanalytics/google-analytics-mcp) ），通过配置 Google Analytics MCP，让 AI 直接读取并分析你的网站业务数据。

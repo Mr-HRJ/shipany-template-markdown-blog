@@ -1,5 +1,7 @@
 ---
 title: '90% 的 AdSense 站死在 低价值内容 判定上，我是怎么从 0 审核通过率翻过来的'
+date: '2026-04-15'
+updated: '2026-04-15'
 ---
 
 > 在批量建立 30 个内容站后，我遭遇了不到 **10%** 的 AdSense 审核通过率。Google 官方发来的拒信通常只有缺乏细节的一句话：“Your content doesn't meet our quality standards”。

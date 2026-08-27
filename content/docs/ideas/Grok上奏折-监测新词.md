@@ -54,7 +54,7 @@ updated: '2026-02-03'
 * 在左下角头像位置，找到 **Task（任务）** 入口
 
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/1cabea0bf4dbbe81.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/bb5d5b39a37f090e.jpg)
 
 
 这个入口如果你没注意过，很容易被忽略，但它是整个功能的核心。
@@ -69,7 +69,7 @@ updated: '2026-02-03'
 * 任务类型选择 **定时任务**
 * 设置为 **每天执行一次**
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/160bd917159e4df5.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0e990bdf57355954.jpg)
 
 
 这里不需要复杂配置，重点在于**频率稳定**，而不是跑得多勤。

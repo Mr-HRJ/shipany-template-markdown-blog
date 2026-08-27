@@ -1,7 +1,6 @@
 ---
 title: '一份完整的SEO优化清单，做完你的网站流量可以增长10倍'
 date: '2026-03-02'
-updated: '2026-03-02'
 ---
 
 我把这份SEO清单重新梳理了一遍，目标不是堆概念，而是让它真正能拿来执行。
@@ -321,6 +320,7 @@ Semrush的Keyword Magic Tool常用来查看：
 | 总关键词数 | 总搜索量   | 平均难度 |
 | ----- | ------ | ---- |
 | 3.5K  | 46,040 | 55%  |
+
 | Keyword                | Intent | Volume | Pot. Traffic | KD% |
 | ---------------------- | ------ | ------ | ------------ | --- |
 | seo strategy           | I      | 6.6K   | 2.4K         | 81  |
@@ -482,7 +482,7 @@ Semrush的Keyword Magic Tool常用来查看：
 ### 示例代码
 
 ```html
-![菠菜煎蛋](spinach_omelette.png)
+<img src="spinach_omelette.png" alt="菠菜煎蛋" />
 ```
 
 这样做不只是为了图片搜索，也是在补足页面语义信息。

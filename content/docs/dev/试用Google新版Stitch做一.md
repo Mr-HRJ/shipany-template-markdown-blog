@@ -1,7 +1,6 @@
 ---
 title: '试用Google新版Stitch做一个可落地的UI页面'
 date: '2026-03-22'
-updated: '2026-03-22'
 ---
 
 Google发布了新版 **Stitch**，我第一时间试了一遍，重点不是看它能不能“生成一个页面”，而是看它到底能不能把 **UI生成、主题控制、页面微调、交互预览、导出交付** 这一整套流程串起来。
@@ -41,7 +40,7 @@ Google发布了新版 **Stitch**，我第一时间试了一遍，重点不是看
 # 初次生成后的界面结构
 
 生成完成之后，页面右侧会直接给出预览结果，整个界面结构也比较清晰，方便继续往下改。
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c7721aa36aa2350b.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/bdd6dab32731058f.jpg)
 
 生成后我看到的主要区域包括：
 
@@ -177,7 +176,7 @@ Google发布了新版 **Stitch**，我第一时间试了一遍，重点不是看
 除了从零开始生成页面，Stitch还有一个我认为更接近商业场景的能力：**对已有页面做优化调整**。
 
 ## 它支持的几种输入方式
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0e59af414bcbee60.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e2839abfe77ca4ae.jpg)
 
 对于已经上线的页面，Stitch支持下面几种改法：
 

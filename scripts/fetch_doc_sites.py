@@ -17,13 +17,19 @@ fresh.
 """
 
 from __future__ import annotations
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+import hashlib
 import html as _html
 import json
 import re
 import sys
 import time
+import unicodedata
 import urllib.request
 from pathlib import Path
+from typing import Callable
+from urllib.parse import quote, urlparse
 
 # Reuse the battle-tested extract / transform pipeline.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -91,6 +97,7 @@ CATEGORY_ORDER = [
 
 # Site slug → display title (shown as the section title on the docs sidebar).
 SITE_TITLES = {
+    "sea": "AI 出海手册",
     "shipany-two": "ShipAny Two 手册",
     "joyflix": "JoyFlix 手册",
     "nanobanana": "Nano Banana 手册",
@@ -99,6 +106,83 @@ SITE_TITLES = {
     "markdown-blog": "Markdown Blog 手册",
     "gpt-image2": "GPT Image 2 手册",
 }
+
+# `/sea` is the source for the existing root-level "AI 出海手册", rather
+# than an independent handbook under `content/docs/sea`.  Keep its source URL
+# segments mapped to the established local folders so already-indexed routes
+# remain stable while titles, bodies, dates and sidebar order are refreshed.
+SEA_CATEGORY_MAP = {
+    "need": ("ideas", "找需求"),
+    "data": ("analytics", "数据分析"),
+    "dev": ("dev", "开发"),
+    "pay": ("payment", "支付"),
+    "seo": ("seo", "SEO"),
+    "geo": ("geo", "GEO 优化"),
+    "external-links": ("backlink", "外链"),
+    "flow": ("traffic", "流量"),
+    "ads": ("ads", "Ads 投流"),
+    "other": ("misc", "其他"),
+    "review": ("review", "复盘"),
+}
+
+_NEXT_PUSH_RE = re.compile(
+    r'self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)', re.DOTALL
+)
+_PAGE_TREE_ITEM_RE = re.compile(
+    r'"name":"((?:\\.|[^"\\])*)","url":"(/(?:\\.|[^"\\])*)"'
+)
+
+
+def decode_rsc_payload(page_html: str) -> str:
+    """Decode all Next.js flight string chunks into one searchable payload."""
+    chunks: list[str] = []
+    for literal in _NEXT_PUSH_RE.findall(page_html):
+        try:
+            chunks.append(json.loads(literal))
+        except json.JSONDecodeError:
+            continue
+    return "".join(chunks)
+
+
+def harvest_page_tree(site: str) -> list[tuple[str, str]]:
+    """Return exact `(sidebar title, URL)` pairs from the root RSC page tree.
+
+    Reading the decoded page tree avoids the shortened links emitted by cards
+    in the rendered HTML.  Those shortened links caused the older harvester to
+    silently miss valid `/sea` articles.
+    """
+    prefix = f"/{site}/"
+    best: list[tuple[str, str]] = []
+    previous_urls: list[str] | None = None
+
+    # Cloudflare occasionally serves an incomplete streamed RSC response even
+    # with HTTP 200. Require two identical inventories when possible and keep
+    # the largest complete-looking response as a fallback.
+    for attempt in range(4):
+        page_html = fetch_html(f"{BASE}/{site}")
+        payload = decode_rsc_payload(page_html)
+        seen: set[str] = set()
+        items: list[tuple[str, str]] = []
+        for raw_name, raw_url in _PAGE_TREE_ITEM_RE.findall(payload):
+            try:
+                name = json.loads(f'"{raw_name}"')
+                url = json.loads(f'"{raw_url}"').rstrip("/")
+            except json.JSONDecodeError:
+                continue
+            if not url.startswith(prefix) or "/search" in url or url in seen:
+                continue
+            seen.add(url)
+            items.append((name, url))
+
+        urls = [url for _, url in items]
+        if urls == previous_urls and items:
+            return items
+        previous_urls = urls
+        if len(items) > len(best):
+            best = items
+        if attempt < 3:
+            time.sleep(0.25)
+    return best
 
 
 # ---------- URL harvest ----------
@@ -112,6 +196,19 @@ def harvest_urls(site: str) -> list[str]:
     discovered category and keep first-appearance order. Sorting alphabetically
     here would scramble the author's intent.
     """
+    # Prefer the canonical page tree. Fall back to the older HTML-link probes
+    # for deployments whose RSC payload does not expose sidebar nodes.
+    try:
+        tree_urls = [
+            url
+            for _, url in harvest_page_tree(site)
+            if len(url.strip("/").split("/")) >= 3
+        ]
+        if tree_urls:
+            return tree_urls
+    except Exception as e:
+        print(f"  [harvest] page-tree fallback for {site}: {e}")
+
     pattern = re.compile(rf"/{re.escape(site)}/[a-z0-9\-][a-z0-9\-/]*")
 
     def harvest_page(url: str) -> list[str]:
@@ -274,6 +371,360 @@ def strip_leading_title(md: str, title: str) -> str:
     return rest.lstrip("\n")
 
 
+# ---------- `/sea` root-handbook synchronization ----------
+
+_SEA_FRONTMATTER_TITLE_RE = re.compile(r"(?m)^title:\s*(.+?)\s*$")
+_SEA_MD_IMAGE_RE = re.compile(
+    r"(!\[[^\]]*\]\()(https?://[^)\s]+)((?:\s+\"[^\"]*\")?\))"
+)
+_SEA_HTML_IMAGE_RE = re.compile(r'(<img\s+[^>]*?src=")(https?://[^"]+)(")')
+_SEA_IMAGE_EXTENSIONS = {
+    ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".avif"
+}
+
+
+def _norm_sea_title(value: str) -> str:
+    value = unicodedata.normalize("NFKC", value).lower()
+    for old, new in {
+        "“": "", "”": "", "‘": "", "’": "", "「": "", "」": "",
+        "『": "", "』": "", "，": ",", "。": ".", "：": ":",
+        "；": ";", "（": "(", "）": ")", "【": "[", "】": "]",
+        "？": "?", "！": "!", "、": ",", "／": "/", "→": "-",
+        "–": "-", "—": "-",
+    }.items():
+        value = value.replace(old, new)
+    return re.sub(r"[\s\-_./,:;()\[\]?!#&+$'\"]+", "", value)
+
+
+def _sea_file_slug(title: str, max_len: int = 18) -> str:
+    slug = re.sub(r"[^A-Za-z0-9一-鿿-]+", "-", title)
+    slug = re.sub(r"-+", "-", slug).strip("-")
+    if len(slug) > max_len:
+        slug = slug[:max_len].rstrip("-")
+    return slug or "untitled"
+
+
+def _read_local_title(path: Path) -> str:
+    text = path.read_text(encoding="utf-8-sig")
+    match = _SEA_FRONTMATTER_TITLE_RE.search(text[:4000])
+    if not match:
+        raise RuntimeError(f"missing frontmatter title: {path.relative_to(REPO)}")
+    title = match.group(1).strip()
+    if len(title) >= 2 and title[0] == title[-1] and title[0] in "'\"":
+        title = title[1:-1]
+    return title.replace("''", "'")
+
+
+def _source_dates(page_html: str) -> tuple[str | None, str | None]:
+    payload = decode_rsc_payload(page_html)
+
+    def parse(label: str) -> str | None:
+        match = re.search(rf"{label}:\s*(\d{{2}}/\d{{2}}/\d{{4}})", payload)
+        if not match:
+            return None
+        return datetime.strptime(match.group(1), "%m/%d/%Y").date().isoformat()
+
+    return parse("Created"), parse("Updated")
+
+
+def _fetch_sea_article(item: dict[str, object]) -> dict[str, object]:
+    source_path = str(item["source_path"])
+    last_error: Exception | None = None
+    for attempt in range(1, 4):
+        try:
+            page_html = fetch_html(f"{BASE}{source_path}")
+            body = extract_markdown(page_html)
+            if not body:
+                raise RuntimeError("no markdown chunk found")
+            body = rewrite_fence_langs(body)
+            created, updated = _source_dates(page_html)
+            if not created:
+                raise RuntimeError("source Created date not found")
+            return {
+                "body": body.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n",
+                "date": created,
+                "updated": updated,
+            }
+        except Exception as exc:
+            last_error = exc
+            if attempt < 3:
+                time.sleep(attempt)
+    raise RuntimeError(f"{source_path}: {last_error}")
+
+
+def _load_r2_compare_config() -> tuple[str, str, dict[str, str]] | None:
+    creds_path = REPO / "scripts" / ".r2-creds.json"
+    if not creds_path.exists():
+        return None
+    creds = json.loads(creds_path.read_text(encoding="utf-8"))
+    public_base = str(creds.get("public_base", "")).rstrip("/")
+    prefix = str(creds.get("key_prefix", "")).strip("/")
+    if not public_base:
+        return None
+    manifest_path = REPO / "scripts" / "image_migration_manifest.json"
+    known_urls: dict[str, str] = {}
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        known_urls = {
+            url: str(value["public_url"])
+            for url, value in manifest.items()
+            if value.get("status") == "ok" and value.get("public_url")
+        }
+    return public_base, prefix, known_urls
+
+
+def _r2_candidate(
+    url: str, config: tuple[str, str, dict[str, str]] | None
+) -> str:
+    if not config:
+        return url
+    public_base, prefix, known_urls = config
+    if urlparse(url).hostname == urlparse(public_base).hostname:
+        return url
+    if url in known_urls:
+        return known_urls[url]
+    suffix = Path(urlparse(url).path).suffix.lower()
+    if suffix not in _SEA_IMAGE_EXTENSIONS:
+        suffix = ".jpg"
+    digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
+    key = f"{digest}{suffix}"
+    if prefix:
+        key = f"{prefix}/{key}"
+    return f"{public_base}/{key}"
+
+
+def _rewrite_sea_image_urls(
+    body: str,
+    config: tuple[str, str, dict[str, str]] | None,
+    should_reuse: Callable[[str], bool] | None = None,
+) -> str:
+    def replace(match: re.Match) -> str:
+        original = match.group(2)
+        candidate = _r2_candidate(original, config)
+        replacement = candidate if should_reuse is None or should_reuse(candidate) else original
+        return f"{match.group(1)}{replacement}{match.group(3)}"
+
+    body = _SEA_HTML_IMAGE_RE.sub(replace, body)
+    return _SEA_MD_IMAGE_RE.sub(replace, body)
+
+
+def _rewrite_sea_internal_links(body: str, source_to_local: dict[str, str]) -> str:
+    # Longest first protects against one source slug being a prefix of another.
+    for source_path in sorted(source_to_local, key=len, reverse=True):
+        local_url = source_to_local[source_path]
+        variants = [f"{BASE}{source_path}", source_path]
+        if source_path.startswith("/sea/"):
+            variants.append(source_path[len("/sea"):])
+        for old in variants:
+            body = body.replace(f"]({old}", f"]({local_url}")
+            body = body.replace(f'href="{old}', f'href="{local_url}')
+            body = body.replace(f"href='{old}", f"href='{local_url}")
+    return body
+
+
+def _render_sea_doc(
+    title: str, date: str, updated: str | None, body: str
+) -> str:
+    frontmatter = ["---", f"title: '{yaml_quote(title)}'", f"date: '{date}'"]
+    if updated:
+        frontmatter.append(f"updated: '{updated}'")
+    frontmatter.extend(["---", ""])
+    return "\n".join(frontmatter) + "\n" + body.rstrip() + "\n"
+
+
+def process_sea() -> None:
+    """Synchronize `/sea` into the existing root AI handbook in-place."""
+    print("\n##### sea (root AI handbook) #####")
+    tree = harvest_page_tree("sea")
+    if not tree:
+        raise RuntimeError("/sea page tree is empty")
+
+    expected_category_order = list(SEA_CATEGORY_MAP)
+    found_category_order: list[str] = []
+    source_items: list[dict[str, object]] = []
+    seen_source_urls: set[str] = set()
+    seen_source_titles: set[tuple[str, str]] = set()
+
+    for title, source_path in tree:
+        if source_path in seen_source_urls:
+            continue
+        seen_source_urls.add(source_path)
+        parts = source_path.strip("/").split("/")
+        if source_path == "/sea/readme":
+            source_category = "readme"
+            local_folder = "must-read"
+            category_title = "网站出海必读"
+        elif len(parts) == 3 and parts[0] == "sea" and parts[1] in SEA_CATEGORY_MAP:
+            source_category = parts[1]
+            local_folder, category_title = SEA_CATEGORY_MAP[source_category]
+            if source_category not in found_category_order:
+                found_category_order.append(source_category)
+        else:
+            continue
+
+        title_key = (local_folder, _norm_sea_title(title))
+        if title_key in seen_source_titles:
+            raise RuntimeError(f"duplicate source title in {local_folder}: {title}")
+        seen_source_titles.add(title_key)
+        source_items.append({
+            "title": title,
+            "source_path": source_path,
+            "source_category": source_category,
+            "local_folder": local_folder,
+            "category_title": category_title,
+        })
+
+    if found_category_order != expected_category_order:
+        raise RuntimeError(
+            f"unexpected /sea category order: {found_category_order}; "
+            f"expected {expected_category_order}"
+        )
+    if not source_items or source_items[0]["source_path"] != "/sea/readme":
+        raise RuntimeError("/sea readme is missing or not first in the page tree")
+
+    local_folders = ["must-read"] + [value[0] for value in SEA_CATEGORY_MAP.values()]
+    existing_by_key: dict[tuple[str, str], Path] = {}
+    all_existing: set[Path] = set()
+    occupied_stems: dict[str, set[str]] = {}
+    for local_folder in local_folders:
+        folder = DOCS_ROOT / local_folder
+        occupied_stems[local_folder] = set()
+        for path in sorted(folder.iterdir()):
+            if path.suffix.lower() not in {".md", ".mdx"}:
+                continue
+            key = (local_folder, _norm_sea_title(_read_local_title(path)))
+            if key in existing_by_key:
+                raise RuntimeError(f"duplicate local title: {path.relative_to(REPO)}")
+            existing_by_key[key] = path
+            all_existing.add(path)
+            occupied_stems[local_folder].add(path.stem)
+
+    used_existing: set[Path] = set()
+    for item in source_items:
+        local_folder = str(item["local_folder"])
+        key = (local_folder, _norm_sea_title(str(item["title"])))
+        path = existing_by_key.get(key)
+        if path:
+            used_existing.add(path)
+        else:
+            base = _sea_file_slug(str(item["title"]))
+            stem = base
+            suffix = 2
+            while stem in occupied_stems[local_folder]:
+                stem = f"{base}-{suffix}"
+                suffix += 1
+            occupied_stems[local_folder].add(stem)
+            path = DOCS_ROOT / local_folder / f"{stem}.md"
+        item["local_path"] = path
+
+    stale_local = sorted(all_existing - used_existing)
+    source_to_local = {
+        str(item["source_path"]): (
+            f"/docs/{item['local_folder']}/"
+            f"{quote(Path(item['local_path']).stem, safe='-._~')}"
+        )
+        for item in source_items
+    }
+
+    print(
+        f"  source tree: {len(source_items)} page(s); "
+        f"local before sync: {len(all_existing)} page(s)"
+    )
+    print("  fetching all source pages (6 workers)...", flush=True)
+    fetched: dict[str, dict[str, object]] = {}
+    failures: list[str] = []
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        future_to_item = {pool.submit(_fetch_sea_article, item): item for item in source_items}
+        completed = 0
+        for future in as_completed(future_to_item):
+            item = future_to_item[future]
+            try:
+                fetched[str(item["source_path"])] = future.result()
+            except Exception as exc:
+                failures.append(str(exc))
+            completed += 1
+            if completed % 20 == 0 or completed == len(source_items):
+                print(f"  fetched {completed}/{len(source_items)}", flush=True)
+    if failures:
+        raise RuntimeError("source fetch failed:\n  " + "\n  ".join(failures))
+
+    r2_config = _load_r2_compare_config()
+    added: list[tuple[str, str]] = []
+    updated_docs: list[tuple[str, str]] = []
+    unchanged = 0
+    pages_by_folder: dict[str, list[str]] = {folder: [] for folder in local_folders}
+
+    for item in source_items:
+        title = str(item["title"])
+        source_path = str(item["source_path"])
+        local_folder = str(item["local_folder"])
+        local_path = Path(item["local_path"])
+        result = fetched[source_path]
+        body = _rewrite_sea_internal_links(str(result["body"]), source_to_local)
+        new_text = _render_sea_doc(
+            title,
+            str(result["date"]),
+            str(result["updated"]) if result["updated"] else None,
+            body,
+        )
+        pages_by_folder[local_folder].append(local_path.stem)
+
+        current = local_path.read_text(encoding="utf-8") if local_path.exists() else None
+        comparable = _rewrite_sea_image_urls(new_text, r2_config)
+        if current == comparable:
+            unchanged += 1
+            continue
+
+        if current is not None:
+            # Reuse only deterministic R2 URLs already referenced by this page;
+            # genuinely new source images remain external for migrate_images.py.
+            new_text = _rewrite_sea_image_urls(
+                new_text,
+                r2_config,
+                should_reuse=lambda candidate, old=current: candidate in old,
+            )
+            updated_docs.append((local_folder, title))
+        else:
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            added.append((local_folder, title))
+        local_path.write_text(new_text, encoding="utf-8")
+
+    for path in stale_local:
+        path.unlink()
+
+    category_titles = {"must-read": "网站出海必读"}
+    category_titles.update({folder: title for folder, title in SEA_CATEGORY_MAP.values()})
+    for folder in local_folders:
+        meta_path = DOCS_ROOT / folder / "meta.json"
+        meta_text = json.dumps(
+            {"title": category_titles[folder], "pages": pages_by_folder[folder]},
+            ensure_ascii=False,
+            indent=2,
+        ) + "\n"
+        if not meta_path.exists() or meta_path.read_text(encoding="utf-8") != meta_text:
+            meta_path.write_text(meta_text, encoding="utf-8")
+
+    root_meta = json.dumps(
+        {"title": "AI 出海手册", "pages": local_folders},
+        ensure_ascii=False,
+        indent=2,
+    ) + "\n"
+    root_meta_path = DOCS_ROOT / "meta.json"
+    if root_meta_path.read_text(encoding="utf-8") != root_meta:
+        root_meta_path.write_text(root_meta, encoding="utf-8")
+
+    print(
+        f"  sync result: {len(added)} added, {len(updated_docs)} updated, "
+        f"{unchanged} unchanged, {len(stale_local)} removed"
+    )
+    for folder, title in added:
+        print(f"    [add:{folder}] {title}")
+    for folder, title in updated_docs:
+        print(f"    [update:{folder}] {title}")
+    for path in stale_local:
+        print(f"    [remove] {path.relative_to(REPO)}")
+
+
 # ---------- Per-site processing ----------
 
 def process_site(site: str) -> None:
@@ -395,7 +846,10 @@ def main() -> None:
     else:
         sites = sys.argv[1:]
     for site in sites:
-        process_site(site)
+        if site == "sea":
+            process_sea()
+        else:
+            process_site(site)
     print("\n=== all done ===")
 
 

@@ -1,7 +1,6 @@
 ---
 title: '推荐使用AITDK SEO必备插件'
 date: '2026-02-03'
-updated: '2026-02-03'
 ---
 
 > 这篇文章系统拆解了一个**SEO 必备浏览器插件 AITDK** 的实际使用价值，并通过 **flux1.ai** 这个真实网站，完整演示了它在**站内结构、技术 SEO、流量判断、问题排查、多语言与结构化数据**等方面能提供哪些关键信息。结论很明确：AITDK 不是“给新手看的玩具插件”，而是一个**能快速帮你判断一个站 SEO 基础好不好、值不值得继续深挖、以及你自己网站还差在哪**的效率工具。
@@ -199,7 +198,7 @@ SERP 模块展示的是：
 
 # Headings：页面结构是否清晰
 
-![Image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/97dec3548f530b53.webp)
+![Image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/97dec3548f530b53.png)
 
 
 这个模块非常直观：
@@ -282,7 +281,7 @@ SERP 模块展示的是：
 
 # Whois / DNS：基础信息速查
 
-<!-- image removed: bigrock.in unreachable -->
+![Image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9d755f7e0b54f477.webp)
 
 
 可以快速查看：

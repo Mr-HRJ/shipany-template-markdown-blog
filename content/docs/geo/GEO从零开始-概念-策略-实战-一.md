@@ -16,7 +16,7 @@ GEO（Generative Engine Optimization，生成式引擎优化）就是：让你�
 
 搜索路径变了
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/42d8438a682e15ce.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/71cdb85acc87a079.jpg)
 
 注意到差异了吗？AI 搜索里用户不需要自己点链接挑内容——AI 已经替他筛选并综合了。如果你没进入 AI 的"引用候选池"，用户根本不知道你存在。
 
@@ -27,7 +27,7 @@ GEO（Generative Engine Optimization，生成式引擎优化）就是：让你�
 # 第二章：为什么现在必须关注
 
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c4eeb406b794bc07.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/458b841c32154e48.jpg)
 
 光看流量数字还不够——AI 推荐过来的用户质量极高。AI 搜索访客的转化率是传统搜索的 23 倍。原因很简单：用户在 AI 那里问的是具体问题（"预算有限适合做瑜伽的入门装备"），而不是宽泛关键词，所以被推过来的人需求更明确。
 
@@ -37,7 +37,7 @@ GEO（Generative Engine Optimization，生成式引擎优化）就是：让你�
 
 # 第三章：SEO vs GEO：一张表看懂区别
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/788dd0aa12423ab2.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/37a160b5b0c03460.jpg)
 
 
 关键认知：GEO 并不是推翻 SEO，是叠加一层新逻辑。Google AI Overviews 的引用仍然高度依赖传统 SEO 信号（96% 的 AI 引用来自权威性强的来源）。你现有的 SEO 工作不会白费。
@@ -57,14 +57,14 @@ GEO（Generative Engine Optimization，生成式引擎优化）就是：让你�
 
 ## RAG 架构：AI 回答问题的四步流程
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0e04fe92f5c6719f.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6f3d604cc12fb67c.jpg)
 
 > 再打一个比方：
 如果 SEO 是"让图书馆把你的书摆在显眼书架"，GEO 就是"让图书管理员在给读者推荐时，能直接念出你书里的某段话"。每一段话都得足够清晰、准确，值得被大声念出来。
 
 ## AI 凭什么信任你
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/63765265765a59ee.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/cb8be22202058bf2.jpg)
 
 > Ahrefs 数据显示，80% 的 ChatGPT 引用来源在 Google 搜索前 100 名里找不到。也就是说，即使你的 SEO 做得很差，只要内容写法对，也有机会被 AI 引用。
 
@@ -73,7 +73,7 @@ GEO（Generative Engine Optimization，生成式引擎优化）就是：让你�
 
 不同平台的"口味"差异很大——同一篇文章在 ChatGPT 和 Perplexity 上的引用逻辑完全不同。只有 11% 的网站能同时被两者引用，说明平台间的来源池几乎互不重叠。
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/93f13579775be8ca.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/dcb5cc20d301943d.jpg)
 
 ## 通用优化策略：
 
@@ -122,7 +122,7 @@ AI 截取的往往是开头 40—60 字，把最重要的话放最前面，不�
 **策略重点：** 在知乎写有深度的专业回答，同时争取权威媒体报道。内容要兼顾专业深度（满足 Kimi 的严谨性）和用户视角（知乎风格）。
 
 ## 国内平台优化对照表
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2256dab8e72e5f6c.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2ac8521e2217ae8b.jpg)
 
 ## 国内平台的特殊考量
 ### 1. 多平台内容一致性更重要
@@ -199,7 +199,7 @@ Sitemap: https://yourdomain.com/sitemap.xml
 > llms.txt是什么？
 2024 年由 fast.ai 的 Jeremy Howard 提出的新标准。格式是 Markdown，放在根目录，叫 llms.txt。它告诉 AI "我的网站有哪些重要内容、怎么理解我"——访问 https://你的域名.com/llms.txt 能看到就对了。
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/3e866180bc66b41f.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/54e84a68816b85a6.jpg)
 
 ```
 # 你的网站名称
@@ -237,13 +237,13 @@ Sitemap: https://yourdomain.com/sitemap.xml
 ## 7.3  Schema 结构化数据 — 用机器能懂的语言描述内容
 
 > Schema 结构化数据是什么？
-嵌在网页 \<head> 里的 JSON 代码，用标准格式告诉搜索引擎和 AI：这篇文章是谁写的、什么时候发布的、是不是问答格式……让机器不用猜，直接读懂。
+嵌在网页 <head> 里的 JSON 代码，用标准格式告诉搜索引擎和 AI：这篇文章是谁写的、什么时候发布的、是不是问答格式……让机器不用猜，直接读懂。
 
 两种最重要的 Schema
 
 ① Article Schema — 每篇文章都要加
 
-```html
+```
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -286,7 +286,7 @@ Sitemap: https://yourdomain.com/sitemap.xml
 
 ② FAQPage Schema — 效果最显著，有 FAQ 就要加
 
-```html
+```
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

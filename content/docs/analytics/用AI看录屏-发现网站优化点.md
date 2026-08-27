@@ -1,7 +1,6 @@
 ---
 title: '用AI看录屏，发现网站优化点'
 date: '2026-02-01'
-updated: '2026-02-01'
 ---
 
 > 这篇内容继续拆解 Clarity 的一个被严重低估的能力：**用 AI 自动总结用户录屏和热力图，直接帮你找网站问题**。当录屏数量变多、人工逐条查看成本过高时，Clarity 的 Summarize Recordings 和 Summarize Heatmaps 可以把零散的用户行为，压缩成可执行的结论。核心价值在于：**不是多看数据，而是更快看懂数据，并转化为具体的页面优化动作。**
@@ -43,7 +42,7 @@ Clarity 提供了一个**AI 总结录屏的入口**：
 * 点击右上角的 **Summarize recordings**
 * Clarity 会基于一批用户录屏
 * 自动输出一段总结分析
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8126399422d5730e.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/4638050bd6e3fd6e.jpg)
 
 这段总结通常会包括：
 
@@ -113,7 +112,7 @@ Clarity 提供了一个**AI 总结录屏的入口**：
 ---
 
 ## 四、Scroll 热力图：用户有没有往下看
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e96c92c98ddc22d0.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8e09e1feb44246ee.jpg)
 
 ### 使用方式
 
@@ -136,7 +135,7 @@ Clarity 提供了一个**AI 总结录屏的入口**：
 ---
 
 ## 五、Attention 热力图：用户时间花在哪里
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c51b78320f5cf82a.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6f0d3992fe54ecdb.jpg)
 
 ### 使用方式
 
@@ -172,7 +171,7 @@ Clarity 在这里也提供了一个 AI 辅助功能。
 
 ### Summarize Heatmaps 功能
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/6e41a17724c9e51d.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/9649ac2c2464f3d8.jpg)
 
 
 使用路径很简单：

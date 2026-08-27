@@ -9,6 +9,8 @@ Idempotent: a manifest at scripts/image_migration_manifest.json maps
 original_url -> {key, public_url, status}. Re-runs skip already-uploaded URLs.
 """
 
+from __future__ import annotations
+
 import argparse
 import hashlib
 import json
@@ -17,7 +19,7 @@ import re
 import sys
 import time
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import boto3
 import requests
@@ -114,8 +116,38 @@ def collect_urls(skip_host: str | None = None) -> tuple[list[str], dict[str, lis
 
 
 def download(url: str, timeout: int = 30) -> tuple[bytes | None, str | None, str | None]:
+    # Markdown sometimes escapes query separators as `\&`. Requests treats
+    # that backslash as part of the parameter name, so normalize it first.
+    request_url = url.replace(r"\&", "&")
     try:
-        r = requests.get(url, headers=HEADERS, timeout=timeout, stream=True)
+        r = requests.get(request_url, headers=HEADERS, timeout=timeout, stream=True)
+        if r.status_code != 200:
+            parsed = urlparse(request_url)
+            retry_headers = {
+                **HEADERS,
+                "Referer": f"{parsed.scheme}://{parsed.netloc}/",
+            }
+            r = requests.get(
+                request_url,
+                headers=retry_headers,
+                timeout=timeout,
+                stream=True,
+            )
+        if r.status_code != 200:
+            # A few image CDNs reject Chromium's full image Accept header but
+            # allow a minimal browser user agent.
+            r = requests.get(
+                request_url,
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=timeout,
+                stream=True,
+            )
+        # If a third-party Next.js image optimizer blocks direct access, fetch
+        # the original asset from its `url=` query parameter instead.
+        if r.status_code != 200 and urlparse(request_url).path.endswith("/_next/image"):
+            original = parse_qs(urlparse(request_url).query).get("url", [None])[0]
+            if original:
+                r = requests.get(original, headers=HEADERS, timeout=timeout, stream=True)
         if r.status_code != 200:
             return None, None, f"HTTP {r.status_code}"
         ct = r.headers.get("Content-Type", "")

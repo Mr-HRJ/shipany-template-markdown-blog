@@ -1,13 +1,12 @@
 ---
 title: '一个适合出海项目的GEO开源工具'
 date: '2026-03-22'
-updated: '2026-03-22'
 ---
 
 如果你在做出海项目，这个工具值得重点看一眼。
 
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/671e2635d17db0ec.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/254bcbda29ad5911.jpg)
 
 我最近看到一个比较实用的开源项目，名字叫 **geo-seo-claude**。它的定位很清楚，不是泛泛地讲SEO，也不是只做单点检测，而是围绕 **GEO，也就是面向生成式搜索和AI引用场景的站点审计** 来设计的。
 

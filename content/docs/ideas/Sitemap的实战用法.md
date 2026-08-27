@@ -41,7 +41,7 @@ updated: '2026-02-03'
 * 到 GSC（Google Search Console）里提交
 * 让搜索引擎根据 Sitemap 抓取和索引页面
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/427cba812eba7756.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/e57f7046c2686e6f.jpg)
 
 
 这个用法解决的是一个问题：
@@ -187,7 +187,7 @@ updated: '2026-02-03'
    * 找出新增的 URL
    * 忽略已经存在的页面
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5c1618cedb0f2ab7.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/2d1330ab8dd7e8e5.jpg)
 
 
 ---

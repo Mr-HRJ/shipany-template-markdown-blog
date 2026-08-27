@@ -11,7 +11,7 @@ updated: '2026-04-15'
 当下的搜索生态确实变了。随着 ChatGPT、Perplexity 和 Claude 的普及，传统 SEO 正在被一种叫 **GEO（生成式引擎优化）** 的新方法论取代。经历过十多年的搜索更新，我的基本判断是：**GEO 绝非 SEO 的版本升级，而是底层逻辑完全不同的新物种**。搞懂这 10 个核心差异，至少能少走 2 年弯路。
 
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/54309407bc2ea0ab.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/5ecad9ee3903fdcd.jpg)
 
 
 ## 1. 优化目标：从排位到信源

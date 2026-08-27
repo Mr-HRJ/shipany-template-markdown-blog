@@ -1,14 +1,13 @@
 ---
 title: '开源的第一个SEO&GEO系统：GEOFlow'
 date: '2026-04-15'
-updated: '2026-04-15'
 ---
 
 > 做内容站、搞 SEO 流量的，这个开源项目能帮你省掉大量重复劳动。
 
 GEOFlow —— 一套完整的 AI 内容生产流水线，从素材管理到 AI 生成到审核发布，全链路自动化。
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/f08c1614c9fb6ddb.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8f4effd02cce29b8.jpg)
 
 https://github.com/yaojingang/GEOFlow
 

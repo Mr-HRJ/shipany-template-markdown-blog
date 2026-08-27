@@ -1,14 +1,13 @@
 ---
 title: '创建一个claude skill 减少重复操作'
 date: '2026-02-02'
-updated: '2026-02-02'
 ---
 
 ## 写在前面
 
 如果你感觉麻烦，可以直接买Saas模板（内置了Skill一步到位），省去你这一步;
 > Shipany AISaas模板，1小时快速上站，可扫码直接购买
-> ![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/8eea25d4e67fee53.jpg)
+> ![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/0a6cd3b4dbaeb6cd.jpg)
 
 > 这篇文章复盘了我在开发中如何用 Skill Creator 给 Claude Code 做一个可复用的“自动生成图片”技能，把原本需要我手动用 nano banana 生成图片的重复工作，变成 Claude Code 能自己完成的流程化能力。核心价值在于：**把高频、机械的素材生成工作从“人肉操作”变成“代码可调用的能力”**，尤其适合落地页、功能页这种需要大量配图的场景。文章同时记录了一个很现实的问题：如果你因为网络/权限原因无法在 claude.ai 打开 Skill Creator，也可以通过 GitHub 本地安装到 `.claude/skills/` 目录来正常使用，并在创建 Skill 时把 API 文档和调用规范提供给 Claude Code，确保它能写出正确的调用逻辑。
 

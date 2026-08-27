@@ -47,7 +47,7 @@ pipx run cowsay -t moooooo
 ### 配置 OAuth 客户端并获取凭证
 
 API 启用后，进入授权概览页面（[https://console.cloud.google.com/auth/overview](https://console.cloud.google.com/auth/overview) ）。在这里，你需要选择或者创建一个客户端以获取系统鉴权密钥。
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/23665f76e4327a2e.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/c97628208ed52c3d.jpg)
 
 创建完成后，系统会提供一个 JSON 格式的密钥文件。**请务必下载并妥善保存在本地计算机上**，这是后续验证身份的唯一凭据。
 

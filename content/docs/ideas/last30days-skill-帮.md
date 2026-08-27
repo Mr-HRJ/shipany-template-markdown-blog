@@ -33,7 +33,7 @@ updated: '2026-03-29'
 
 近期在GitHub Trending快速上升的开源项目last30days-skill正是围绕这个问题设计的一套解决方案。
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/d28fe376957cdf38.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/78af102625819afd.jpg)
 
 根据公开资料，该项目通过聚合过去30天的社区讨论，生成结构化研究报告，用于发现趋势、Prompt模式和真实需求。 
 
@@ -43,7 +43,7 @@ updated: '2026-03-29'
 
 
 
-![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/eb203f8dfcb6e70a.jpg)
+![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/dcd04b3bc58e6ce0.jpg)
 
 
 从功能定位来看，last30days-skill 可以理解为：

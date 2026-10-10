@@ -249,6 +249,7 @@ PAGE_ORDER: dict[str, list[str]] = {
         "我建议网站加一个Discord群，收集反馈",
         "杭州97年小伙，靠 AI 5个月上线了120多个 App",
         "月度经常性收入1万美元攻略：如何在Reddit上吸引用户关注",
+        "实用的 Reddit 搜索技巧，建议收藏",
         "很多人会忽略的Newsletter",
         "出海工具汇总",
         "Kie API使用中的真实省钱策略",

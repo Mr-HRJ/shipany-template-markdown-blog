@@ -112,6 +112,7 @@ SITE_TITLES = {
 # segments mapped to the established local folders so already-indexed routes
 # remain stable while titles, bodies, dates and sidebar order are refreshed.
 SEA_CATEGORY_MAP = {
+    "readme": ("must-read", "网站出海必读"),
     "need": ("ideas", "找需求"),
     "data": ("analytics", "数据分析"),
     "dev": ("dev", "开发"),
@@ -128,9 +129,6 @@ SEA_CATEGORY_MAP = {
 _NEXT_PUSH_RE = re.compile(
     r'self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)', re.DOTALL
 )
-_PAGE_TREE_ITEM_RE = re.compile(
-    r'"name":"((?:\\.|[^"\\])*)","url":"(/(?:\\.|[^"\\])*)"'
-)
 
 
 def decode_rsc_payload(page_html: str) -> str:
@@ -144,6 +142,85 @@ def decode_rsc_payload(page_html: str) -> str:
     return "".join(chunks)
 
 
+def extract_page_tree(page_html: str, site: str) -> list[tuple[str, str]]:
+    """Read page nodes, including React labels and lazy Flight references."""
+    payload = decode_rsc_payload(page_html)
+    decoder = json.JSONDecoder()
+    records = {
+        match.group(1): match.end()
+        for match in re.finditer(r"(?m)^([0-9a-f]+):", payload)
+    }
+
+    def label(value: object, seen: frozenset[str] = frozenset()) -> str:
+        if isinstance(value, str):
+            reference = re.fullmatch(r"\$L?([0-9a-f]+)", value)
+            if reference:
+                record = reference.group(1)
+                if record in seen or record not in records:
+                    raise RuntimeError(f"unresolved page title reference: {value}")
+                try:
+                    resolved, _ = decoder.raw_decode(payload, records[record])
+                except json.JSONDecodeError as exc:
+                    raise RuntimeError(f"invalid page title reference: {value}") from exc
+                return label(resolved, seen | {record})
+            return value[1:] if value.startswith("$$") else value
+        if isinstance(value, list):
+            if len(value) >= 4 and value[0] == "$" and isinstance(value[3], dict):
+                props = value[3]
+                key = str(value[2] or "")
+                if (
+                    key.startswith(("new-label-", "child-update-dot-"))
+                    or props.get("aria-hidden") is True
+                ):
+                    return ""
+                return label(props.get("children", ""), seen)
+            return "".join(label(child, seen) for child in value)
+        if value is None:
+            return ""
+        raise RuntimeError(f"unsupported page title value: {type(value).__name__}")
+
+    trees: list[dict] = []
+    for match in re.finditer(r'"tree"\s*:\s*', payload):
+        try:
+            tree, _ = decoder.raw_decode(payload, match.end())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(tree, dict) and isinstance(tree.get("children"), list):
+            trees.append(tree)
+    if not trees:
+        raise RuntimeError(f"/{site} complete page tree not found")
+
+    inventories: list[list[tuple[str, str]]] = []
+    for tree in trees:
+        items: list[tuple[str, str]] = []
+        seen_urls: set[str] = set()
+
+        def visit(node: dict) -> None:
+            if node.get("type") == "page":
+                url = node.get("url", "")
+                if isinstance(url, str) and url.startswith(f"/{site}/"):
+                    title = label(node.get("name")).strip()
+                    if not title or title.startswith("$L"):
+                        raise RuntimeError(f"empty or unresolved page title: {url}")
+                    url = url.rstrip("/")
+                    if url not in seen_urls:
+                        items.append((title, url))
+                        seen_urls.add(url)
+            index = node.get("index")
+            if isinstance(index, dict):
+                visit(index)
+            for child in node.get("children", []):
+                if isinstance(child, dict):
+                    visit(child)
+
+        visit(tree)
+        if items:
+            inventories.append(items)
+    if not inventories or any(items != inventories[0] for items in inventories):
+        raise RuntimeError(f"/{site} page tree is empty or inconsistent")
+    return inventories[0]
+
+
 def harvest_page_tree(site: str) -> list[tuple[str, str]]:
     """Return exact `(sidebar title, URL)` pairs from the root RSC page tree.
 
@@ -151,38 +228,20 @@ def harvest_page_tree(site: str) -> list[tuple[str, str]]:
     in the rendered HTML.  Those shortened links caused the older harvester to
     silently miss valid `/sea` articles.
     """
-    prefix = f"/{site}/"
-    best: list[tuple[str, str]] = []
-    previous_urls: list[str] | None = None
+    previous: list[tuple[str, str]] | None = None
 
     # Cloudflare occasionally serves an incomplete streamed RSC response even
-    # with HTTP 200. Require two identical inventories when possible and keep
-    # the largest complete-looking response as a fallback.
+    # with HTTP 200. Never synchronize from a largest-response fallback:
+    # two complete inventories must agree on both titles and URLs.
     for attempt in range(4):
         page_html = fetch_html(f"{BASE}/{site}")
-        payload = decode_rsc_payload(page_html)
-        seen: set[str] = set()
-        items: list[tuple[str, str]] = []
-        for raw_name, raw_url in _PAGE_TREE_ITEM_RE.findall(payload):
-            try:
-                name = json.loads(f'"{raw_name}"')
-                url = json.loads(f'"{raw_url}"').rstrip("/")
-            except json.JSONDecodeError:
-                continue
-            if not url.startswith(prefix) or "/search" in url or url in seen:
-                continue
-            seen.add(url)
-            items.append((name, url))
-
-        urls = [url for _, url in items]
-        if urls == previous_urls and items:
+        items = extract_page_tree(page_html, site)
+        if items == previous:
             return items
-        previous_urls = urls
-        if len(items) > len(best):
-            best = items
+        previous = items
         if attempt < 3:
             time.sleep(0.25)
-    return best
+    raise RuntimeError(f"/{site} page tree did not stabilize after four fetches")
 
 
 # ---------- URL harvest ----------
@@ -427,6 +486,26 @@ def _source_dates(page_html: str) -> tuple[str | None, str | None]:
     return parse("Created"), parse("Updated")
 
 
+def _normalize_sea_markdown(body: str) -> str:
+    """Keep Markdown hard breaks without importing trailing whitespace."""
+    body = body.replace("\r\n", "\n").replace("\r", "\n")
+    lines: list[str] = []
+    in_fence = False
+    for line in body.split("\n"):
+        stripped = line.lstrip()
+        if stripped.startswith(("```", "~~~")):
+            in_fence = not in_fence
+            lines.append(line)
+        elif in_fence:
+            lines.append(line)
+        else:
+            trimmed = line.rstrip(" \t")
+            if trimmed and line.endswith("  ") and not re.match(r"^#{1,6}(?:\s|$)", stripped):
+                trimmed += "\\"
+            lines.append(trimmed)
+    return "\n".join(lines)
+
+
 def _fetch_sea_article(item: dict[str, object]) -> dict[str, object]:
     source_path = str(item["source_path"])
     last_error: Exception | None = None
@@ -436,7 +515,7 @@ def _fetch_sea_article(item: dict[str, object]) -> dict[str, object]:
             body = extract_markdown(page_html)
             if not body:
                 raise RuntimeError("no markdown chunk found")
-            body = rewrite_fence_langs(body)
+            body = _normalize_sea_markdown(rewrite_fence_langs(body))
             created, updated = _source_dates(page_html)
             if not created:
                 raise RuntimeError("source Created date not found")
@@ -538,6 +617,12 @@ def process_sea() -> None:
     tree = harvest_page_tree("sea")
     if not tree:
         raise RuntimeError("/sea page tree is empty")
+    # The source still serves its README landing page even when it is omitted
+    # from the sidebar. Preserve the existing entry URL without adding a
+    # sidebar item absent from the source tree.
+    sidebar_urls = {url for _, url in tree}
+    if "/sea/readme" not in sidebar_urls:
+        tree = [("网站出海必读", "/sea/readme")] + tree
 
     expected_category_order = list(SEA_CATEGORY_MAP)
     found_category_order: list[str] = []
@@ -554,13 +639,15 @@ def process_sea() -> None:
             source_category = "readme"
             local_folder = "must-read"
             category_title = "网站出海必读"
+            if source_category not in found_category_order:
+                found_category_order.append(source_category)
         elif len(parts) == 3 and parts[0] == "sea" and parts[1] in SEA_CATEGORY_MAP:
             source_category = parts[1]
             local_folder, category_title = SEA_CATEGORY_MAP[source_category]
             if source_category not in found_category_order:
                 found_category_order.append(source_category)
         else:
-            continue
+            raise RuntimeError(f"unmapped /sea article: {source_path}")
 
         title_key = (local_folder, _norm_sea_title(title))
         if title_key in seen_source_titles:
@@ -582,7 +669,7 @@ def process_sea() -> None:
     if not source_items or source_items[0]["source_path"] != "/sea/readme":
         raise RuntimeError("/sea readme is missing or not first in the page tree")
 
-    local_folders = ["must-read"] + [value[0] for value in SEA_CATEGORY_MAP.values()]
+    local_folders = [value[0] for value in SEA_CATEGORY_MAP.values()]
     existing_by_key: dict[tuple[str, str], Path] = {}
     all_existing: set[Path] = set()
     occupied_stems: dict[str, set[str]] = {}
@@ -667,11 +754,12 @@ def process_sea() -> None:
             str(result["updated"]) if result["updated"] else None,
             body,
         )
-        pages_by_folder[local_folder].append(local_path.stem)
+        if source_path in sidebar_urls:
+            pages_by_folder[local_folder].append(local_path.stem)
 
         current = local_path.read_text(encoding="utf-8") if local_path.exists() else None
         comparable = _rewrite_sea_image_urls(new_text, r2_config)
-        if current == comparable:
+        if current is not None and _normalize_sea_markdown(current) == comparable:
             unchanged += 1
             continue
 

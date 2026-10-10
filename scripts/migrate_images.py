@@ -94,13 +94,20 @@ def guess_ext(url: str, content_type: str | None) -> str:
     return ".jpg"  # sensible default
 
 
-def collect_urls(skip_host: str | None = None) -> tuple[list[str], dict[str, list[Path]]]:
+def collect_urls(
+    skip_host: str | None = None, roots: list[Path] | None = None
+) -> tuple[list[str], dict[str, list[Path]]]:
     """Return (unique_urls, url_to_files). Scans both .md and .mdx.
     URLs whose host equals `skip_host` (our own R2) are ignored."""
     from urllib.parse import urlparse as _urlparse
 
     url_files: dict[str, list[Path]] = {}
-    files = sorted(list(DOCS.rglob("*.md")) + list(DOCS.rglob("*.mdx")))
+    files = sorted({
+        path
+        for root in roots or [DOCS]
+        for pattern in ("*.md", "*.mdx")
+        for path in root.rglob(pattern)
+    })
     for md in files:
         text = md.read_text(encoding="utf-8")
         urls = set()
@@ -203,14 +210,23 @@ def rewrite_files(url_to_new: dict[str, str], url_to_files: dict[str, list[Path]
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="scan only, no upload")
+    ap.add_argument(
+        "--root", action="append", type=Path,
+        help="restrict migration to this content/docs folder; repeat for multiple folders",
+    )
     args = ap.parse_args()
+
+    roots = [path.resolve() for path in args.root] if args.root else None
+    for root in roots or []:
+        if not root.is_dir() or not root.is_relative_to(DOCS.resolve()):
+            ap.error(f"migration root must be a directory inside {DOCS}: {root}")
 
     creds = load_creds()
     manifest = load_manifest()
 
     from urllib.parse import urlparse as _urlparse
     skip_host = _urlparse(creds["public_base"]).hostname
-    urls, url_to_files = collect_urls(skip_host=skip_host)
+    urls, url_to_files = collect_urls(skip_host=skip_host, roots=roots)
     print(f"Found {len(urls)} unique URLs across {sum(len(v) for v in url_to_files.values())} usages")
 
     if args.dry_run:

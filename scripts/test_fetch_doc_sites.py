@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fetch_doc_sites as scraper
+from page_order import PAGE_ORDER
 
 
 def flight_html(pages, extra_records=None, split_chunks=False):
@@ -137,6 +138,14 @@ class ExtractPageTreeTests(unittest.TestCase):
             with self.subTest(fixture=fixture):
                 with self.assertRaises(RuntimeError):
                     scraper.extract_page_tree(fixture, "sea")
+
+
+class SeaCategoryMetadataTests(unittest.TestCase):
+    def test_category_labels_match_source_order_catalog(self):
+        self.assertEqual(
+            [title for _, title in scraper.SEA_CATEGORY_MAP.values()],
+            list(PAGE_ORDER),
+        )
 
 
 class HarvestPageTreeTests(unittest.TestCase):

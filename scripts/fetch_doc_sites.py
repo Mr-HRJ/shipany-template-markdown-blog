@@ -588,6 +588,13 @@ def _rewrite_sea_image_urls(
 
 
 def _rewrite_sea_internal_links(body: str, source_to_local: dict[str, str]) -> str:
+    # This legacy link omits the ShipAny Two handbook prefix on the source.
+    body = re.sub(
+        r'''(\]\(|href=["'])(?:''' + re.escape(BASE)
+        + r''')?/payment/how-china-person-pay(?=[#)"'\s])''',
+        r"\1/docs/shipany-two/payment/how-china-person-pay",
+        body,
+    )
     # Longest first protects against one source slug being a prefix of another.
     for source_path in sorted(source_to_local, key=len, reverse=True):
         local_url = source_to_local[source_path]

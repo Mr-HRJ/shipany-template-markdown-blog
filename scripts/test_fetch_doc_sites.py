@@ -148,6 +148,24 @@ class SeaCategoryMetadataTests(unittest.TestCase):
         )
 
 
+class SeaInternalLinkTests(unittest.TestCase):
+    def test_legacy_payment_link_resolves_to_existing_handbook(self):
+        target = "/docs/shipany-two/payment/how-china-person-pay"
+        cases = {
+            "[payment](/payment/how-china-person-pay)": f"[payment]({target})",
+            "[payment](/payment/how-china-person-pay#shop)": f"[payment]({target}#shop)",
+            f'<a href="{scraper.BASE}/payment/how-china-person-pay">pay</a>':
+                f'<a href="{target}">pay</a>',
+            "[other](/payment/how-china-person-pay-other)":
+                "[other](/payment/how-china-person-pay-other)",
+            "[external](https://example.com/payment/how-china-person-pay)":
+                "[external](https://example.com/payment/how-china-person-pay)",
+        }
+        for original, expected in cases.items():
+            with self.subTest(original=original):
+                self.assertEqual(scraper._rewrite_sea_internal_links(original, {}), expected)
+
+
 class HarvestPageTreeTests(unittest.TestCase):
     @patch.object(scraper.time, "sleep")
     @patch.object(scraper, "fetch_html")

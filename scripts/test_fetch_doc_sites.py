@@ -5,7 +5,9 @@ Run with: python3 -m unittest discover -s scripts -p 'test_fetch_doc_sites.py'
 
 import json
 import sys
+import tempfile
 import unittest
+from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import patch
 
@@ -146,6 +148,121 @@ class SeaCategoryMetadataTests(unittest.TestCase):
             [title for _, title in scraper.SEA_CATEGORY_MAP.values()],
             list(PAGE_ORDER),
         )
+
+
+class SeaNewCategoryTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="sea-new-category-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.repo = Path(self.temp.name)
+        self.docs = self.repo / "docs"
+        self.categories = {
+            "readme": ("must-read", "网站出海必读"),
+            "seo": ("seo", "Seo"),
+            "saas-seo": ("saas-seo", "AI 工具站 SEO 小册子"),
+        }
+        self.tree = [
+            ("网站出海必读", "/sea/readme"),
+            ("既有 SEO 文章", "/sea/seo/existing"),
+            ("新增工具站文章", "/sea/saas-seo/new"),
+        ]
+        self.results = {
+            url: {"body": f"{title}正文\n", "date": "2026-10-14", "updated": None}
+            for title, url in self.tree
+        }
+        self.new_folder = self.docs / "saas-seo"
+        for folder, title in list(self.categories.values())[:2]:
+            directory = self.docs / folder
+            directory.mkdir(parents=True)
+            (directory / "meta.json").write_text(
+                json.dumps({"title": title, "pages": ["stable-route"]}, ensure_ascii=False,
+                           indent=2) + "\n",
+                encoding="utf-8",
+            )
+        self.original_docs = {}
+        for (title, url), folder in zip(self.tree, ("must-read", "seo")):
+            result = self.results[url]
+            path = self.docs / folder / "stable-route.md"
+            text = scraper._render_sea_doc(title, result["date"], None, result["body"])
+            path.write_text(text, encoding="utf-8")
+            self.original_docs[path] = text
+        (self.docs / "meta.json").write_text(
+            json.dumps({"title": "AI 出海手册", "pages": ["must-read", "seo"]},
+                       ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        self.patches = ExitStack()
+        self.addCleanup(self.patches.close)
+        for name, value in (
+            ("REPO", self.repo), ("DOCS_ROOT", self.docs),
+            ("SEA_CATEGORY_MAP", self.categories),
+        ):
+            self.patches.enter_context(patch.object(scraper, name, value))
+        self.patches.enter_context(patch.object(scraper, "harvest_page_tree", return_value=self.tree))
+        self.patches.enter_context(patch.object(scraper, "_load_r2_compare_config", return_value=None))
+
+    def test_missing_new_category_is_created_only_after_all_fetches(self):
+        def fetch(item):
+            self.assertFalse(self.new_folder.exists())
+            return self.results[item["source_path"]]
+
+        with patch.object(scraper, "_fetch_sea_article", side_effect=fetch) as fetch_article:
+            scraper.process_sea()
+        self.assertEqual(fetch_article.call_count, len(self.tree))
+        new_doc = self.new_folder / "新增工具站文章.md"
+        self.assertEqual(
+            new_doc.read_text(encoding="utf-8"),
+            scraper._render_sea_doc("新增工具站文章", "2026-10-14", None, "新增工具站文章正文\n"),
+        )
+        self.assertEqual(
+            json.loads((self.new_folder / "meta.json").read_text(encoding="utf-8")),
+            {"title": "AI 工具站 SEO 小册子", "pages": ["新增工具站文章"]},
+        )
+        self.assertEqual(
+            json.loads((self.docs / "meta.json").read_text(encoding="utf-8"))["pages"],
+            ["must-read", "seo", "saas-seo"],
+        )
+        for path, original in self.original_docs.items():
+            self.assertEqual(path.read_text(encoding="utf-8"), original)
+            self.assertEqual(list(path.parent.glob("*.md")), [path])
+
+    def test_source_failure_does_not_create_new_category_or_change_existing_files(self):
+        before = {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()}
+
+        def fetch(item):
+            if item["source_path"] == "/sea/saas-seo/new":
+                raise RuntimeError("new source page unavailable")
+            return self.results[item["source_path"]]
+
+        with patch.object(scraper, "_fetch_sea_article", side_effect=fetch), \
+                patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write_text, \
+                patch.object(Path, "unlink") as unlink:
+            with self.assertRaisesRegex(RuntimeError, "new source page unavailable"):
+                scraper.process_sea()
+        mkdir.assert_not_called()
+        write_text.assert_not_called()
+        unlink.assert_not_called()
+        self.assertFalse(self.new_folder.exists())
+        self.assertEqual(
+            {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()},
+            before,
+        )
+
+    def test_other_directory_errors_are_not_treated_as_empty(self):
+        original_iterdir = Path.iterdir
+
+        def iterdir(path):
+            if path == self.new_folder:
+                raise PermissionError("category directory inaccessible")
+            return original_iterdir(path)
+
+        with patch.object(Path, "iterdir", iterdir), \
+                patch.object(scraper, "_fetch_sea_article") as fetch_article:
+            with self.assertRaisesRegex(PermissionError, "category directory inaccessible"):
+                scraper.process_sea()
+        fetch_article.assert_not_called()
+        self.assertFalse(self.new_folder.exists())
 
 
 class SeaInternalLinkTests(unittest.TestCase):

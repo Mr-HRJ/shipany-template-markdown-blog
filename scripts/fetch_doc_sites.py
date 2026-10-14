@@ -118,6 +118,7 @@ SEA_CATEGORY_MAP = {
     "dev": ("dev", "开发"),
     "pay": ("payment", "支付"),
     "seo": ("seo", "Seo"),
+    "saas-seo": ("saas-seo", "AI 工具站 SEO 小册子"),
     "geo": ("geo", "GEO"),
     "external-links": ("backlink", "外链"),
     "flow": ("traffic", "流量"),
@@ -683,7 +684,13 @@ def process_sea() -> None:
     for local_folder in local_folders:
         folder = DOCS_ROOT / local_folder
         occupied_stems[local_folder] = set()
-        for path in sorted(folder.iterdir()):
+        try:
+            existing_paths = sorted(folder.iterdir())
+        except FileNotFoundError:
+            # New source categories have no local directory until every source
+            # page has fetched successfully and its first article is written.
+            existing_paths = []
+        for path in existing_paths:
             if path.suffix.lower() not in {".md", ".mdx"}:
                 continue
             key = (local_folder, _norm_sea_title(_read_local_title(path)))

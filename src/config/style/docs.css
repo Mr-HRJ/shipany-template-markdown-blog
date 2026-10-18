@@ -53,6 +53,7 @@
 .docs-shell #nd-sidebar a[data-active='true'] {
   background: var(--accent);
   color: var(--primary);
+  box-shadow: inset 3px 0 0 var(--brand);
   font-weight: 600;
 }
 
@@ -67,7 +68,7 @@
 
 .docs-shell .docs-title {
   margin: 0;
-  color: var(--foreground);
+  color: var(--primary);
   font-size: clamp(1.875rem, 3vw, 2.5rem);
   font-weight: 650;
   line-height: 1.35;
@@ -115,8 +116,19 @@
   margin-top: 2.75rem;
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--brand);
   font-size: 1.5rem;
+}
+
+.docs-shell .docs-content h2 {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-inline-start: 5px solid color-mix(in srgb, var(--brand) 55%, white);
+  border-radius: 0.5rem;
+  background: var(--brand);
+  color: var(--brand-foreground);
 }
 
 .docs-shell .docs-content h3 {
@@ -128,6 +140,10 @@
 .docs-shell .docs-content strong {
   color: var(--foreground);
   font-weight: 650;
+}
+
+.docs-shell .docs-content h2 :is(strong, em) {
+  color: inherit;
 }
 
 .docs-shell .docs-content a {
@@ -148,15 +164,15 @@
 }
 
 .docs-shell .docs-content li::marker {
-  color: var(--muted-foreground);
+  color: var(--primary);
 }
 
 .docs-shell .docs-content blockquote {
   margin-block: 1.75rem;
   padding: 1rem 1.25rem;
-  border-inline-start: 3px solid var(--primary);
+  border-inline-start: 3px solid var(--brand);
   border-radius: 0 0.5rem 0.5rem 0;
-  background: var(--muted);
+  background: var(--accent);
   color: var(--foreground);
   font-style: normal;
 }

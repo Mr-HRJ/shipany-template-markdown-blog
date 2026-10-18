@@ -121,7 +121,7 @@ function DesktopNavigation({
                     className={cn(
                       'h-10 flex-row items-center gap-2 rounded-lg px-4 font-medium',
                       active
-                        ? 'bg-primary/8 text-primary hover:bg-primary/12 hover:text-primary'
+                        ? 'bg-brand text-brand-foreground hover:bg-brand/90 hover:text-brand-foreground'
                         : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                     )}
                   >
@@ -151,7 +151,7 @@ function HeaderActions({ header }: { header: HeaderType }) {
             'focus-visible:ring-ring inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
             button.variant === 'outline'
               ? 'bg-background hover:bg-muted border'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              : 'bg-brand text-brand-foreground hover:bg-brand/90'
           )}
         >
           {button.icon && (
@@ -282,7 +282,9 @@ export function Header({ header }: { header: HeaderType }) {
                       aria-current={active ? 'page' : undefined}
                       className={cn(
                         'focus-visible:ring-ring flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium focus-visible:ring-2 focus-visible:outline-none',
-                        active ? 'bg-primary/8 text-primary' : 'hover:bg-muted'
+                        active
+                          ? 'bg-brand text-brand-foreground'
+                          : 'hover:bg-muted'
                       )}
                     >
                       {item.icon && (

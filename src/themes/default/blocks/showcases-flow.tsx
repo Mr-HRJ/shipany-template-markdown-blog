@@ -307,7 +307,7 @@ export function ShowcasesFlow({
                             (filteredItems[selectedIndex] as any).button.size ||
                             'default'
                           }
-                          className="bg-primary hover:bg-primary/90 h-8 border-0 px-3 py-1.5 text-sm font-medium text-white"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 border-0 px-3 py-1.5 text-sm font-medium"
                         >
                           <Link
                             href={
@@ -326,7 +326,7 @@ export function ShowcasesFlow({
                                   (filteredItems[selectedIndex] as any).button
                                     .icon as string
                                 }
-                                className="text-white"
+                                className="text-primary-foreground"
                               />
                             )}
                             {(filteredItems[selectedIndex] as any).button.title}

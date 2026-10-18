@@ -157,7 +157,7 @@ export function Showcases({
                             asChild
                             variant={(item as any).button.variant || 'default'}
                             size={(item as any).button.size || 'sm'}
-                            className="bg-primary hover:bg-primary/90 h-8 w-full border-0 px-3 py-1.5 text-sm font-medium text-white"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 w-full border-0 px-3 py-1.5 text-sm font-medium"
                           >
                             <Link
                               href={(item as any).button.url || ''}
@@ -166,7 +166,7 @@ export function Showcases({
                               {(item as any).button.icon && (
                                 <SmartIcon
                                   name={(item as any).button.icon as string}
-                                  className="text-white"
+                                  className="text-primary-foreground"
                                 />
                               )}
                               {(item as any).button.title}

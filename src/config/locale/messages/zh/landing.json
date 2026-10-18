@@ -14,12 +14,16 @@
     "nav": {
       "items": [
         {
-          "title": "博客",
-          "url": "/blog"
+          "title": "首页",
+          "url": "/"
         },
         {
-          "title": "文档",
+          "title": "出海手册",
           "url": "/docs"
+        },
+        {
+          "title": "博客",
+          "url": "/blog"
         }
       ]
     },
@@ -43,13 +47,17 @@
     },
     "show_sign": true,
     "show_theme": true,
-    "show_locale": true
+    "show_locale": true,
+    "menu_title": "站点导航",
+    "menu_description": "阅读手册、发现文章，继续你的出海实践。",
+    "open_menu": "打开导航菜单",
+    "skip_content": "跳到主要内容"
   },
   "footer": {
     "id": "footer",
     "brand": {
       "title": "王大锤",
-      "description": "ShipAny 是专为 AI SaaS 创业项目打造的 NextJS 模板。丰富模板与组件，极速交付你的产品。",
+      "description": "整理 AI 出海、独立开发与产品增长的实用知识。从找需求到产品上线，让每一步都有资料可查。",
       "logo": {
         "src": "/logo.png",
         "alt": "王大锤",
@@ -61,11 +69,11 @@
     "nav": {
       "items": [
         {
-          "title": "关于我们",
+          "title": "探索",
           "children": [
             {
-              "title": "功能亮点",
-              "url": "/#features",
+              "title": "知识首页",
+              "url": "/",
               "target": "_self"
             },
             {
@@ -81,10 +89,10 @@
           ]
         },
         {
-          "title": "资源",
+          "title": "阅读与工具",
           "children": [
             {
-              "title": "文档",
+              "title": "出海手册",
               "url": "/docs",
               "target": "_self"
             },
@@ -123,32 +131,7 @@
       ]
     },
     "social": {
-      "items": [
-        {
-          "title": "X",
-          "icon": "RiTwitterXFill",
-          "url": "https://x.com/your-app-name",
-          "target": "_blank"
-        },
-        {
-          "title": "Github",
-          "icon": "Github",
-          "url": "https://github.com/your-app-name",
-          "target": "_blank"
-        },
-        {
-          "title": "Discord",
-          "icon": "RiDiscordFill",
-          "url": "https://discord.gg/your-app-name",
-          "target": "_blank"
-        },
-        {
-          "title": "邮箱",
-          "icon": "Mail",
-          "url": "mailto:support@your-domain.com",
-          "target": "_self"
-        }
-      ]
+      "items": []
     },
     "agreement": {
       "items": [

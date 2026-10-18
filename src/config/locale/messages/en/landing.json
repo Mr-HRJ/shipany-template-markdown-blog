@@ -14,12 +14,16 @@
     "nav": {
       "items": [
         {
-          "title": "Blog",
-          "url": "/blog"
+          "title": "Home",
+          "url": "/"
         },
         {
-          "title": "Docs",
+          "title": "Handbooks",
           "url": "/docs"
+        },
+        {
+          "title": "Blog",
+          "url": "/blog"
         }
       ]
     },
@@ -43,13 +47,17 @@
     },
     "show_sign": true,
     "show_theme": true,
-    "show_locale": true
+    "show_locale": true,
+    "menu_title": "Site navigation",
+    "menu_description": "Find a handbook, explore the blog, and keep building.",
+    "open_menu": "Open navigation menu",
+    "skip_content": "Skip to main content"
   },
   "footer": {
     "id": "footer",
     "brand": {
       "title": "王大锤",
-      "description": "ShipAny is a NextJS boilerplate for building AI SaaS startups. Ship Fast with a variety of templates and components.",
+      "description": "Practical notes on AI products, independent development, and growth. A reference for every step from finding an idea to launching it.",
       "logo": {
         "src": "/logo.png",
         "alt": "王大锤",
@@ -61,11 +69,11 @@
     "nav": {
       "items": [
         {
-          "title": "About",
+          "title": "Explore",
           "children": [
             {
-              "title": "Features",
-              "url": "/#features",
+              "title": "Knowledge home",
+              "url": "/",
               "target": "_self"
             },
             {
@@ -81,10 +89,10 @@
           ]
         },
         {
-          "title": "Resources",
+          "title": "Reading & tools",
           "children": [
             {
-              "title": "Documents",
+              "title": "Handbooks",
               "url": "/docs",
               "target": "_self"
             },
@@ -123,32 +131,7 @@
       ]
     },
     "social": {
-      "items": [
-        {
-          "title": "X",
-          "icon": "RiTwitterXFill",
-          "url": "https://x.com/your-app-name",
-          "target": "_blank"
-        },
-        {
-          "title": "Github",
-          "icon": "Github",
-          "url": "https://github.com/your-app-name",
-          "target": "_blank"
-        },
-        {
-          "title": "Discord",
-          "icon": "RiDiscordFill",
-          "url": "https://discord.gg/your-app-name",
-          "target": "_blank"
-        },
-        {
-          "title": "Email",
-          "icon": "Mail",
-          "url": "mailto:support@your-domain.com",
-          "target": "_self"
-        }
-      ]
+      "items": []
     },
     "agreement": {
       "items": [

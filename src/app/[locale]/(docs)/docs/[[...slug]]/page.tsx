@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/mdx-components';
+import { findNeighbour } from 'fumadocs-core/server';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import {
   DocsBody,
@@ -7,7 +8,6 @@ import {
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/page';
-import { findNeighbour } from 'fumadocs-core/server';
 
 import { source } from '@/core/docs/source';
 import { redirect } from '@/core/i18n/navigation';
@@ -39,17 +39,20 @@ const HANDBOOK_ROOTS = new Set([
   'markdown-blog',
 ]);
 
-// ISO `2026-06-16` -> `06/16/2026` to match the source site's date format.
-function formatDate(iso?: string) {
+function formatDate(iso: string | undefined, locale: string) {
   if (!iso) return undefined;
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-  return m ? `${m[2]}/${m[3]}/${m[1]}` : iso;
+  if (!m) return iso;
+  return locale === 'zh'
+    ? `${m[1]}年${Number(m[2])}月${Number(m[3])}日`
+    : `${m[2]}/${m[3]}/${m[1]}`;
 }
 
 export default async function DocsContentPage(props: {
   params: Promise<{ slug?: string[]; locale?: string }>;
 }) {
   const params = await props.params;
+  const locale = params.locale || 'en';
   const slug = encodeSlug(params.slug);
 
   // Root /docs lands on the "网站出海必读" readme instead of the sparse index
@@ -85,8 +88,10 @@ export default async function DocsContentPage(props: {
   const neighbour = findNeighbour(tree, page.url);
 
   // Source-site publish/update dates (only /sea articles carry these).
-  const created = formatDate((page.data as { date?: string }).date);
-  const updated = formatDate((page.data as { updated?: string }).updated);
+  const createdAt = (page.data as { date?: string }).date;
+  const updatedAt = (page.data as { updated?: string }).updated;
+  const created = formatDate(createdAt, locale);
+  const updated = formatDate(updatedAt, locale);
 
   return (
     <DocsPage
@@ -96,16 +101,27 @@ export default async function DocsContentPage(props: {
         style: 'clerk',
       }}
       footer={{ items: neighbour }}
+      article={{ className: 'docs-article' }}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsTitle className="docs-title">{page.data.title}</DocsTitle>
       {created && (
-        <div className="mb-6 flex justify-between text-sm text-fd-muted-foreground">
-          <div>Created: {created}</div>
-          {updated && <div className="sm:text-right">Updated: {updated}</div>}
+        <div className="docs-dates">
+          <span>
+            {locale === 'zh' ? '发布于' : 'Published'}{' '}
+            <time dateTime={createdAt}>{created}</time>
+          </span>
+          {updated && (
+            <span>
+              {locale === 'zh' ? '更新于' : 'Updated'}{' '}
+              <time dateTime={updatedAt}>{updated}</time>
+            </span>
+          )}
         </div>
       )}
-      <DocsDescription>{page.data.description}</DocsDescription>
-      <DocsBody>
+      <DocsDescription className="docs-description">
+        {page.data.description}
+      </DocsDescription>
+      <DocsBody className="docs-content">
         <MDXContent
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths

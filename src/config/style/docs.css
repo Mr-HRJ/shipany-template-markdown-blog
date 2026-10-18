@@ -1,142 +1,265 @@
 @import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-body {
-  background-color: var(--background);
+/* Fumadocs also renders portals outside its layout. Reuse the site palette
+   for its base styles so loading a handbook cannot recolor other routes. */
+@theme {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-popover: var(--popover);
+  --color-fd-popover-foreground: var(--popover-foreground);
+  --color-fd-card: var(--card);
+  --color-fd-card-foreground: var(--card-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--primary);
+  --color-fd-primary-foreground: var(--primary-foreground);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-secondary-foreground: var(--secondary-foreground);
+  --color-fd-accent: var(--accent);
+  --color-fd-accent-foreground: var(--accent-foreground);
+  --color-fd-ring: var(--ring);
 }
 
-.docs strong,
-article .prose strong {
-  font-weight: 600;
-  color: var(--color-fd-primary);
+.docs-shell {
+  min-height: 100svh;
+  background: var(--background);
+  color: var(--foreground);
 }
 
-.docs ul li {
-  list-style-type: square;
-  margin-left: 1em;
-  line-height: 2em;
+.docs-shell .docs-brand-logo {
+  flex-shrink: 0;
+  border-radius: 0.625rem;
 }
 
-.docs h2 {
-  font-size: 1.5em;
+.docs-shell .docs-brand-title {
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
 }
 
-.docs a:not([href^='#']) {
+.docs-shell #nd-subnav {
+  background: var(--card);
+}
+
+.docs-shell #nd-sidebar {
+  border-inline-end: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.docs-shell #nd-sidebar a[data-active='true'] {
+  background: var(--accent);
   color: var(--primary);
+  font-weight: 600;
 }
 
-/* ---- Docs theme: green accent (match reference style) ---- */
-:root,
-.dark {
-  --color-fd-primary: #07c160;
+.docs-shell .docs-article {
+  max-width: calc(74ch + 5rem);
+  min-height: calc(100svh - var(--fd-nav-height));
+  gap: 1.25rem;
+  padding: 2.75rem 2.5rem 4rem;
+  background: var(--card);
+  border-inline: 1px solid var(--border);
 }
 
-/* Page title (DocsTitle) — left-aligned, default foreground color, like the
-   reference site. Body H1s are stripped into the title, so `article h1`
-   effectively only matches DocsTitle here. */
-article h1 {
-  text-align: left;
+.docs-shell .docs-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(1.875rem, 3vw, 2.5rem);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-/* Body H1 (only if a heading survives in content) — centered, green, underline */
-article .prose h1 {
-  color: var(--color-fd-primary) !important;
-  border-bottom: 2px solid var(--color-fd-primary);
-  padding-bottom: 0.5rem;
-  text-align: center !important;
-  margin-bottom: 1rem;
-  display: block;
-  font-size: 1.875em;
+.docs-shell .docs-description {
+  margin: 0 0 1.25rem;
+  color: var(--muted-foreground);
+  font-size: 1.0625rem;
+  line-height: 1.85;
 }
 
-/* Body H2 — solid green pill, white text, left-aligned, text centered inside */
-article .prose h2 {
+.docs-shell .docs-dates {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  background-color: #07c160;
-  color: #ffffff;
-  padding: 0.3em 0.9em;
-  border-radius: 0.5rem;
-  font-size: 1.5em;
-  font-weight: 600;
-  line-height: 1.25;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.7;
 }
 
-/* Body H3 — green text with left bar */
-article .prose h3 {
-  color: var(--color-fd-primary);
-  border-left: 4px solid var(--color-fd-primary);
-  padding-left: 0.75rem;
-  font-weight: 600;
-  font-size: 1.25em;
+.docs-shell .docs-content {
+  min-width: 0;
+  max-width: none;
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
 }
 
-/* Green bullet markers */
-article .prose ul > li::marker {
-  color: var(--color-fd-primary);
+.docs-shell .docs-content :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--foreground);
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+  scroll-margin-top: calc(
+    var(--fd-nav-height) + var(--fd-tocnav-height) + 1.5rem
+  );
 }
 
-/* Article links — green (but not inside headings) */
-article .prose a,
-article .prose a:visited {
-  color: #07c160;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.docs-shell .docs-content :is(h1, h2) {
+  margin-top: 2.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
 }
-article .prose a:hover {
-  color: #05a850;
+
+.docs-shell .docs-content h3 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.1875rem;
 }
-article .prose :is(h1, h2, h3, h4, h5, h6) a,
-article .prose :is(h1, h2, h3, h4, h5, h6) a:visited,
-article .prose :is(h1, h2, h3, h4, h5, h6) a:hover {
+
+.docs-shell .docs-content strong {
+  color: var(--foreground);
+  font-weight: 650;
+}
+
+.docs-shell .docs-content a {
+  color: var(--primary);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.docs-shell .docs-content a:hover {
+  text-decoration-color: currentColor;
+}
+
+.docs-shell .docs-content :is(h1, h2, h3, h4, h5, h6) a {
   color: inherit;
   text-decoration: none;
 }
 
-/* Any descendant of a heading inherits the heading's color (prevents
-   strong/code/em inside h1~h6 from being re-colored by other rules) */
-article .prose :is(h1, h2, h3, h4, h5, h6) :is(strong, em, code, span, b, i) {
+.docs-shell .docs-content li::marker {
+  color: var(--muted-foreground);
+}
+
+.docs-shell .docs-content blockquote {
+  margin-block: 1.75rem;
+  padding: 1rem 1.25rem;
+  border-inline-start: 3px solid var(--primary);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: var(--muted);
+  color: var(--foreground);
+  font-style: normal;
+}
+
+.docs-shell .docs-content blockquote p {
+  margin-block: 0.5rem;
   color: inherit;
-  background: transparent;
 }
 
-/* Blockquote — green left bar */
-article .prose blockquote {
-  border-left: 4px solid var(--color-fd-primary);
-  padding-left: 1rem;
-  color: var(--color-fd-muted-foreground);
-}
-article .prose blockquote p {
-  color: #d4d4d8;
+.docs-shell .docs-content blockquote p::before,
+.docs-shell .docs-content blockquote p::after {
+  content: none;
 }
 
-/* Code block — dark green tinted background (override fumadocs + shiki) */
-article .prose figure.shiki,
-article .prose figure.shiki > div,
-article .prose figure.shiki pre {
-  background-color: #0b2a1a !important;
+.docs-shell .docs-content :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  background: var(--muted);
+  color: var(--foreground);
+  font-size: 0.875em;
+  font-weight: 500;
 }
 
-article .prose figure.shiki {
-  border-color: #123d26 !important;
+.docs-shell .docs-content figure.shiki {
+  margin-block: 1.75rem;
+  background: var(--background);
+  border-color: var(--border);
+  border-radius: 0.75rem;
+  box-shadow: none;
 }
 
-/* Table header row — green gradient background */
-article .prose thead tr {
-  background: linear-gradient(135deg, #07c160, #05a850);
-}
-article .prose thead tr th {
-  background: transparent;
-  color: #ffffff;
+.docs-shell .docs-content pre {
+  padding-inline: 0;
+  line-height: 1.8;
+  overflow-wrap: normal;
+  white-space: pre;
 }
 
-/* Inline code — subtle green tint */
-article .prose :not(pre) > code {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: var(--color-fd-primary);
-  padding: 0.1em 0.35em;
-  border-radius: 0.25rem;
+.docs-shell .docs-content > pre {
+  max-width: 100%;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.docs-shell .docs-content :is(th, td) {
+  padding: 0.875rem 1rem;
+  border-color: var(--border);
+  text-align: start;
+}
+
+.docs-shell .docs-content th {
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.docs-shell .docs-content :is(img, video) {
+  margin-block: 1.75rem;
+  border-color: var(--border);
+}
+
+.docs-shell :is(a, button, input):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+@media (min-width: 1280px) {
+  .docs-shell {
+    --fd-toc-width: 240px;
+  }
+
+  .docs-shell #nd-toc {
+    padding-inline-start: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .docs-shell .docs-article {
+    padding: 1.75rem 1.25rem 3rem;
+    border-inline: 0;
+  }
+
+  .docs-shell .docs-brand-title {
+    max-width: 48vw;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .docs-shell .docs-content :is(h1, h2) {
+    margin-top: 2.25rem;
+    font-size: 1.375rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-shell *,
+  .docs-shell *::before,
+  .docs-shell *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
 }

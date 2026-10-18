@@ -1,0 +1,253 @@
+/* Keep article typography local: MarkdownPreview also serves editors and forms. */
+.reading-page .reading-content #nice {
+  padding: 0;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+.reading-page .reading-content #nice p {
+  margin: 1.25em 0;
+  color: var(--foreground);
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.reading-page .reading-content #nice :is(h1, h2, h3, h4, h5, h6) {
+  display: block;
+  position: static;
+  margin: 2.25em 0 0.85em;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--foreground);
+  font-weight: 650;
+  line-height: 1.5;
+  text-align: left;
+  text-wrap: pretty;
+  scroll-margin-top: 7rem;
+}
+
+.reading-page .reading-content #nice :is(h1, h2)::before,
+.reading-page .reading-content #nice :is(h1, h2)::after {
+  content: none;
+}
+
+.reading-page .reading-content #nice h1 {
+  font-size: 1.875em;
+}
+
+.reading-page .reading-content #nice h2 {
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5em;
+}
+
+.reading-page .reading-content #nice h3 {
+  font-size: 1.25em;
+}
+
+.reading-page .reading-content #nice :is(h4, h5, h6) {
+  font-size: 1.0625em;
+}
+
+.reading-page .reading-content #nice > :first-child {
+  margin-top: 0;
+}
+
+.reading-page .reading-content #nice :is(ul, ol) {
+  margin: 1.25em 0;
+  padding-left: 1.5em;
+}
+
+.reading-page .reading-content #nice :is(ul, ol) li {
+  margin: 0.45em 0;
+  padding-left: 0.25em;
+  color: var(--foreground);
+  font-size: inherit;
+  line-height: 1.9;
+}
+
+.reading-page .reading-content #nice :is(ul, ol) li::marker {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.reading-page .reading-content #nice li :is(ul, ol) {
+  margin: 0.5em 0;
+}
+
+.reading-page .reading-content #nice a {
+  padding-bottom: 0;
+  border: 0;
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  text-underline-offset: 0.22em;
+  transition: text-decoration-color 150ms ease;
+}
+
+.reading-page .reading-content #nice a:hover {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
+.reading-page .reading-content #nice a:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
+.reading-page .reading-content #nice :is(h1, h2, h3, h4, h5, h6) a {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.reading-page .reading-content #nice :is(strong, em) {
+  color: inherit;
+}
+
+.reading-page .reading-content #nice blockquote {
+  margin: 1.75em 0;
+  padding: 0.25em 0 0.25em 1.25em;
+  border-left: 3px solid var(--primary);
+  border-radius: 0;
+  background: none;
+}
+
+.reading-page .reading-content #nice blockquote::before {
+  content: none;
+}
+
+.reading-page .reading-content #nice blockquote p {
+  padding-left: 0;
+  color: var(--muted-foreground);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.reading-page .reading-content #nice hr {
+  height: 1px;
+  margin: 2.5em 0;
+  background: var(--border);
+  opacity: 1;
+}
+
+.reading-page .reading-content #nice img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.75em 0;
+  border-radius: 0.625rem;
+  box-shadow: none;
+  transition: none;
+}
+
+.reading-page .reading-content #nice img:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.reading-page .reading-content #nice figcaption {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-style: normal;
+}
+
+.reading-page .reading-content #nice code {
+  margin: 0;
+  padding: 0.15em 0.35em;
+  border-radius: 0.25rem;
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.reading-page .reading-content #nice pre {
+  max-width: 100%;
+  margin: 1.75em 0;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--muted);
+  box-shadow: none;
+}
+
+.reading-page .reading-content #nice pre code {
+  padding: 1.25rem;
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.reading-page .reading-content #nice table {
+  display: block;
+  max-width: 100%;
+  margin: 1.75em 0;
+  overflow-x: auto;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 0.875rem;
+}
+
+.reading-page .reading-content #nice table thead {
+  background: var(--muted);
+}
+
+/* mdnice declares header cells with !important; contain the override here. */
+.reading-page .reading-content #nice table thead tr th {
+  padding: 0.875rem 1rem !important;
+  border-bottom: 1px solid var(--border) !important;
+  background: transparent !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+}
+
+.reading-page .reading-content #nice table tbody tr,
+.reading-page .reading-content #nice table tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+.reading-page .reading-content #nice table tbody tr:hover {
+  background: var(--muted);
+}
+
+.reading-page .reading-content #nice table tbody tr td {
+  padding: 0.875rem 1rem;
+  border-color: var(--border);
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+.reading-page .reading-content #nice :is(del, .footnotes, .footnote-ref) {
+  color: var(--muted-foreground);
+  border-color: var(--border);
+}
+
+.reading-page .reading-content #nice input[type='checkbox'] {
+  accent-color: var(--primary);
+}
+
+@media (min-width: 768px) {
+  .reading-page .reading-content #nice {
+    font-size: 1.0625rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-page .reading-content #nice a {
+    transition: none;
+  }
+}

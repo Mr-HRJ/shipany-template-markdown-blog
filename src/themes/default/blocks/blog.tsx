@@ -1,462 +1,418 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { Calendar, Grid, List, Loader2, Search, X, Menu } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-
-import { Link } from '@/core/i18n/navigation';
-import { cn } from '@/shared/lib/utils';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
-  Blog as BlogType,
-  Category as CategoryType,
-  Post as PostType,
-} from '@/shared/types/blocks/blog';
+  ArrowUpRight,
+  Bookmark,
+  BookOpen,
+  Calendar,
+  ChevronDown,
+  Code2,
+  FileText,
+  Gamepad2,
+  Grid2X2,
+  ImageIcon,
+  Layers3,
+  List,
+  Search,
+  Video,
+  X,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
-// 扩展 PostType 以包含新字段
-interface ExtendedPostType extends PostType {
-  isPinned?: boolean;
-  isRecommended?: boolean;
-}
+import { Link, usePathname } from '@/core/i18n/navigation';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/utils';
+import { Blog as BlogType, Post as PostType } from '@/shared/types/blocks/blog';
 
-// 移除Markdown语法的简单函数
-function stripMarkdown(text: string): string {
-  if (!text) return '';
-  
+import '@/config/style/library.css';
+
+const PAGE_SIZE = 12;
+const manualIcons = {
+  'docs-ai-chuhai': BookOpen,
+  'docs-shipany-two': Layers3,
+  'docs-joyflix': Video,
+  'docs-nanobanana': ImageIcon,
+  'docs-gamiary': Gamepad2,
+  'docs-blog': FileText,
+  'docs-markdown-blog': Code2,
+  'docs-gpt-image2': ImageIcon,
+};
+
+function stripMarkdown(text: string) {
   return text
-    // 移除标题标记
-    .replace(/^#{1,6}\s+/gm, '')
-    // 移除粗体和斜体
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
-    // 移除链接，保留文本
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // 移除图片
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
-    // 移除行内代码
-    .replace(/`([^`]+)`/g, '$1')
-    // 移除代码块
     .replace(/```[\s\S]*?```/g, '')
-    // 移除引用
-    .replace(/^>\s+/gm, '')
-    // 移除列表标记
-    .replace(/^[\*\-\+]\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
-    // 移除水平线
-    .replace(/^[\*\-_]{3,}$/gm, '')
-    // 移除多余空白
-    .replace(/\n{2,}/g, '\n')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/(^#{1,6}\s+|[*_`>])/gm, '')
     .trim();
 }
 
-// Check if a post is published within the last 3 days
-function isNewPost(createdAt: string): boolean {
-  if (!createdAt) return false;
-  
-  try {
-    const postDate = new Date(createdAt);
-    const now = new Date();
-    const diffTime = now.getTime() - postDate.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    
-    return diffDays <= 3;
-  } catch {
-    return false;
-  }
+function isManual(post: PostType) {
+  return Boolean(post.id && post.id in manualIcons);
+}
+
+function LibraryHero({ manual }: { manual: PostType }) {
+  const t = useTranslations('blog.library');
+
+  return (
+    <div className="library-hero">
+      <div className="library-intro">
+        <h1>{t('hero_title')}</h1>
+        <p>{t('hero_description')}</p>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild size="lg">
+            <Link href={manual.url || '/docs'}>
+              <BookOpen className="size-4" aria-hidden="true" />
+              {t('start_reading')}
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <a href="#library-catalog">{t('browse_manuals')}</a>
+          </Button>
+        </div>
+        <div className="library-topics" aria-label={t('covered_topics')}>
+          <span>{t('topic_build')}</span>
+          <span>{t('topic_grow')}</span>
+          <span>{t('topic_launch')}</span>
+        </div>
+      </div>
+      <Link
+        href={manual.url || '/docs'}
+        className="library-feature"
+        aria-label={t('start_reading')}
+      >
+        <div className="library-book">
+          <div className="library-book-top">
+            <BookOpen size={24} strokeWidth={1.5} aria-hidden="true" />
+            <span>{t('main_manual')}</span>
+          </div>
+          <div className="library-book-title">
+            AI 出海
+            <br />
+            实战手册
+          </div>
+          <div className="library-book-bottom">
+            <span>{t('book_caption')}</span>
+            <ArrowUpRight size={21} aria-hidden="true" />
+          </div>
+          <span className="library-bookmark" aria-hidden="true" />
+        </div>
+        <div className="library-feature-note">
+          <span>{t('start_here')}</span>
+          <span>{t('step_by_step')}</span>
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+function PostCard({ post, view }: { post: PostType; view: 'grid' | 'list' }) {
+  const t = useTranslations('blog');
+  const manual = isManual(post);
+  const Icon = manualIcons[post.id as keyof typeof manualIcons] || FileText;
+  const palette =
+    post.id === 'docs-ai-chuhai'
+      ? 'green'
+      : post.id === 'docs-joyflix' || post.id === 'docs-gpt-image2'
+        ? 'blue'
+        : post.id === 'docs-nanobanana' || post.id === 'docs-gamiary'
+          ? 'gold'
+          : 'slate';
+
+  return (
+    <Link
+      href={post.url || '/blog'}
+      target={post.target || '_self'}
+      rel={post.target === '_blank' ? 'noopener noreferrer' : undefined}
+      className={cn('library-entry', view === 'list' && 'library-entry-row')}
+      data-palette={palette}
+    >
+      {post.image ? (
+        <img
+          src={post.image}
+          alt=""
+          loading="lazy"
+          className="library-entry-image"
+        />
+      ) : (
+        <div className="library-entry-symbol" aria-hidden="true">
+          <Icon size={24} strokeWidth={1.6} />
+        </div>
+      )}
+      <div className="library-entry-content">
+        <div className="library-entry-kind">
+          <span>{manual ? t('library.manual') : t('library.article')}</span>
+          {post.isPinned ? (
+            <span>{t('page.pinned')}</span>
+          ) : (
+            post.isRecommended && (
+              <Bookmark size={13} aria-label={t('page.recommended')} />
+            )
+          )}
+        </div>
+        <h3>{post.title}</h3>
+        <p>{stripMarkdown(post.description || '')}</p>
+        <div className="library-entry-meta">
+          {post.created_at ? (
+            <span>
+              <Calendar size={12} aria-hidden="true" />
+              {post.created_at}
+            </span>
+          ) : (
+            manual && <span>{t('library.manual_details')}</span>
+          )}
+          {post.author_name && (
+            <span className="min-w-0 truncate">{post.author_name}</span>
+          )}
+          <ArrowUpRight size={17} aria-hidden="true" />
+        </div>
+        {post.categories && post.categories.length > 0 && (
+          <div className="text-muted-foreground mt-3 flex flex-wrap gap-2 text-xs">
+            {post.categories.map((category) => (
+              <span key={category.id || category.slug}>{category.title}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Link>
+  );
 }
 
 export function Blog({
   className,
-  ...props
+  blog: suppliedBlog,
+  section,
+  ...data
 }: {
   className?: string;
   blog?: BlogType;
-  section?: any;
-  [key: string]: any;
+  section?: Partial<BlogType>;
+  posts?: PostType[];
+  categories?: BlogType['categories'];
+  currentCategory?: BlogType['currentCategory'];
 }) {
-  const blog: BlogType = props.blog || ({
-    ...props,
-    ...(props.section || {}),
-  } as BlogType);
-  const t = useTranslations('blog.page');
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list'); // 默认列表模式
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [displayedPosts, setDisplayedPosts] = useState<ExtendedPostType[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const observerTarget = useRef<HTMLDivElement>(null);
-  
-  const POSTS_PER_PAGE = 12;
-
-  // 当搜索查询改变时,更新 URL 参数并触发服务端搜索
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    
-    // 使用 setTimeout 进行防抖
-    const timeoutId = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value.trim()) {
-        params.set('search', value.trim());
-      } else {
-        params.delete('search');
-      }
-      // 重置页码
-      params.delete('page');
-      
-      router.push(`?${params.toString()}`);
-    }, 500); // 500ms 防抖
-
-    return () => clearTimeout(timeoutId);
+  const blog = suppliedBlog || {
+    ...data,
+    ...section,
+    posts: data.posts || section?.posts || [],
   };
-
-  // 加载更多文章
-  const loadMore = useCallback(() => {
-    if (isLoading || !hasMore) return;
-    
-    setIsLoading(true);
-    
-    // 模拟异步加载
-    setTimeout(() => {
-      const startIndex = (page - 1) * POSTS_PER_PAGE;
-      const endIndex = startIndex + POSTS_PER_PAGE;
-      const newPosts = (blog.posts || []).slice(startIndex, endIndex);
-      
-      if (newPosts.length > 0) {
-        setDisplayedPosts((prev) => [...prev, ...newPosts]);
-        setPage((prev) => prev + 1);
-        setHasMore(endIndex < (blog.posts || []).length);
-      } else {
-        setHasMore(false);
-      }
-      
-      setIsLoading(false);
-    }, 300);
-  }, [page, blog.posts, isLoading, hasMore]);
-
-  // 初始加载
-  useEffect(() => {
-    setDisplayedPosts([]);
-    setPage(1);
-    setHasMore(true);
-  }, [blog.posts]);
+  const t = useTranslations('blog');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const query = searchParams.get('search') || '';
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [filter, setFilter] = useState<'all' | 'manuals' | 'articles'>('all');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinel = useRef<HTMLDivElement>(null);
+  const home = pathname === '/';
+  const posts = blog.posts || [];
+  const manuals = posts.filter(isManual);
+  const mainManual = manuals.find((post) => post.id === 'docs-ai-chuhai');
+  const filteredPosts = posts.filter((post) => {
+    if (filter === 'manuals' && !isManual(post)) return false;
+    if (filter === 'articles' && isManual(post)) return false;
+    return `${post.title || ''} ${stripMarkdown(post.description || '')}`
+      .toLocaleLowerCase()
+      .includes(query.trim().toLocaleLowerCase());
+  });
+  const hasMore = visibleCount < filteredPosts.length;
 
   useEffect(() => {
-    if (displayedPosts.length === 0 && (blog.posts || []).length > 0) {
-      loadMore();
-    }
-  }, [displayedPosts, blog.posts, loadMore]);
-
-  // Intersection Observer 用于滚动加载
-  useEffect(() => {
+    if (!hasMore || !sentinel.current) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMore();
-        }
+      ([entry]) => {
+        if (entry.isIntersecting) setVisibleCount((count) => count + PAGE_SIZE);
       },
-      { threshold: 0.1 }
+      { rootMargin: '160px' }
     );
+    observer.observe(sentinel.current);
+    return () => observer.disconnect();
+  }, [hasMore, visibleCount, query, filter]);
 
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [hasMore, isLoading, loadMore]);
+  function updateSearch(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set('search', value);
+    else params.delete('search');
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${params.size ? `?${params}` : ''}${window.location.hash}`
+    );
+    setVisibleCount(PAGE_SIZE);
+  }
 
   return (
     <section
       id={blog.id}
-      className={cn('py-18 md:py-20', blog.className, className)}
+      className={cn('library-page', blog.className, className)}
     >
       <div className="container">
-        {/* 移动端分类菜单按钮 */}
-        <button
-          onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-          className="md:hidden absolute top-2 right-4 z-50 p-2 rounded-lg bg-background border border-border shadow-lg"
-          aria-label="Toggle categories"
-        >
-          <Menu className="size-6" />
-        </button>
-
-        {/* 移动端分类抽屉 */}
-        {isCategoryOpen && (
-          <>
-            <div
-              className="md:hidden fixed inset-0 bg-black/50 z-40"
-              onClick={() => setIsCategoryOpen(false)}
-            />
-            <div className="md:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-background border-l border-border z-9999 overflow-y-auto shadow-xl">
-              <div className="p-6">
-                <h3 className="mb-4 text-lg font-semibold">{t('categories')}</h3>
-                <nav className="space-y-1">
-                  {blog.categories?.map((category: CategoryType) => (
-                    <Link
-                      key={category.slug}
-                      href={
-                        !category.slug || category.slug === 'all'
-                          ? '/blog'
-                          : `/blog/category/${category.slug}`
-                      }
-                      onClick={() => setIsCategoryOpen(false)}
-                      className={cn(
-                        'block rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent',
-                        blog.currentCategory?.slug === category.slug &&
-                          'bg-accent font-medium'
-                      )}
-                    >
-                      {category.title}
-                    </Link>
-                  ))}
-                </nav>
-              </div>
-            </div>
-          </>
+        {home && mainManual ? (
+          <LibraryHero manual={mainManual} />
+        ) : (
+          <div className="library-page-heading">
+            <h1>{blog.title || t('blog.title')}</h1>
+            <p>{blog.description || t('blog.description')}</p>
+          </div>
         )}
-
-        <div className="flex flex-col gap-6 md:flex-row">
-          {/* 左侧分类 - 仅桌面端显示 */}
-          <aside className="hidden md:block w-full md:w-64 md:flex-shrink-0">
-            <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border bg-card p-4">
-              <h3 className="mb-4 font-semibold">{t('categories')}</h3>
-              <nav className="space-y-1">
-                {blog.categories?.map((category: CategoryType) => (
-                  <Link
-                    key={category.slug}
-                    href={
-                      !category.slug || category.slug === 'all'
-                        ? '/blog'
-                        : `/blog/category/${category.slug}`
-                    }
-                    className={cn(
-                      'block rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary hover:text-primary-foreground',
-                      blog.currentCategory?.slug === category.slug &&
-                        'bg-primary text-primary-foreground font-medium'
-                    )}
-                  >
-                    {category.title || t('all')}
-                  </Link>
-                ))}
-              </nav>
+        <div id="library-catalog" className="library-catalog">
+          <div className="library-catalog-heading">
+            <div>
+              <h2>
+                {home ? t('library.catalog_title') : t('library.all_content')}
+              </h2>
+              <p>
+                {t('library.catalog_description', {
+                  manuals: manuals.length,
+                  articles: posts.length - manuals.length,
+                })}
+              </p>
             </div>
-          </aside>
-
-          {/* 右侧内容 */}
-          <div className="flex-1">
-            {/* 顶部标题和视图切换 */}
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1">
-                {blog.sr_only_title && (
-                  <h1 className="sr-only">{blog.sr_only_title}</h1>
-                )}
-                <h2 className="text-2xl font-bold">{blog.title}</h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {blog.description}
-                </p>
-              </div>
-              <div className="flex gap-2">
+            <div className="library-search">
+              <Search size={18} aria-hidden="true" />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => updateSearch(event.target.value)}
+                placeholder={t('library.search_placeholder')}
+                aria-label={t('library.search_placeholder')}
+              />
+              {query && (
                 <button
-                  onClick={() => setViewMode('grid')}
-                  className={cn(
-                    'rounded-md p-2 transition-colors',
-                    viewMode === 'grid'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-primary/10'
-                  )}
-                  aria-label={t('grid_view')}
+                  type="button"
+                  onClick={() => updateSearch('')}
+                  aria-label={t('page.clear_search')}
                 >
-                  <Grid className="h-5 w-5" />
+                  <X size={16} aria-hidden="true" />
                 </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={cn(
-                    'rounded-md p-2 transition-colors',
-                    viewMode === 'list'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-primary/10'
-                  )}
-                  aria-label={t('list_view')}
-                >
-                  <List className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* 搜索框 */}
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder={t('search_placeholder')}
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full rounded-lg border bg-background px-10 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => handleSearchChange('')}
-                    className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                    aria-label={t('clear_search')}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              {searchQuery && (
-                <p className="text-muted-foreground mt-2 text-sm">
-                  {t('found_posts', { count: (blog.posts || []).length })}
-                </p>
               )}
             </div>
-
-            {/* 文章列表 */}
-            {displayedPosts.length > 0 ? (
-              <>
-                <div
-                  className={cn(
-                    viewMode === 'grid'
-                      ? 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
-                      : 'space-y-4'
-                  )}
-                >
-                  {displayedPosts.map((item, idx) => (
-                    <Link
-                      key={`${item.id}-${idx}`}
-                      href={item.url || ''}
-                      target={item.target || '_blank'}
-                      rel="noopener noreferrer"
-                      className={cn(
-                        'block overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md',
-                        viewMode === 'list' && 'flex flex-col gap-4 sm:flex-row'
-                      )}
-                    >
-                      {item.image && (
-                        <div
-                          className={cn(
-                            viewMode === 'grid'
-                              ? 'aspect-video w-full'
-                              : 'h-48 w-full sm:h-32 sm:w-48 sm:flex-shrink-0'
-                          )}
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.title || ''}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 p-4">
-                        <div className="mb-2 flex items-start gap-2">
-                          <h3 className="flex-1 text-lg font-semibold line-clamp-2">
-                            {item.title}
-                            {isNewPost(item.created_at || '') && (
-                              <span className="ml-2 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white dark:bg-green-900/30 dark:text-green-400">
-                                {t('new')}
-                              </span>
-                            )}
-                            {item.isRecommended && (
-                              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                                {t('recommended')}
-                              </span>
-                            )}
-                          </h3>
-                          {item.isPinned && (
-                            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                              {t('pinned')}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground mb-3 text-sm line-clamp-2">
-                          {stripMarkdown(item.description || '')}
-                        </p>
-                        <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-xs">
-                          {item.created_at && (
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {item.created_at}
-                            </div>
-                          )}
-                          {item.author_name && (
-                            <div className="flex items-center gap-1">
-                              {item.author_image && (
-                                <Avatar>
-                                  <AvatarImage
-                                    src={item.author_image}
-                                    alt={item.author_name}
-                                    className="h-4 w-4 rounded-full"
-                                  />
-                                  <AvatarFallback>
-                                    {item.author_name.charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                              {item.author_name}
-                            </div>
-                          )}
-                          {/* Show categories only when viewing "All" category */}
-                          {(!blog.currentCategory?.slug || blog.currentCategory?.slug === 'all') && 
-                           item.categories && 
-                           item.categories.length > 0 && (
-                            <div className="flex items-center gap-1 flex-wrap">
-                              {item.categories.map((category, catIdx) => (
-                                <span
-                                  key={`${category.slug}-${catIdx}`}
-                                  className="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-green-500 dark:border-green-900 bg-transparent text-gray-6 hover:bg-green-500/10"
-                                >
-                                  {category.title}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-
-                {/* 加载指示器 */}
-                <div
-                  ref={observerTarget}
-                  className="mt-8 flex justify-center"
-                >
-                  {isLoading && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {t('loading')}
-                    </div>
-                  )}
-                  {!hasMore && displayedPosts.length > 0 && (
-                    <p className="text-muted-foreground text-sm">
-                      {t('all_loaded')}
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : (blog.posts || []).length === 0 && searchQuery ? (
-              <div className="text-muted-foreground py-12 text-center">
-                <p>{t('no_results')}</p>
+          </div>
+          <div className="library-toolbar">
+            <div
+              className="library-filters"
+              role="group"
+              aria-label={t('library.content_type')}
+            >
+              {(['all', 'manuals', 'articles'] as const).map((value) => (
                 <button
-                  onClick={() => handleSearchChange('')}
-                  className="mt-4 text-sm text-primary hover:underline"
+                  key={value}
+                  type="button"
+                  aria-pressed={filter === value}
+                  onClick={() => {
+                    setFilter(value);
+                    setVisibleCount(PAGE_SIZE);
+                  }}
                 >
-                  {t('clear_search')}
+                  {t(`library.filter_${value}`)}
+                  <span>
+                    {value === 'all'
+                      ? posts.length
+                      : value === 'manuals'
+                        ? manuals.length
+                        : posts.length - manuals.length}
+                  </span>
                 </button>
-              </div>
+              ))}
+            </div>
+            <div
+              className="library-view"
+              role="group"
+              aria-label={t('library.view_mode')}
+            >
+              <button
+                type="button"
+                aria-label={t('page.grid_view')}
+                aria-pressed={view === 'grid'}
+                onClick={() => setView('grid')}
+              >
+                <Grid2X2 size={17} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label={t('page.list_view')}
+                aria-pressed={view === 'list'}
+                onClick={() => setView('list')}
+              >
+                <List size={19} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          {blog.categories && blog.categories.length > 1 && (
+            <nav
+              className="mb-6 flex flex-wrap gap-2"
+              aria-label={t('page.categories')}
+            >
+              {blog.categories.map((category) => (
+                <Link
+                  key={category.id || category.slug}
+                  href={
+                    category.url ||
+                    (category.slug === 'all'
+                      ? '/blog'
+                      : `/blog/category/${category.slug}`)
+                  }
+                  aria-current={
+                    category.slug === blog.currentCategory?.slug
+                      ? 'page'
+                      : undefined
+                  }
+                  className="text-muted-foreground hover:bg-accent aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground rounded-md px-3 py-2 text-sm"
+                >
+                  {category.title}
+                </Link>
+              ))}
+            </nav>
+          )}
+          {query && (
+            <p className="text-muted-foreground mb-5 text-sm" role="status">
+              {t('page.found_posts', { count: filteredPosts.length })}
+            </p>
+          )}
+          {filteredPosts.length ? (
+            <div
+              className={cn(
+                'library-entries',
+                view === 'list' && 'library-entries-list'
+              )}
+            >
+              {filteredPosts.slice(0, visibleCount).map((post) => (
+                <PostCard
+                  key={post.id || post.url || post.slug}
+                  post={post}
+                  view={view}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="library-empty" role="status">
+              <Search size={28} strokeWidth={1.5} aria-hidden="true" />
+              <h3>{query ? t('page.no_results') : t('page.no_content')}</h3>
+              <p>{t('library.empty_hint')}</p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  updateSearch('');
+                  setFilter('all');
+                }}
+              >
+                {t('library.reset_filters')}
+              </Button>
+            </div>
+          )}
+          <div ref={sentinel} className="library-end">
+            {hasMore ? (
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+              >
+                {t('library.load_more')}
+                <ChevronDown size={16} />
+              </Button>
             ) : (
-              <div className="text-muted-foreground py-12 text-center">
-                {t('no_content')}
-              </div>
+              filteredPosts.length > 0 && <span>{t('library.end_note')}</span>
             )}
           </div>
         </div>

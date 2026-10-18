@@ -4,12 +4,12 @@
     "description": "阅读我们最新的产品功能、解决方案和更新内容。"
   },
   "page": {
-    "title": "ShipAny 博客",
+    "title": "手册与文章",
     "sections": {
       "blog": {
         "id": "blog",
         "title": "博客",
-        "description": "阅读我们最新的产品功能、解决方案和更新内容。"
+        "description": "关于 AI 产品、出海增长与开发实践的手册和记录。"
       }
     }
   },

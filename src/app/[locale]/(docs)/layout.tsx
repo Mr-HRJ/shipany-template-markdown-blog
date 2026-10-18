@@ -10,7 +10,16 @@ import { baseOptions } from './layout.config';
 import '@/config/style/docs.css';
 
 const zh: Partial<Translations> = {
-  search: '搜索内容',
+  search: '搜索手册',
+  searchNoResult: '没有找到相关内容',
+  toc: '本页目录',
+  tocNoHeadings: '本页暂无章节标题',
+  lastUpdate: '更新于',
+  chooseLanguage: '选择语言',
+  nextPage: '下一篇',
+  previousPage: '上一篇',
+  chooseTheme: '切换主题',
+  editOnGithub: '在 GitHub 上编辑',
 };
 // available languages that will be displayed on UI
 // make sure `locale` is consistent with your i18n config
@@ -34,6 +43,7 @@ export default async function DocsRootLayout({
 }) {
   const { locale } = await params;
   const lang = locale || 'en';
+  const options = baseOptions(lang);
 
   return (
     <RootProvider
@@ -49,10 +59,11 @@ export default async function DocsRootLayout({
       }}
     >
       <DocsLayout
-        {...baseOptions(lang)}
+        {...options}
         tree={source.pageTree[lang]}
-        nav={{ ...baseOptions(lang).nav, mode: 'top' }}
+        nav={{ ...options.nav, mode: 'top' }}
         tabMode="sidebar"
+        containerProps={{ className: 'docs-shell' }}
       >
         {children}
       </DocsLayout>

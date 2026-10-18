@@ -4,12 +4,12 @@
     "description": "Read latest product features, solutions, and updates."
   },
   "page": {
-    "title": "ShipAny Blog",
+    "title": "Handbooks and articles",
     "sections": {
       "blog": {
         "id": "blog",
         "title": "Blog",
-        "description": "Read latest product features, solutions, and updates."
+        "description": "Handbooks and field notes on AI products, global growth, and development."
       }
     }
   },

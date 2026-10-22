@@ -502,6 +502,11 @@ def _normalize_sea_markdown(body: str) -> str:
         else:
             trimmed = line.rstrip(" \t")
             if trimmed and line.endswith("  ") and not re.match(r"^#{1,6}(?:\s|$)", stripped):
+                # GFM otherwise treats the hard-break backslash as part of a
+                # bare URL, producing links ending in %5C after compilation.
+                url_line = re.fullmatch(r"(\s*)(https?://[^\s<>]+)", trimmed)
+                if url_line:
+                    trimmed = f"{url_line.group(1)}<{url_line.group(2)}>"
                 trimmed += "\\"
             lines.append(trimmed)
     return "\n".join(lines)

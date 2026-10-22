@@ -54,6 +54,25 @@ def new_badge():
 
 
 class ExtractPageTreeTests(unittest.TestCase):
+    def test_url_hard_breaks_use_explicit_autolinks_without_changing_code(self):
+        body = (
+            "   https://example.com/tool?a=1&b=2  \n说明\n"
+            "<https://example.com/already-linked>  \n"
+            "- [显式链接](https://example.com/existing)  \n"
+            "```text\nhttps://example.com/code  \n```\n"
+        )
+        expected = (
+            "   <https://example.com/tool?a=1&b=2>\\\n说明\n"
+            "<https://example.com/already-linked>\\\n"
+            "- [显式链接](https://example.com/existing)\\\n"
+            "```text\nhttps://example.com/code  \n```\n"
+        )
+        for value in (body, body.replace("\n", "\r\n")):
+            with self.subTest(line_endings=repr(value[:20])):
+                normalized = scraper._normalize_sea_markdown(value)
+                self.assertEqual(normalized, expected)
+                self.assertEqual(scraper._normalize_sea_markdown(normalized), expected)
+
     def test_markdown_whitespace_preserves_hard_breaks_and_code(self):
         body = "第一行  \n第二行 \n# \n\n```text\ncode  \n```\n"
         expected = "第一行\\\n第二行\n#\n\n```text\ncode  \n```\n"

@@ -44,6 +44,7 @@ from fetch_shipany_docs import (  # noqa: E402
     escape_prose_html,
     yaml_quote,
 )
+from fix_heading_links import HEADING_RE, fix_heading_text  # noqa: E402
 
 _SUBCATS = {"getting-started", "configuration", "payment", "deployment",
             "video-tutorials", "frequently-asked-questions", "others"}
@@ -125,6 +126,13 @@ SEA_CATEGORY_MAP = {
     "ads": ("ads", "Ads"),
     "other": ("misc", "其他"),
     "review": ("review", "复盘"),
+}
+
+# These are distinct source articles with exactly the same sidebar title.
+# Bind their verified identities explicitly without changing the old route.
+SEA_ROUTE_OVERRIDES = {
+    "/sea/geo/geo-optimization-playbook-ai-search-era": "geo/GEO-AI-搜索时代的新流量入口.md",
+    "/sea/geo/geo-ai-search-door": "geo/geo-ai-search-door.md",
 }
 
 _NEXT_PUSH_RE = re.compile(
@@ -501,6 +509,9 @@ def _normalize_sea_markdown(body: str) -> str:
             lines.append(line)
         else:
             trimmed = line.rstrip(" \t")
+            heading = HEADING_RE.match(trimmed)
+            if heading:
+                trimmed = heading.group(1) + fix_heading_text(heading.group(2))
             if trimmed and line.endswith("  ") and not re.match(r"^#{1,6}(?:\s|$)", stripped):
                 # GFM otherwise treats the hard-break backslash as part of a
                 # bare URL, producing links ending in %5C after compilation.
@@ -641,7 +652,9 @@ def process_sea() -> None:
     found_category_order: list[str] = []
     source_items: list[dict[str, object]] = []
     seen_source_urls: set[str] = set()
-    seen_source_titles: set[tuple[str, str]] = set()
+    source_titles: dict[tuple[str, str], list[str]] = {}
+    pinned_paths: dict[str, Path] = {}
+    pinned_routes: set[tuple[str, str]] = set()
 
     for title, source_path in tree:
         if source_path in seen_source_urls:
@@ -663,9 +676,23 @@ def process_sea() -> None:
             raise RuntimeError(f"unmapped /sea article: {source_path}")
 
         title_key = (local_folder, _norm_sea_title(title))
-        if title_key in seen_source_titles:
-            raise RuntimeError(f"duplicate source title in {local_folder}: {title}")
-        seen_source_titles.add(title_key)
+        source_titles.setdefault(title_key, []).append(source_path)
+        override = SEA_ROUTE_OVERRIDES.get(source_path)
+        if override:
+            relative = Path(override)
+            path = DOCS_ROOT / relative
+            if (
+                relative.is_absolute() or len(relative.parts) != 2
+                or relative.parts[0] != local_folder
+                or relative.suffix not in {".md", ".mdx"}
+                or not path.resolve().is_relative_to(DOCS_ROOT.resolve())
+            ):
+                raise RuntimeError(f"invalid /sea route override: {source_path}")
+            route = (local_folder, relative.stem)
+            if route in pinned_routes:
+                raise RuntimeError(f"duplicate /sea route override: {source_path}")
+            pinned_routes.add(route)
+            pinned_paths[source_path] = path
         source_items.append({
             "title": title,
             "source_path": source_path,
@@ -673,6 +700,13 @@ def process_sea() -> None:
             "local_folder": local_folder,
             "category_title": category_title,
         })
+
+    for key, urls in source_titles.items():
+        if len(urls) > 1 and any(url not in pinned_paths for url in urls):
+            raise RuntimeError(f"duplicate source title in {key[0]}: {urls}")
+    for source_path, relative in SEA_ROUTE_OVERRIDES.items():
+        if source_path not in seen_source_urls and (DOCS_ROOT / relative).exists():
+            raise RuntimeError(f"pinned /sea source missing; verify removal first: {source_path}")
 
     if found_category_order != expected_category_order:
         raise RuntimeError(
@@ -684,6 +718,7 @@ def process_sea() -> None:
 
     local_folders = [value[0] for value in SEA_CATEGORY_MAP.values()]
     existing_by_key: dict[tuple[str, str], Path] = {}
+    pinned_local_keys: set[tuple[str, str]] = set()
     all_existing: set[Path] = set()
     occupied_stems: dict[str, set[str]] = {}
     for local_folder in local_folders:
@@ -698,21 +733,31 @@ def process_sea() -> None:
         for path in existing_paths:
             if path.suffix.lower() not in {".md", ".mdx"}:
                 continue
-            key = (local_folder, _norm_sea_title(_read_local_title(path)))
-            if key in existing_by_key:
-                raise RuntimeError(f"duplicate local title: {path.relative_to(REPO)}")
-            existing_by_key[key] = path
             all_existing.add(path)
             occupied_stems[local_folder].add(path.stem)
+            key = (local_folder, _norm_sea_title(_read_local_title(path)))
+            if path in pinned_paths.values():
+                if key in existing_by_key:
+                    raise RuntimeError(f"duplicate local title: {path.relative_to(REPO)}")
+                pinned_local_keys.add(key)
+                continue
+            if key in existing_by_key or key in pinned_local_keys:
+                raise RuntimeError(f"duplicate local title: {path.relative_to(REPO)}")
+            existing_by_key[key] = path
+
+    for path in pinned_paths.values():
+        if path not in all_existing and path.stem in occupied_stems[path.parent.name]:
+            raise RuntimeError(f"pinned /sea route already occupied: {path.relative_to(REPO)}")
+        occupied_stems[path.parent.name].add(path.stem)
 
     used_existing: set[Path] = set()
     for item in source_items:
         local_folder = str(item["local_folder"])
         key = (local_folder, _norm_sea_title(str(item["title"])))
-        path = existing_by_key.get(key)
-        if path:
+        path = pinned_paths.get(str(item["source_path"])) or existing_by_key.get(key)
+        if path in all_existing:
             used_existing.add(path)
-        else:
+        elif path is None:
             base = _sea_file_slug(str(item["title"]))
             stem = base
             suffix = 2

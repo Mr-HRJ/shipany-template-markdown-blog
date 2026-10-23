@@ -54,6 +54,24 @@ def new_badge():
 
 
 class ExtractPageTreeTests(unittest.TestCase):
+    def test_heading_link_sanitizer_preserves_body_links_and_fenced_examples(self):
+        body = (
+            "## [工具指南](https://example.com/guide) https://example.com/tool\n"
+            "正文 [保留链接](https://example.com/body) https://example.com/plain\n"
+            "```markdown\n# [代码内链接](https://example.com/code)  \n```\n"
+            "~~~text\n## https://example.com/tilde\n~~~\n"
+            "### 已处理 `https://example.com/already`\n"
+        )
+        expected = (
+            "## 工具指南 `https://example.com/tool`\n"
+            "正文 [保留链接](https://example.com/body) https://example.com/plain\n"
+            "```markdown\n# [代码内链接](https://example.com/code)  \n```\n"
+            "~~~text\n## https://example.com/tilde\n~~~\n"
+            "### 已处理 `https://example.com/already`\n"
+        )
+        self.assertEqual(scraper._normalize_sea_markdown(body), expected)
+        self.assertEqual(scraper._normalize_sea_markdown(expected), expected)
+
     def test_url_hard_breaks_use_explicit_autolinks_without_changing_code(self):
         body = (
             "   https://example.com/tool?a=1&b=2  \n说明\n"
@@ -282,6 +300,224 @@ class SeaNewCategoryTests(unittest.TestCase):
                 scraper.process_sea()
         fetch_article.assert_not_called()
         self.assertFalse(self.new_folder.exists())
+
+
+class SeaPinnedRouteTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="sea-pinned-route-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.repo = Path(self.temp.name)
+        self.docs = self.repo / "docs"
+        self.title = "GEO：AI 搜索时代的新流量入口"
+        self.old_url = "/sea/geo/old-article"
+        self.new_url = "/sea/geo/new-article"
+        self.old_path = self.docs / "geo" / "legacy-route.md"
+        self.new_path = self.docs / "geo" / "geo-ai-search-door.md"
+        self.categories = {
+            "readme": ("must-read", "网站出海必读"),
+            "geo": ("geo", "GEO"),
+        }
+        self.overrides = {
+            self.old_url: "geo/legacy-route.md",
+            self.new_url: "geo/geo-ai-search-door.md",
+        }
+        self.tree = [
+            ("网站出海必读", "/sea/readme"),
+            (self.title, self.old_url),
+            (self.title, self.new_url),
+        ]
+        self.results = {
+            "/sea/readme": {
+                "body": "完整手册说明\n", "date": "2026-04-01", "updated": None,
+            },
+            self.old_url: {
+                "body": "旧文章独立正文，保留已有路由。\n",
+                "date": "2026-04-05", "updated": None,
+            },
+            self.new_url: {
+                "body": f"新文章不同正文。[旧文章]({self.old_url})\n",
+                "date": "2026-10-22", "updated": "2026-10-23",
+            },
+        }
+        for folder, title in self.categories.values():
+            directory = self.docs / folder
+            directory.mkdir(parents=True)
+            pages = ["readme"] if folder == "must-read" else [self.old_path.stem]
+            (directory / "meta.json").write_text(
+                json.dumps({"title": title, "pages": pages}, ensure_ascii=False,
+                           indent=2) + "\n", encoding="utf-8",
+            )
+        self.old_text = self._render(self.title, self.old_url)
+        self.old_path.write_text(self.old_text, encoding="utf-8")
+        (self.docs / "must-read" / "readme.md").write_text(
+            self._render("网站出海必读", "/sea/readme"), encoding="utf-8",
+        )
+        (self.docs / "meta.json").write_text(
+            json.dumps({"title": "AI 出海手册", "pages": ["must-read", "geo"]},
+                       ensure_ascii=False, indent=2) + "\n", encoding="utf-8",
+        )
+        self.other_manual = self.docs / "unrelated-handbook" / "keep.mdx"
+        self.other_manual.parent.mkdir()
+        self.other_manual.write_text("---\ntitle: '无关手册'\n---\n保留内容\n", encoding="utf-8")
+        self.other_text = self.other_manual.read_bytes()
+        self.patches = ExitStack()
+        self.addCleanup(self.patches.close)
+        for name, value in (
+            ("REPO", self.repo), ("DOCS_ROOT", self.docs),
+            ("SEA_CATEGORY_MAP", self.categories), ("SEA_ROUTE_OVERRIDES", self.overrides),
+        ):
+            self.patches.enter_context(patch.object(scraper, name, value))
+        self.patches.enter_context(patch.object(scraper, "harvest_page_tree", return_value=self.tree))
+        self.patches.enter_context(patch.object(scraper, "_load_r2_compare_config", return_value=None))
+
+    def _render(self, title, url):
+        result = self.results[url]
+        return scraper._render_sea_doc(
+            title, result["date"], result["updated"], result["body"],
+        )
+
+    def _snapshot(self):
+        return {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()}
+
+    def _run(self):
+        with patch.object(scraper, "_fetch_sea_article",
+                          side_effect=lambda item: self.results[item["source_path"]]):
+            scraper.process_sea()
+
+    def _assert_failure_without_writes(self, message, failed_source=None):
+        before = self._snapshot()
+
+        def fetch(item):
+            if item["source_path"] == failed_source:
+                raise RuntimeError("pinned article unavailable")
+            return self.results[item["source_path"]]
+
+        with patch.object(scraper, "_fetch_sea_article", side_effect=fetch) as fetch_article, \
+                patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write_text, \
+                patch.object(Path, "unlink") as unlink:
+            with self.assertRaisesRegex(RuntimeError, message):
+                scraper.process_sea()
+        mkdir.assert_not_called()
+        write_text.assert_not_called()
+        unlink.assert_not_called()
+        self.assertEqual(self._snapshot(), before)
+        return fetch_article
+
+    def _assert_idempotent(self):
+        before = self._snapshot()
+        with patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write_text, \
+                patch.object(Path, "unlink") as unlink:
+            self._run()
+        mkdir.assert_not_called()
+        write_text.assert_not_called()
+        unlink.assert_not_called()
+        self.assertEqual(self._snapshot(), before)
+
+    def _geo_pages(self):
+        return json.loads((self.docs / "geo" / "meta.json").read_text(encoding="utf-8"))["pages"]
+
+    def test_same_title_routes_keep_identity_source_order_and_idempotence(self):
+        self._run()
+        self.assertEqual(self.old_path.read_text(encoding="utf-8"), self.old_text)
+        expected_new = self._render(self.title, self.new_url).replace(
+            f"]({self.old_url})", "](/docs/geo/legacy-route)",
+        )
+        self.assertEqual(self.new_path.read_text(encoding="utf-8"), expected_new)
+        self.assertEqual(self._geo_pages(), [self.old_path.stem, self.new_path.stem])
+        self.assertEqual(set((self.docs / "geo").glob("*.md")), {self.old_path, self.new_path})
+        self._assert_idempotent()
+
+        self.tree[1:] = list(reversed(self.tree[1:]))
+        self._run()
+        self.assertEqual(self._geo_pages(), [self.new_path.stem, self.old_path.stem])
+        self.assertEqual(self.old_path.read_text(encoding="utf-8"), self.old_text)
+        self.assertEqual(self.new_path.read_text(encoding="utf-8"), expected_new)
+        self.assertEqual(self.other_manual.read_bytes(), self.other_text)
+        self._assert_idempotent()
+
+    def test_same_source_urls_keep_routes_after_both_titles_change(self):
+        self._run()
+        renamed = {self.old_url: "旧文大幅改名", self.new_url: "新文另一个标题"}
+        self.tree[1:] = [(renamed[url], url) for _, url in self.tree[1:]]
+        self._run()
+        self.assertEqual(scraper._read_local_title(self.old_path), renamed[self.old_url])
+        self.assertEqual(scraper._read_local_title(self.new_path), renamed[self.new_url])
+        self.assertIn(self.results[self.old_url]["body"], self.old_path.read_text(encoding="utf-8"))
+        self.assertIn("新文章不同正文", self.new_path.read_text(encoding="utf-8"))
+        self.assertEqual(self._geo_pages(), [self.old_path.stem, self.new_path.stem])
+        self.assertEqual(set((self.docs / "geo").glob("*.md")), {self.old_path, self.new_path})
+        self._assert_idempotent()
+
+    def test_unbound_third_source_with_same_title_fails_before_fetch(self):
+        self.tree.append((self.title, "/sea/geo/unverified-third"))
+        self._assert_failure_without_writes("duplicate source title").assert_not_called()
+
+    def test_stray_local_same_title_is_rejected_before_or_after_pinned_file(self):
+        for filename in ("aaa-stray.md", "zzz-stray.md"):
+            with self.subTest(filename=filename):
+                stray = self.docs / "geo" / filename
+                stray.write_text(self.old_text, encoding="utf-8")
+                try:
+                    self._assert_failure_without_writes("duplicate local title").assert_not_called()
+                finally:
+                    stray.unlink()
+
+    def test_override_routes_must_be_distinct_including_md_mdx_same_stem(self):
+        for new_route in ("geo/legacy-route.md", "geo/legacy-route.mdx"):
+            with self.subTest(new_route=new_route):
+                self.overrides[self.new_url] = new_route
+                self._assert_failure_without_writes("duplicate /sea route override").assert_not_called()
+
+    def test_override_scope_traversal_and_extension_are_rejected(self):
+        invalid_routes = (
+            "seo/new.md", "../new.md", "geo/../../outside.md",
+            "geo/nested/new.md", "geo/new.txt", str(self.repo / "outside.md"),
+        )
+        for new_route in invalid_routes:
+            with self.subTest(new_route=new_route):
+                self.overrides[self.new_url] = new_route
+                self._assert_failure_without_writes("invalid /sea route override").assert_not_called()
+
+    def test_missing_pinned_source_preserves_existing_file(self):
+        self._run()
+        complete_tree = list(self.tree)
+        for missing_url in (self.old_url, self.new_url):
+            with self.subTest(missing_url=missing_url):
+                self.tree[:] = [item for item in complete_tree if item[1] != missing_url]
+                self._assert_failure_without_writes("pinned /sea source missing").assert_not_called()
+        self.tree[:] = complete_tree
+
+    def test_fetch_failure_with_valid_pins_has_no_partial_writes(self):
+        fetched = self._assert_failure_without_writes(
+            "pinned article unavailable", failed_source=self.new_url,
+        )
+        self.assertEqual(fetched.call_count, len(self.tree))
+        self.assertFalse(self.new_path.exists())
+
+    def test_new_pinned_route_is_reserved_before_earlier_automatic_slug(self):
+        earlier_url = "/sea/geo/earlier-unpinned"
+        earlier_title = self.new_path.stem
+        self.tree.insert(1, (earlier_title, earlier_url))
+        self.results[earlier_url] = {
+            "body": "较早出现但不是绑定文章。\n", "date": "2026-10-23", "updated": None,
+        }
+        self._run()
+        automatic = self.new_path.with_name(self.new_path.stem + "-2.md")
+        self.assertEqual(automatic.read_text(encoding="utf-8"), self._render(earlier_title, earlier_url))
+        self.assertEqual(scraper._read_local_title(self.new_path), self.title)
+        self.assertEqual(self.old_path.read_text(encoding="utf-8"), self.old_text)
+        self.assertEqual(self._geo_pages(), [automatic.stem, self.old_path.stem, self.new_path.stem])
+        self._assert_idempotent()
+
+    def test_existing_mdx_cannot_occupy_new_pinned_md_route(self):
+        conflicting = self.new_path.with_suffix(".mdx")
+        conflicting.write_text(
+            scraper._render_sea_doc("另一篇本地文章", "2026-10-01", None, "不得覆盖\n"),
+            encoding="utf-8",
+        )
+        self._assert_failure_without_writes("pinned /sea route already occupied").assert_not_called()
 
 
 class SeaInternalLinkTests(unittest.TestCase):

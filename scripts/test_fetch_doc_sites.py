@@ -238,6 +238,116 @@ class SeaNewCategoryTests(unittest.TestCase):
         self.patches.enter_context(patch.object(scraper, "harvest_page_tree", return_value=self.tree))
         self.patches.enter_context(patch.object(scraper, "_load_r2_compare_config", return_value=None))
 
+    def _add_root_page(self):
+        url = "/sea/product-launch-cold-start-guide"
+        self.tree.insert(1, ("根层独立文章", url))
+        self.results[url] = {
+            "body": "完整正文。[SEO](/sea/seo/existing)\n",
+            "date": "2026-11-04", "updated": None,
+        }
+        self.results["/sea/saas-seo/new"]["body"] += f"[根页]({url})\n"
+        return url
+
+    def _run(self):
+        with patch.object(scraper, "_fetch_sea_article",
+                          side_effect=lambda item: self.results[item["source_path"]]):
+            scraper.process_sea()
+
+    def _assert_root_failure_without_writes(self, message):
+        before = {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()}
+        with patch.object(scraper, "_fetch_sea_article") as fetch_article, \
+                patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write_text, \
+                patch.object(Path, "unlink") as unlink:
+            with self.assertRaisesRegex(RuntimeError, message):
+                scraper.process_sea()
+        fetch_article.assert_not_called()
+        mkdir.assert_not_called()
+        write_text.assert_not_called()
+        unlink.assert_not_called()
+        self.assertEqual(
+            {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()},
+            before,
+        )
+
+    def test_standalone_root_page_keeps_position_links_route_and_idempotence(self):
+        url = self._add_root_page()
+        unrelated = {self.docs / "index.md": "现有根首页\n",
+                     self.docs / "unrelated.md": "其他根文件\n"}
+        for path, text in unrelated.items():
+            path.write_text(text, encoding="utf-8")
+        self._run()
+        root_doc = self.docs / "product-launch-cold-start-guide.md"
+        self.assertEqual(
+            root_doc.read_text(encoding="utf-8"),
+            scraper._render_sea_doc(
+                "根层独立文章", "2026-11-04", None,
+                "完整正文。[SEO](/docs/seo/stable-route)\n",
+            ),
+        )
+        self.assertEqual(
+            json.loads((self.docs / "meta.json").read_text(encoding="utf-8"))["pages"],
+            ["must-read", root_doc.stem, "seo", "saas-seo"],
+        )
+        self.assertIn(
+            "[根页](/docs/product-launch-cold-start-guide)",
+            (self.new_folder / "新增工具站文章.md").read_text(encoding="utf-8"),
+        )
+        self.tree[1] = ("完全改名后的独立文章", url)
+        self._run()
+        self.assertEqual(scraper._read_local_title(root_doc), "完全改名后的独立文章")
+        self.assertEqual(sorted(path.name for path in self.docs.glob("*.md")),
+                         ["index.md", root_doc.name, "unrelated.md"])
+        for path, text in {**self.original_docs, **unrelated}.items():
+            self.assertEqual(path.read_text(encoding="utf-8"), text)
+        before = {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()}
+        with patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write_text, \
+                patch.object(Path, "unlink") as unlink:
+            self._run()
+        mkdir.assert_not_called()
+        write_text.assert_not_called()
+        unlink.assert_not_called()
+        self.assertEqual(
+            {path: path.read_bytes() for path in self.docs.rglob("*") if path.is_file()},
+            before,
+        )
+
+    def test_unknown_standalone_url_still_fails_before_fetch(self):
+        self.tree.insert(1, ("未核实根文章", "/sea/unverified-root-page"))
+        self._assert_root_failure_without_writes("unmapped /sea article")
+
+    def test_root_route_rejects_mdx_and_folder_collisions(self):
+        self._add_root_page()
+        alternate = self.docs / "product-launch-cold-start-guide.mdx"
+        alternate.write_text("保留其他文件\n", encoding="utf-8")
+        self._assert_root_failure_without_writes("route already occupied")
+        alternate.unlink()
+        directory = self.docs / "product-launch-cold-start-guide"
+        directory.mkdir()
+        self._assert_root_failure_without_writes("route already occupied")
+
+    def test_root_route_cannot_escape_scope_or_replace_index(self):
+        url = self._add_root_page()
+        for route in ("../outside.md", "geo/nested.md", "page.txt", "/outside.md", "index.md"):
+            with self.subTest(route=route), \
+                    patch.object(scraper, "SEA_ROOT_ROUTES", {url: route}):
+                self._assert_root_failure_without_writes("invalid /sea route override")
+
+    def test_root_route_cannot_follow_a_symlink_to_existing_index(self):
+        self._add_root_page()
+        index = self.docs / "index.mdx"
+        index.write_text("保留现有首页\n", encoding="utf-8")
+        (self.docs / "product-launch-cold-start-guide.md").symlink_to(index)
+        self._assert_root_failure_without_writes("invalid /sea route override")
+        self.assertEqual(index.read_text(encoding="utf-8"), "保留现有首页\n")
+
+    def test_missing_pinned_root_source_preserves_existing_page(self):
+        url = self._add_root_page()
+        self._run()
+        self.tree[:] = [item for item in self.tree if item[1] != url]
+        self._assert_root_failure_without_writes("pinned /sea source missing")
+
     def test_missing_new_category_is_created_only_after_all_fetches(self):
         def fetch(item):
             self.assertFalse(self.new_folder.exists())

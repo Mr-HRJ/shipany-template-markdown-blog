@@ -135,6 +135,12 @@ SEA_ROUTE_OVERRIDES = {
     "/sea/geo/geo-ai-search-door": "geo/geo-ai-search-door.md",
 }
 
+# Verified standalone pages in the source tree, outside every category folder.
+# Keep this explicit so an unfamiliar URL still stops synchronization.
+SEA_ROOT_ROUTES = {
+    "/sea/product-launch-cold-start-guide": "product-launch-cold-start-guide.md",
+}
+
 _NEXT_PUSH_RE = re.compile(
     r'self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)', re.DOTALL
 )
@@ -655,6 +661,7 @@ def process_sea() -> None:
     source_titles: dict[tuple[str, str], list[str]] = {}
     pinned_paths: dict[str, Path] = {}
     pinned_routes: set[tuple[str, str]] = set()
+    route_overrides = {**SEA_ROUTE_OVERRIDES, **SEA_ROOT_ROUTES}
 
     for title, source_path in tree:
         if source_path in seen_source_urls:
@@ -667,6 +674,10 @@ def process_sea() -> None:
             category_title = "网站出海必读"
             if source_category not in found_category_order:
                 found_category_order.append(source_category)
+        elif source_path in SEA_ROOT_ROUTES:
+            source_category = ""
+            local_folder = ""
+            category_title = "AI 出海手册"
         elif len(parts) == 3 and parts[0] == "sea" and parts[1] in SEA_CATEGORY_MAP:
             source_category = parts[1]
             local_folder, category_title = SEA_CATEGORY_MAP[source_category]
@@ -677,13 +688,15 @@ def process_sea() -> None:
 
         title_key = (local_folder, _norm_sea_title(title))
         source_titles.setdefault(title_key, []).append(source_path)
-        override = SEA_ROUTE_OVERRIDES.get(source_path)
+        override = route_overrides.get(source_path)
         if override:
             relative = Path(override)
             path = DOCS_ROOT / relative
             if (
-                relative.is_absolute() or len(relative.parts) != 2
-                or relative.parts[0] != local_folder
+                relative.is_absolute() or len(relative.parts) != (2 if local_folder else 1)
+                or relative.parent != Path(local_folder)
+                or (not local_folder and relative.stem in {"index", "meta"})
+                or (not local_folder and path.is_symlink())
                 or relative.suffix not in {".md", ".mdx"}
                 or not path.resolve().is_relative_to(DOCS_ROOT.resolve())
             ):
@@ -704,7 +717,7 @@ def process_sea() -> None:
     for key, urls in source_titles.items():
         if len(urls) > 1 and any(url not in pinned_paths for url in urls):
             raise RuntimeError(f"duplicate source title in {key[0]}: {urls}")
-    for source_path, relative in SEA_ROUTE_OVERRIDES.items():
+    for source_path, relative in route_overrides.items():
         if source_path not in seen_source_urls and (DOCS_ROOT / relative).exists():
             raise RuntimeError(f"pinned /sea source missing; verify removal first: {source_path}")
 
@@ -721,11 +734,15 @@ def process_sea() -> None:
     pinned_local_keys: set[tuple[str, str]] = set()
     all_existing: set[Path] = set()
     occupied_stems: dict[str, set[str]] = {}
-    for local_folder in local_folders:
+    for local_folder in [*local_folders, ""]:
         folder = DOCS_ROOT / local_folder
         occupied_stems[local_folder] = set()
         try:
-            existing_paths = sorted(folder.iterdir())
+            existing_paths = (
+                sorted(path for path in pinned_paths.values()
+                       if path.parent == DOCS_ROOT and path.exists())
+                if not local_folder else sorted(folder.iterdir())
+            )
         except FileNotFoundError:
             # New source categories have no local directory until every source
             # page has fetched successfully and its first article is written.
@@ -746,9 +763,20 @@ def process_sea() -> None:
             existing_by_key[key] = path
 
     for path in pinned_paths.values():
-        if path not in all_existing and path.stem in occupied_stems[path.parent.name]:
+        local_folder = str(path.parent.relative_to(DOCS_ROOT))
+        if local_folder == ".":
+            local_folder = ""
+            if any(
+                other != path and (
+                    other.name == path.stem
+                    or (other.suffix in {".md", ".mdx"} and other.stem == path.stem)
+                )
+                for other in DOCS_ROOT.iterdir()
+            ):
+                raise RuntimeError(f"pinned /sea route already occupied: {path.relative_to(REPO)}")
+        if path not in all_existing and path.stem in occupied_stems[local_folder]:
             raise RuntimeError(f"pinned /sea route already occupied: {path.relative_to(REPO)}")
-        occupied_stems[path.parent.name].add(path.stem)
+        occupied_stems[local_folder].add(path.stem)
 
     used_existing: set[Path] = set()
     for item in source_items:
@@ -771,8 +799,10 @@ def process_sea() -> None:
     stale_local = sorted(all_existing - used_existing)
     source_to_local = {
         str(item["source_path"]): (
-            f"/docs/{item['local_folder']}/"
-            f"{quote(Path(item['local_path']).stem, safe='-._~')}"
+            "/docs/" + quote(
+                Path(item["local_path"]).relative_to(DOCS_ROOT).with_suffix("").as_posix(),
+                safe="/-._~",
+            )
         )
         for item in source_items
     }
@@ -804,6 +834,7 @@ def process_sea() -> None:
     updated_docs: list[tuple[str, str]] = []
     unchanged = 0
     pages_by_folder: dict[str, list[str]] = {folder: [] for folder in local_folders}
+    root_pages: list[str] = []
 
     for item in source_items:
         title = str(item["title"])
@@ -819,7 +850,11 @@ def process_sea() -> None:
             body,
         )
         if source_path in sidebar_urls:
-            pages_by_folder[local_folder].append(local_path.stem)
+            if local_folder:
+                pages_by_folder[local_folder].append(local_path.stem)
+            root_entry = local_folder or local_path.stem
+            if root_entry not in root_pages:
+                root_pages.append(root_entry)
 
         current = local_path.read_text(encoding="utf-8") if local_path.exists() else None
         comparable = _rewrite_sea_image_urls(new_text, r2_config)
@@ -857,7 +892,7 @@ def process_sea() -> None:
             meta_path.write_text(meta_text, encoding="utf-8")
 
     root_meta = json.dumps(
-        {"title": "AI 出海手册", "pages": local_folders},
+        {"title": "AI 出海手册", "pages": root_pages},
         ensure_ascii=False,
         indent=2,
     ) + "\n"

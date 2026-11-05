@@ -54,6 +54,24 @@ def new_badge():
 
 
 class ExtractPageTreeTests(unittest.TestCase):
+    def test_verified_prompt_cleanup_is_opt_in_and_preserves_labelled_code(self):
+        body = "```\n提示词 \n第二行\t\n```\n```text\ncode  \n```\n"
+        self.assertEqual(scraper._normalize_sea_markdown(body), body)
+        expected = "```\n提示词\n第二行\n```\n```text\ncode  \n```\n"
+        self.assertEqual(scraper._normalize_sea_markdown(body, trim_prompt_fences=True), expected)
+        self.assertEqual(scraper._normalize_sea_markdown(expected, trim_prompt_fences=True), expected)
+
+    def test_only_verified_source_enables_prompt_fence_cleanup(self):
+        body = "```\n提示词 \n```\n"
+        with patch.object(scraper, "fetch_html", return_value="source"), \
+                patch.object(scraper, "extract_markdown", return_value=body), \
+                patch.object(scraper, "_source_dates", return_value=("2026-11-04", None)):
+            for source_path, expected in (("/sea/need/how-use-grok-find-new-word", body.replace("词 ", "词")),
+                                          ("/sea/need/another-article", body)):
+                with self.subTest(source_path=source_path):
+                    result = scraper._fetch_sea_article({"source_path": source_path})
+                    self.assertEqual(result["body"], expected)
+
     def test_heading_link_sanitizer_preserves_body_links_and_fenced_examples(self):
         body = (
             "## [工具指南](https://example.com/guide) https://example.com/tool\n"
@@ -240,6 +258,9 @@ class SeaNewCategoryTests(unittest.TestCase):
 
     def _add_root_page(self):
         url = "/sea/product-launch-cold-start-guide"
+        self.patches.enter_context(patch.object(
+            scraper, "SEA_ROOT_ROUTES", {url: "product-launch-cold-start-guide.md"},
+        ))
         self.tree.insert(1, ("根层独立文章", url))
         self.results[url] = {
             "body": "完整正文。[SEO](/sea/seo/existing)\n",
@@ -316,6 +337,47 @@ class SeaNewCategoryTests(unittest.TestCase):
     def test_unknown_standalone_url_still_fails_before_fetch(self):
         self.tree.insert(1, ("未核实根文章", "/sea/unverified-root-page"))
         self._assert_root_failure_without_writes("unmapped /sea article")
+
+    def test_root_page_moved_into_category_keeps_route_and_source_position(self):
+        old_url = self._add_root_page()
+        self._run()
+        root_doc = self.docs / "product-launch-cold-start-guide.md"
+        original = root_doc.read_text(encoding="utf-8")
+        new_url = "/sea/readme/product-launch-cold-start-guide"
+        self.tree[1] = ("根层独立文章", new_url)
+        self.results[new_url] = {**self.results.pop(old_url), "updated": "2026-11-04"}
+        self.results["/sea/saas-seo/new"]["body"] = f"[迁移页]({new_url})\n"
+        with patch.object(scraper, "SEA_ROOT_ROUTES", {new_url: root_doc.name}):
+            self._run()
+            self.assertEqual(
+                root_doc.read_text(encoding="utf-8"),
+                original.replace("date: '2026-11-04'\n", "date: '2026-11-04'\nupdated: '2026-11-04'\n"),
+            )
+            self.assertEqual(
+                json.loads((self.docs / "must-read" / "meta.json").read_text())["pages"],
+                ["stable-route", "../product-launch-cold-start-guide"],
+            )
+            self.assertEqual(
+                json.loads((self.docs / "meta.json").read_text())["pages"],
+                ["must-read", "seo", "saas-seo"],
+            )
+            self.assertIn("[迁移页](/docs/product-launch-cold-start-guide)",
+                          (self.new_folder / "新增工具站文章.md").read_text())
+            self.assertFalse((self.docs / "must-read" / root_doc.name).exists())
+            self.tree[1] = ("迁入分类后完全改名", new_url)
+            self._run()
+            self.assertEqual(scraper._read_local_title(root_doc), "迁入分类后完全改名")
+            self.assertEqual(list(self.docs.glob("*.md")), [root_doc])
+            with patch.object(Path, "write_text") as write, patch.object(Path, "unlink") as unlink:
+                self._run()
+            write.assert_not_called()
+            unlink.assert_not_called()
+
+    def test_root_route_with_unknown_source_category_fails_before_fetch(self):
+        url = "/sea/unverified-category/product-launch-cold-start-guide"
+        self.tree.insert(1, ("未核实分类文章", url))
+        with patch.object(scraper, "SEA_ROOT_ROUTES", {url: "product-launch-cold-start-guide.md"}):
+            self._assert_root_failure_without_writes("unmapped /sea article")
 
     def test_root_route_rejects_mdx_and_folder_collisions(self):
         self._add_root_page()

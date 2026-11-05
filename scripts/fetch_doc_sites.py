@@ -135,11 +135,15 @@ SEA_ROUTE_OVERRIDES = {
     "/sea/geo/geo-ai-search-door": "geo/geo-ai-search-door.md",
 }
 
-# Verified standalone pages in the source tree, outside every category folder.
-# Keep this explicit so an unfamiliar URL still stops synchronization.
+# Pages originally imported at the root keep their routes even if the source
+# moves them into a category. Only explicitly verified source identities qualify.
 SEA_ROOT_ROUTES = {
-    "/sea/product-launch-cold-start-guide": "product-launch-cold-start-guide.md",
+    "/sea/readme/product-launch-cold-start-guide": "product-launch-cold-start-guide.md",
 }
+
+# These verified unlabelled fences contain prose prompts, not whitespace-
+# sensitive code. Keep the cleanup opt-in so other source examples stay exact.
+SEA_PROMPT_CODE_ROUTES = {"/sea/need/how-use-grok-find-new-word"}
 
 _NEXT_PUSH_RE = re.compile(
     r'self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)', re.DOTALL
@@ -501,18 +505,20 @@ def _source_dates(page_html: str) -> tuple[str | None, str | None]:
     return parse("Created"), parse("Updated")
 
 
-def _normalize_sea_markdown(body: str) -> str:
+def _normalize_sea_markdown(body: str, *, trim_prompt_fences: bool = False) -> str:
     """Keep Markdown hard breaks without importing trailing whitespace."""
     body = body.replace("\r\n", "\n").replace("\r", "\n")
     lines: list[str] = []
     in_fence = False
+    prompt_fence = False
     for line in body.split("\n"):
         stripped = line.lstrip()
         if stripped.startswith(("```", "~~~")):
             in_fence = not in_fence
+            prompt_fence = in_fence and trim_prompt_fences and stripped in {"```", "~~~"}
             lines.append(line)
         elif in_fence:
-            lines.append(line)
+            lines.append(line.rstrip(" \t") if prompt_fence else line)
         else:
             trimmed = line.rstrip(" \t")
             heading = HEADING_RE.match(trimmed)
@@ -538,7 +544,10 @@ def _fetch_sea_article(item: dict[str, object]) -> dict[str, object]:
             body = extract_markdown(page_html)
             if not body:
                 raise RuntimeError("no markdown chunk found")
-            body = _normalize_sea_markdown(rewrite_fence_langs(body))
+            body = _normalize_sea_markdown(
+                rewrite_fence_langs(body),
+                trim_prompt_fences=source_path in SEA_PROMPT_CODE_ROUTES,
+            )
             created, updated = _source_dates(page_html)
             if not created:
                 raise RuntimeError("source Created date not found")
@@ -675,9 +684,17 @@ def process_sea() -> None:
             if source_category not in found_category_order:
                 found_category_order.append(source_category)
         elif source_path in SEA_ROOT_ROUTES:
-            source_category = ""
+            if len(parts) == 2 and parts[0] == "sea":
+                source_category = ""
+                category_title = "AI 出海手册"
+            elif len(parts) == 3 and parts[0] == "sea" and parts[1] in SEA_CATEGORY_MAP:
+                source_category = parts[1]
+                category_title = SEA_CATEGORY_MAP[source_category][1]
+                if source_category not in found_category_order:
+                    found_category_order.append(source_category)
+            else:
+                raise RuntimeError(f"unmapped /sea article: {source_path}")
             local_folder = ""
-            category_title = "AI 出海手册"
         elif len(parts) == 3 and parts[0] == "sea" and parts[1] in SEA_CATEGORY_MAP:
             source_category = parts[1]
             local_folder, category_title = SEA_CATEGORY_MAP[source_category]
@@ -711,6 +728,7 @@ def process_sea() -> None:
             "source_path": source_path,
             "source_category": source_category,
             "local_folder": local_folder,
+            "navigation_folder": SEA_CATEGORY_MAP[source_category][0] if source_category else "",
             "category_title": category_title,
         })
 
@@ -840,6 +858,7 @@ def process_sea() -> None:
         title = str(item["title"])
         source_path = str(item["source_path"])
         local_folder = str(item["local_folder"])
+        navigation_folder = str(item["navigation_folder"])
         local_path = Path(item["local_path"])
         result = fetched[source_path]
         body = _rewrite_sea_internal_links(str(result["body"]), source_to_local)
@@ -850,9 +869,12 @@ def process_sea() -> None:
             body,
         )
         if source_path in sidebar_urls:
-            if local_folder:
-                pages_by_folder[local_folder].append(local_path.stem)
-            root_entry = local_folder or local_path.stem
+            if navigation_folder:
+                # Fumadocs resolves relative file references with each locale's
+                # URL, preserving the old route without duplicating the article.
+                page_reference = local_path.stem if local_folder else f"../{local_path.stem}"
+                pages_by_folder[navigation_folder].append(page_reference)
+            root_entry = navigation_folder or local_path.stem
             if root_entry not in root_pages:
                 root_pages.append(root_entry)
 

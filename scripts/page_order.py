@@ -74,6 +74,7 @@ PAGE_ORDER: dict[str, list[str]] = {
         "打造专属 AI 数据分析师：Google Analytics MCP 完整配置指南",
     ],
     "开发": [
+        "赛博菩萨Cloudflare全家桶零基础教程",
         "基于Mksaas模板的上站SOP全流程",
         "付费用户来源追踪与归因分析",
         "防止用户薅羊毛的一次真实复盘",

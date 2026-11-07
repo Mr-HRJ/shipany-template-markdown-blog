@@ -270,6 +270,8 @@ PAGE_ORDER: dict[str, list[str]] = {
         "46 个闷声发财的小站：我翻完 1.5 万个收银台和 1,161 份真实收入，挑出来值得抄的",
         "Next.js 还是 TanStack Start？独立开发者出海项目怎么选？",
         "Cloudflare Workers vs Vercel vs Supabase：出海 SaaS 怎么选？成本、性能与部署对比",
+        "2个月速成8分雅思 万字手搓全流程保姆级学习+避坑指南（基础篇）",
+        "Grok Bot 使用方法论：信任、团队与工作循环",
         "如何查看成功网站的来时路",
         "推荐使用AITDK SEO必备插件",
         "不出国、不囤货、不懂英语，普通人如何开始出海赚美元？",

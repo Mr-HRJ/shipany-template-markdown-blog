@@ -75,6 +75,7 @@ PAGE_ORDER: dict[str, list[str]] = {
     ],
     "开发": [
         "赛博菩萨Cloudflare全家桶零基础教程",
+        "Antigravity 从 0 ~ 1 完整保姆级教程",
         "基于Mksaas模板的上站SOP全流程",
         "付费用户来源追踪与归因分析",
         "防止用户薅羊毛的一次真实复盘",

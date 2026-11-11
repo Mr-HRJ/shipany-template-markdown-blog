@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fetch_doc_sites as scraper
+from fetch_doc_sites import PageTreeEntry
 from page_order import PAGE_ORDER
 
 
@@ -42,6 +43,10 @@ def flight_html(pages, extra_records=None, split_chunks=False):
 def page(name, url="/sea/need/example"):
     # The source need not serialize name immediately before url.
     return {"url": url, "type": "page", "external": False, "name": name}
+
+
+def folder_node(name, *children):
+    return {"type": "folder", "name": name, "children": list(children)}
 
 
 def new_badge():
@@ -120,24 +125,24 @@ class ExtractPageTreeTests(unittest.TestCase):
         fixture = flight_html(
             [
                 page("网站出海必读", "/sea/readme"),
-                {
-                    "type": "folder",
-                    "name": "找需求",
-                    "children": [
-                        page("第二篇", "/sea/need/second"),
+                folder_node(
+                    "找需求",
+                    page("第二篇", "/sea/need/second"),
+                    folder_node(
+                        "实操",
                         page("第一篇", "/sea/need/first"),
                         page("其他手册", "/joyflix/getting-started/readme"),
-                    ],
-                },
+                    ),
+                ),
             ],
             split_chunks=True,
         )
         self.assertEqual(
             scraper.extract_page_tree(fixture, "sea"),
             [
-                ("网站出海必读", "/sea/readme"),
-                ("第二篇", "/sea/need/second"),
-                ("第一篇", "/sea/need/first"),
+                PageTreeEntry("网站出海必读", "/sea/readme"),
+                PageTreeEntry("第二篇", "/sea/need/second", ("找需求",)),
+                PageTreeEntry("第一篇", "/sea/need/first", ("找需求", "实操")),
             ],
         )
 
@@ -157,7 +162,18 @@ class ExtractPageTreeTests(unittest.TestCase):
         ]
         self.assertEqual(
             scraper.extract_page_tree(flight_html([page(title)]), "sea"),
-            [("更新后的完整标题", "/sea/need/example")],
+            [PageTreeEntry("更新后的完整标题", "/sea/need/example")],
+        )
+
+    def test_update_badge_is_removed_by_key(self):
+        title = [
+            "Update 使用指南",
+            ["$", "span", "update-label-uuid", {"children": "Update"}],
+            ["$", "span", "ordinary-title-text", {"children": " Update"}],
+        ]
+        self.assertEqual(
+            scraper.extract_page_tree(flight_html([page(title)]), "sea"),
+            [PageTreeEntry("Update 使用指南 Update", "/sea/need/example")],
         )
 
     def test_lazy_title_resolves_records_and_decodes_literal_dollar(self):
@@ -175,8 +191,27 @@ class ExtractPageTreeTests(unittest.TestCase):
         )
         self.assertEqual(
             scraper.extract_page_tree(fixture, "sea"),
-            [("$10k MRR 的点子是怎么来的", "/sea/need/example")],
+            [PageTreeEntry("$10k MRR 的点子是怎么来的", "/sea/need/example")],
         )
+
+    def test_duplicate_page_urls_and_sibling_folder_paths_are_rejected(self):
+        fixtures = {
+            "duplicate page URL": [
+                folder_node("找需求", page("第一篇")),
+                folder_node("Seo", page("第二篇")),
+            ],
+            "duplicate sibling folders": [
+                folder_node(
+                    "找需求",
+                    folder_node("实操", page("第一篇")),
+                    folder_node("实操", page("第二篇", "/sea/need/second")),
+                ),
+            ],
+        }
+        for problem, nodes in fixtures.items():
+            with self.subTest(problem=problem):
+                with self.assertRaisesRegex(RuntimeError, "[Dd]uplicate"):
+                    scraper.extract_page_tree(flight_html(nodes), "sea")
 
     def test_missing_references_and_invalid_titles_fail_closed(self):
         invalid_names = ["$Lmissing", "", None, [], new_badge()]
@@ -217,13 +252,13 @@ class SeaNewCategoryTests(unittest.TestCase):
             "saas-seo": ("saas-seo", "AI 工具站 SEO 小册子"),
         }
         self.tree = [
-            ("网站出海必读", "/sea/readme"),
-            ("既有 SEO 文章", "/sea/seo/existing"),
-            ("新增工具站文章", "/sea/saas-seo/new"),
+            PageTreeEntry("网站出海必读", "/sea/readme"),
+            PageTreeEntry("既有 SEO 文章", "/sea/seo/existing", ("Seo",)),
+            PageTreeEntry("新增工具站文章", "/sea/saas-seo/new", ("AI 工具站 SEO 小册子",)),
         ]
         self.results = {
-            url: {"body": f"{title}正文\n", "date": "2026-10-14", "updated": None}
-            for title, url in self.tree
+            entry.url: {"body": f"{entry.title}正文\n", "date": "2026-10-14", "updated": None}
+            for entry in self.tree
         }
         self.new_folder = self.docs / "saas-seo"
         for folder, title in list(self.categories.values())[:2]:
@@ -235,10 +270,10 @@ class SeaNewCategoryTests(unittest.TestCase):
                 encoding="utf-8",
             )
         self.original_docs = {}
-        for (title, url), folder in zip(self.tree, ("must-read", "seo")):
-            result = self.results[url]
+        for entry, folder in zip(self.tree, ("must-read", "seo")):
+            result = self.results[entry.url]
             path = self.docs / folder / "stable-route.md"
-            text = scraper._render_sea_doc(title, result["date"], None, result["body"])
+            text = scraper._render_sea_doc(entry.title, result["date"], None, result["body"])
             path.write_text(text, encoding="utf-8")
             self.original_docs[path] = text
         (self.docs / "meta.json").write_text(
@@ -261,13 +296,35 @@ class SeaNewCategoryTests(unittest.TestCase):
         self.patches.enter_context(patch.object(
             scraper, "SEA_ROOT_ROUTES", {url: "product-launch-cold-start-guide.md"},
         ))
-        self.tree.insert(1, ("根层独立文章", url))
+        self.tree.insert(1, PageTreeEntry("根层独立文章", url))
         self.results[url] = {
             "body": "完整正文。[SEO](/sea/seo/existing)\n",
             "date": "2026-11-04", "updated": None,
         }
         self.results["/sea/saas-seo/new"]["body"] += f"[根页]({url})\n"
         return url
+
+    def _add_nested_group_entries(self):
+        root_url = "/sea/readme/product-launch-cold-start-guide"
+        self.patches.enter_context(patch.object(
+            scraper, "SEA_ROOT_ROUTES", {root_url: "product-launch-cold-start-guide.md"},
+        ))
+        category = "网站出海必读"
+        entries = [
+            PageTreeEntry("固定根路由", root_url, (category, "乙组")),
+            PageTreeEntry("深层文章", "/sea/readme/deep", (category, "乙组", "实操")),
+            PageTreeEntry("同组后续文章", "/sea/readme/later", (category, "乙组")),
+            PageTreeEntry("另一组文章", "/sea/readme/other", (category, "甲组")),
+        ]
+        self.tree[1:1] = entries
+        for entry in entries:
+            self.results[entry.url] = {
+                "body": f"{entry.title}正文\n",
+                "date": "2026-11-10",
+                "updated": None,
+            }
+        self.results["/sea/readme/deep"]["body"] += f"[冷启动]({root_url})\n"
+        return entries
 
     def _run(self):
         with patch.object(scraper, "_fetch_sea_article",
@@ -314,7 +371,7 @@ class SeaNewCategoryTests(unittest.TestCase):
             "[根页](/docs/product-launch-cold-start-guide)",
             (self.new_folder / "新增工具站文章.md").read_text(encoding="utf-8"),
         )
-        self.tree[1] = ("完全改名后的独立文章", url)
+        self.tree[1] = self.tree[1]._replace(title="完全改名后的独立文章")
         self._run()
         self.assertEqual(scraper._read_local_title(root_doc), "完全改名后的独立文章")
         self.assertEqual(sorted(path.name for path in self.docs.glob("*.md")),
@@ -335,7 +392,7 @@ class SeaNewCategoryTests(unittest.TestCase):
         )
 
     def test_unknown_standalone_url_still_fails_before_fetch(self):
-        self.tree.insert(1, ("未核实根文章", "/sea/unverified-root-page"))
+        self.tree.insert(1, PageTreeEntry("未核实根文章", "/sea/unverified-root-page"))
         self._assert_root_failure_without_writes("unmapped /sea article")
 
     def test_root_page_moved_into_category_keeps_route_and_source_position(self):
@@ -344,7 +401,7 @@ class SeaNewCategoryTests(unittest.TestCase):
         root_doc = self.docs / "product-launch-cold-start-guide.md"
         original = root_doc.read_text(encoding="utf-8")
         new_url = "/sea/readme/product-launch-cold-start-guide"
-        self.tree[1] = ("根层独立文章", new_url)
+        self.tree[1] = PageTreeEntry("根层独立文章", new_url, ("网站出海必读",))
         self.results[new_url] = {**self.results.pop(old_url), "updated": "2026-11-04"}
         self.results["/sea/saas-seo/new"]["body"] = f"[迁移页]({new_url})\n"
         with patch.object(scraper, "SEA_ROOT_ROUTES", {new_url: root_doc.name}):
@@ -364,7 +421,7 @@ class SeaNewCategoryTests(unittest.TestCase):
             self.assertIn("[迁移页](/docs/product-launch-cold-start-guide)",
                           (self.new_folder / "新增工具站文章.md").read_text())
             self.assertFalse((self.docs / "must-read" / root_doc.name).exists())
-            self.tree[1] = ("迁入分类后完全改名", new_url)
+            self.tree[1] = self.tree[1]._replace(title="迁入分类后完全改名")
             self._run()
             self.assertEqual(scraper._read_local_title(root_doc), "迁入分类后完全改名")
             self.assertEqual(list(self.docs.glob("*.md")), [root_doc])
@@ -375,7 +432,7 @@ class SeaNewCategoryTests(unittest.TestCase):
 
     def test_root_route_with_unknown_source_category_fails_before_fetch(self):
         url = "/sea/unverified-category/product-launch-cold-start-guide"
-        self.tree.insert(1, ("未核实分类文章", url))
+        self.tree.insert(1, PageTreeEntry("未核实分类文章", url, ("未核实分类",)))
         with patch.object(scraper, "SEA_ROOT_ROUTES", {url: "product-launch-cold-start-guide.md"}):
             self._assert_root_failure_without_writes("unmapped /sea article")
 
@@ -407,8 +464,163 @@ class SeaNewCategoryTests(unittest.TestCase):
     def test_missing_pinned_root_source_preserves_existing_page(self):
         url = self._add_root_page()
         self._run()
-        self.tree[:] = [item for item in self.tree if item[1] != url]
+        self.tree[:] = [entry for entry in self.tree if entry.url != url]
         self._assert_root_failure_without_writes("pinned /sea source missing")
+
+    def test_nested_groups_follow_source_order_without_changing_article_routes(self):
+        self._add_nested_group_entries()
+        self._run()
+
+        category = self.docs / "must-read"
+        expected_metadata = {
+            "meta.json": {
+                "title": "网站出海必读",
+                "pages": ["stable-route", "sea-group-1", "sea-group-2"],
+            },
+            "sea-group-1/meta.json": {
+                "title": "乙组",
+                "pages": ["../../product-launch-cold-start-guide", "sea-group-1", "../同组后续文章"],
+            },
+            "sea-group-1/sea-group-1/meta.json": {
+                "title": "实操",
+                "pages": ["../../深层文章"],
+            },
+            "sea-group-2/meta.json": {
+                "title": "甲组",
+                "pages": ["../另一组文章"],
+            },
+        }
+        for relative, metadata in expected_metadata.items():
+            with self.subTest(meta=relative):
+                self.assertEqual(json.loads((category / relative).read_text(encoding="utf-8")), metadata)
+        self.assertEqual(
+            {path.relative_to(category).as_posix() for path in category.rglob("*")
+             if path.suffix in {".md", ".mdx"}},
+            {"stable-route.md", "深层文章.md", "同组后续文章.md", "另一组文章.md"},
+        )
+        root_doc = self.docs / "product-launch-cold-start-guide.md"
+        self.assertEqual(scraper._read_local_title(root_doc), "固定根路由")
+        self.assertIn("[冷启动](/docs/product-launch-cold-start-guide)",
+                      (category / "深层文章.md").read_text(encoding="utf-8"))
+        self.assertEqual(
+            json.loads((self.docs / "meta.json").read_text(encoding="utf-8"))["pages"],
+            ["must-read", "seo", "saas-seo"],
+        )
+
+    def test_subgroup_rename_and_removal_only_change_navigation(self):
+        entries = self._add_nested_group_entries()
+        self._run()
+        articles = {
+            path: path.read_bytes() for path in self.docs.rglob("*")
+            if path.suffix in {".md", ".mdx"}
+        }
+
+        category_title = "网站出海必读"
+        renamed_group = (category_title, "冷启动实操")
+        self.tree[1:1 + len(entries)] = [
+            *(entry._replace(folders=renamed_group) for entry in entries[:3]),
+            entries[3]._replace(folders=(category_title,)),
+        ]
+        self._run()
+
+        category = self.docs / "must-read"
+        self.assertEqual(
+            {path.relative_to(category).as_posix() for path in category.rglob("meta.json")},
+            {"meta.json", "sea-group-1/meta.json"},
+        )
+        self.assertEqual(
+            json.loads((category / "meta.json").read_text(encoding="utf-8"))["pages"],
+            ["stable-route", "sea-group-1", "另一组文章"],
+        )
+        self.assertEqual(
+            json.loads((category / "sea-group-1" / "meta.json").read_text(encoding="utf-8")),
+            {
+                "title": "冷启动实操",
+                "pages": ["../../product-launch-cold-start-guide", "../深层文章", "../同组后续文章"],
+            },
+        )
+        self.assertEqual(
+            {path: path.read_bytes() for path in self.docs.rglob("*")
+             if path.suffix in {".md", ".mdx"}},
+            articles,
+        )
+
+    def test_interrupted_parent_metadata_write_can_be_retried(self):
+        self._add_nested_group_entries()
+        parent_meta = self.docs / "must-read" / "meta.json"
+        original_meta = parent_meta.read_bytes()
+        original_write = Path.write_text
+
+        def fail_parent(path, *args, **kwargs):
+            if path == parent_meta:
+                raise OSError("temporary parent metadata write failure")
+            return original_write(path, *args, **kwargs)
+
+        with patch.object(Path, "write_text", fail_parent):
+            with self.assertRaisesRegex(OSError, "temporary parent metadata write failure"):
+                self._run()
+        self.assertEqual(parent_meta.read_bytes(), original_meta)
+        self.assertTrue((self.docs / "must-read" / "sea-group-1" / "meta.json").exists())
+
+        articles = {
+            path: path.read_bytes() for path in self.docs.rglob("*")
+            if path.suffix in {".md", ".mdx"}
+        }
+        self._run()
+        self.assertEqual(
+            json.loads(parent_meta.read_text(encoding="utf-8"))["pages"],
+            ["stable-route", "sea-group-1", "sea-group-2"],
+        )
+        self.assertEqual(
+            {path: path.read_bytes() for path in self.docs.rglob("*")
+             if path.suffix in {".md", ".mdx"}},
+            articles,
+        )
+        with patch.object(Path, "write_text") as write, patch.object(Path, "unlink") as unlink:
+            self._run()
+        write.assert_not_called()
+        unlink.assert_not_called()
+
+    def test_orphan_group_with_foreign_metadata_is_not_adopted(self):
+        self._add_nested_group_entries()
+        orphan = self.docs / "must-read" / "sea-group-1"
+        orphan.mkdir()
+        (orphan / "meta.json").write_text(
+            json.dumps({"title": "用户维护的目录", "pages": ["../stable-route"]},
+                       ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        self._assert_root_failure_without_writes("navigation group path already occupied")
+
+    def test_interrupted_group_cleanup_is_completed_on_retry(self):
+        entries = self._add_nested_group_entries()
+        self._run()
+        category = self.docs / "must-read"
+        parent_meta = category / "meta.json"
+        old_parent = parent_meta.read_bytes()
+        failed_meta = category / "sea-group-1" / "meta.json"
+        original_unlink = Path.unlink
+        self.tree[1:1 + len(entries)] = [
+            entry._replace(folders=("网站出海必读",)) for entry in entries
+        ]
+
+        def fail_cleanup(path, *args, **kwargs):
+            if path == failed_meta:
+                raise OSError("temporary group cleanup failure")
+            return original_unlink(path, *args, **kwargs)
+
+        with patch.object(Path, "unlink", fail_cleanup):
+            with self.assertRaisesRegex(OSError, "temporary group cleanup failure"):
+                self._run()
+        self.assertEqual(parent_meta.read_bytes(), old_parent)
+
+        self._run()
+        self.assertEqual(set(category.rglob("meta.json")), {parent_meta})
+        self.assertEqual(
+            json.loads(parent_meta.read_text(encoding="utf-8"))["pages"],
+            ["stable-route", "../product-launch-cold-start-guide",
+             "深层文章", "同组后续文章", "另一组文章"],
+        )
 
     def test_missing_new_category_is_created_only_after_all_fetches(self):
         def fetch(item):
@@ -494,9 +706,9 @@ class SeaPinnedRouteTests(unittest.TestCase):
             self.new_url: "geo/geo-ai-search-door.md",
         }
         self.tree = [
-            ("网站出海必读", "/sea/readme"),
-            (self.title, self.old_url),
-            (self.title, self.new_url),
+            PageTreeEntry("网站出海必读", "/sea/readme"),
+            PageTreeEntry(self.title, self.old_url, ("GEO",)),
+            PageTreeEntry(self.title, self.new_url, ("GEO",)),
         ]
         self.results = {
             "/sea/readme": {
@@ -612,7 +824,7 @@ class SeaPinnedRouteTests(unittest.TestCase):
     def test_same_source_urls_keep_routes_after_both_titles_change(self):
         self._run()
         renamed = {self.old_url: "旧文大幅改名", self.new_url: "新文另一个标题"}
-        self.tree[1:] = [(renamed[url], url) for _, url in self.tree[1:]]
+        self.tree[1:] = [entry._replace(title=renamed[entry.url]) for entry in self.tree[1:]]
         self._run()
         self.assertEqual(scraper._read_local_title(self.old_path), renamed[self.old_url])
         self.assertEqual(scraper._read_local_title(self.new_path), renamed[self.new_url])
@@ -623,7 +835,7 @@ class SeaPinnedRouteTests(unittest.TestCase):
         self._assert_idempotent()
 
     def test_unbound_third_source_with_same_title_fails_before_fetch(self):
-        self.tree.append((self.title, "/sea/geo/unverified-third"))
+        self.tree.append(PageTreeEntry(self.title, "/sea/geo/unverified-third", ("GEO",)))
         self._assert_failure_without_writes("duplicate source title").assert_not_called()
 
     def test_stray_local_same_title_is_rejected_before_or_after_pinned_file(self):
@@ -657,7 +869,7 @@ class SeaPinnedRouteTests(unittest.TestCase):
         complete_tree = list(self.tree)
         for missing_url in (self.old_url, self.new_url):
             with self.subTest(missing_url=missing_url):
-                self.tree[:] = [item for item in complete_tree if item[1] != missing_url]
+                self.tree[:] = [entry for entry in complete_tree if entry.url != missing_url]
                 self._assert_failure_without_writes("pinned /sea source missing").assert_not_called()
         self.tree[:] = complete_tree
 
@@ -671,7 +883,7 @@ class SeaPinnedRouteTests(unittest.TestCase):
     def test_new_pinned_route_is_reserved_before_earlier_automatic_slug(self):
         earlier_url = "/sea/geo/earlier-unpinned"
         earlier_title = self.new_path.stem
-        self.tree.insert(1, (earlier_title, earlier_url))
+        self.tree.insert(1, PageTreeEntry(earlier_title, earlier_url, ("GEO",)))
         self.results[earlier_url] = {
             "body": "较早出现但不是绑定文章。\n", "date": "2026-10-23", "updated": None,
         }
@@ -719,11 +931,40 @@ class HarvestPageTreeTests(unittest.TestCase):
         fetch_html.side_effect = [before, after, after]
         self.assertEqual(
             scraper.harvest_page_tree("sea"),
-            [("新标题", "/sea/need/example")],
+            [PageTreeEntry("新标题", "/sea/need/example")],
         )
         self.assertEqual(fetch_html.call_count, 3)
         self.assertEqual(sleep.call_count, 2)
         fetch_html.assert_called_with(scraper.BASE + "/sea")
+
+    @patch.object(scraper.time, "sleep")
+    @patch.object(scraper, "fetch_html")
+    def test_stability_compares_folder_paths_as_well_as_titles_and_urls(self, fetch_html, sleep):
+        before = flight_html([folder_node("找需求", page("文章"))])
+        after = flight_html([folder_node("找需求", folder_node("实操", page("文章")))])
+        fetch_html.side_effect = [before, after, after]
+        self.assertEqual(
+            scraper.harvest_page_tree("sea"),
+            [PageTreeEntry("文章", "/sea/need/example", ("找需求", "实操"))],
+        )
+        self.assertEqual(fetch_html.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
+    @patch.object(scraper.time, "sleep")
+    @patch.object(scraper, "fetch_html")
+    def test_transient_error_requires_two_new_matching_inventories(self, fetch_html, sleep):
+        complete = flight_html([folder_node("找需求", page("完整文章"))])
+        for failure in (RuntimeError("temporary fetch failure"), "<html>truncated response</html>"):
+            with self.subTest(failure=failure):
+                fetch_html.reset_mock()
+                sleep.reset_mock()
+                fetch_html.side_effect = [complete, failure, complete, complete]
+                self.assertEqual(
+                    scraper.harvest_page_tree("sea"),
+                    [PageTreeEntry("完整文章", "/sea/need/example", ("找需求",))],
+                )
+                self.assertEqual(fetch_html.call_count, 4)
+                self.assertEqual(sleep.call_count, 3)
 
     @patch.object(scraper.time, "sleep")
     @patch.object(scraper, "fetch_html")

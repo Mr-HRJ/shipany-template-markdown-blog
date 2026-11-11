@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect as redirectToPage } from 'next/navigation';
 import { getMDXComponents } from '@/mdx-components';
-import { findNeighbour } from 'fumadocs-core/server';
+import { findNeighbour, flattenTree } from 'fumadocs-core/server';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import {
   DocsBody,
@@ -54,14 +54,13 @@ export default async function DocsContentPage(props: {
   const params = await props.params;
   const locale = params.locale || 'en';
   const slug = encodeSlug(params.slug);
+  const tree = source.getPageTree(locale);
 
-  // Root /docs lands on the "网站出海必读" readme instead of the sparse index
-  // page, matching the source site whose handbook root shows the readme.
+  // Follow the source handbook's first article, including nested groups.
   if (!slug || slug.length === 0) {
-    redirect({
-      href: `/docs/must-read/${encodeURIComponent('网站出海必读')}`,
-      locale: (params.locale || 'en') as 'en' | 'zh',
-    });
+    const firstPage = flattenTree(tree.children)[0];
+    if (!firstPage) notFound();
+    redirectToPage(firstPage.url);
   }
 
   // fumadocs skips a root folder's index.mdx, so /docs/<handbook> can't be
@@ -84,7 +83,6 @@ export default async function DocsContentPage(props: {
   // Compute prev/next on the server so the footer doesn't depend on
   // `usePathname()` during hydration (that caused grid-cols-1 ↔ grid-cols-2
   // hydration mismatch warnings).
-  const tree = (source.pageTree as any)[params.locale || 'en'];
   const neighbour = findNeighbour(tree, page.url);
 
   // Source-site publish/update dates (only /sea articles carry these).

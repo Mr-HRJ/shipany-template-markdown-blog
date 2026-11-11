@@ -22,13 +22,14 @@ from datetime import datetime
 import hashlib
 import html as _html
 import json
+from posixpath import relpath
 import re
 import sys
 import time
 import unicodedata
 import urllib.request
 from pathlib import Path
-from typing import Callable
+from typing import Callable, NamedTuple, cast
 from urllib.parse import quote, urlparse
 
 # Reuse the battle-tested extract / transform pipeline.
@@ -150,6 +151,12 @@ _NEXT_PUSH_RE = re.compile(
 )
 
 
+class PageTreeEntry(NamedTuple):
+    title: str
+    url: str
+    folders: tuple[str, ...] = ()
+
+
 def decode_rsc_payload(page_html: str) -> str:
     """Decode all Next.js flight string chunks into one searchable payload."""
     chunks: list[str] = []
@@ -161,7 +168,7 @@ def decode_rsc_payload(page_html: str) -> str:
     return "".join(chunks)
 
 
-def extract_page_tree(page_html: str, site: str) -> list[tuple[str, str]]:
+def extract_page_tree(page_html: str, site: str) -> list[PageTreeEntry]:
     """Read page nodes, including React labels and lazy Flight references."""
     payload = decode_rsc_payload(page_html)
     decoder = json.JSONDecoder()
@@ -188,7 +195,7 @@ def extract_page_tree(page_html: str, site: str) -> list[tuple[str, str]]:
                 props = value[3]
                 key = str(value[2] or "")
                 if (
-                    key.startswith(("new-label-", "child-update-dot-"))
+                    key.startswith(("new-label-", "update-label-", "child-update-dot-"))
                     or props.get("aria-hidden") is True
                 ):
                     return ""
@@ -209,12 +216,20 @@ def extract_page_tree(page_html: str, site: str) -> list[tuple[str, str]]:
     if not trees:
         raise RuntimeError(f"/{site} complete page tree not found")
 
-    inventories: list[list[tuple[str, str]]] = []
+    inventories: list[list[PageTreeEntry]] = []
     for tree in trees:
-        items: list[tuple[str, str]] = []
+        items: list[PageTreeEntry] = []
         seen_urls: set[str] = set()
+        seen_folders: set[tuple[str, ...]] = set()
 
-        def visit(node: dict) -> None:
+        def visit(node: dict, folders: tuple[str, ...] = ()) -> None:
+            is_folder = site == "sea" and node.get("type") == "folder"
+            if is_folder:
+                folders += (label(node.get("name")).strip(),)
+                if not folders[-1] or folders in seen_folders:
+                    raise RuntimeError(f"empty or duplicate /sea folder label: {folders}")
+                seen_folders.add(folders)
+            before = len(items)
             if node.get("type") == "page":
                 url = node.get("url", "")
                 if isinstance(url, str) and url.startswith(f"/{site}/"):
@@ -222,15 +237,19 @@ def extract_page_tree(page_html: str, site: str) -> list[tuple[str, str]]:
                     if not title or title.startswith("$L"):
                         raise RuntimeError(f"empty or unresolved page title: {url}")
                     url = url.rstrip("/")
+                    if site == "sea" and url in seen_urls:
+                        raise RuntimeError(f"duplicate /sea page URL: {url}")
                     if url not in seen_urls:
-                        items.append((title, url))
+                        items.append(PageTreeEntry(title, url, folders))
                         seen_urls.add(url)
             index = node.get("index")
             if isinstance(index, dict):
-                visit(index)
+                visit(index, folders)
             for child in node.get("children", []):
                 if isinstance(child, dict):
-                    visit(child)
+                    visit(child, folders)
+            if is_folder and before == len(items):
+                raise RuntimeError(f"/sea folder contains no articles: {folders}")
 
         visit(tree)
         if items:
@@ -240,27 +259,32 @@ def extract_page_tree(page_html: str, site: str) -> list[tuple[str, str]]:
     return inventories[0]
 
 
-def harvest_page_tree(site: str) -> list[tuple[str, str]]:
-    """Return exact `(sidebar title, URL)` pairs from the root RSC page tree.
+def harvest_page_tree(site: str) -> list[PageTreeEntry]:
+    """Return ordered titles, URLs and folder paths from the root RSC tree.
 
     Reading the decoded page tree avoids the shortened links emitted by cards
     in the rendered HTML.  Those shortened links caused the older harvester to
     silently miss valid `/sea` articles.
     """
-    previous: list[tuple[str, str]] | None = None
+    previous: list[PageTreeEntry] | None = None
+    last_error: RuntimeError | None = None
 
     # Cloudflare occasionally serves an incomplete streamed RSC response even
     # with HTTP 200. Never synchronize from a largest-response fallback:
     # two complete inventories must agree on both titles and URLs.
     for attempt in range(4):
-        page_html = fetch_html(f"{BASE}/{site}")
-        items = extract_page_tree(page_html, site)
-        if items == previous:
-            return items
-        previous = items
+        try:
+            items = extract_page_tree(fetch_html(f"{BASE}/{site}"), site)
+        except RuntimeError as exc:
+            previous = None
+            last_error = exc
+        else:
+            if items == previous:
+                return items
+            previous = items
         if attempt < 3:
             time.sleep(0.25)
-    raise RuntimeError(f"/{site} page tree did not stabilize after four fetches")
+    raise RuntimeError(f"/{site} page tree did not stabilize after four fetches") from last_error
 
 
 # ---------- URL harvest ----------
@@ -278,9 +302,9 @@ def harvest_urls(site: str) -> list[str]:
     # for deployments whose RSC payload does not expose sidebar nodes.
     try:
         tree_urls = [
-            url
-            for _, url in harvest_page_tree(site)
-            if len(url.strip("/").split("/")) >= 3
+            entry.url
+            for entry in harvest_page_tree(site)
+            if len(entry.url.strip("/").split("/")) >= 3
         ]
         if tree_urls:
             return tree_urls
@@ -650,6 +674,85 @@ def _render_sea_doc(
     return "\n".join(frontmatter) + "\n" + body.rstrip() + "\n"
 
 
+_SEA_GROUP_FOLDER = re.compile(r"sea-group-[1-9]\d*")
+
+
+def _existing_sea_groups(folder: Path) -> set[Path]:
+    """Find previously generated groups reachable from a category's metadata."""
+    meta = folder / "meta.json"
+    if folder.is_symlink() or meta.is_symlink():
+        raise RuntimeError(f"unsafe /sea metadata path: {meta.relative_to(REPO)}")
+    if not meta.exists():
+        return set()
+    groups: set[Path] = set()
+    for entry in json.loads(meta.read_text(encoding="utf-8")).get("pages", []):
+        if _SEA_GROUP_FOLDER.fullmatch(entry) and (folder / entry).is_dir():
+            group = folder / entry
+            groups.add(group)
+            groups.update(_existing_sea_groups(group))
+    return groups
+
+
+def _plan_sea_navigation(
+    source_items: list[dict[str, object]], sidebar_urls: set[str],
+) -> tuple[dict[Path, str], set[Path]]:
+    root_pages: list[str] = []
+    metadata: dict[Path, tuple[str, list[str]]] = {DOCS_ROOT: ("AI 出海手册", root_pages)}
+    previous_groups: set[Path] = set()
+    for folder, title in SEA_CATEGORY_MAP.values():
+        path = DOCS_ROOT / folder
+        metadata[path] = (title, [])
+        previous_groups.update(_existing_sea_groups(path))
+
+    group_paths: dict[tuple[str, ...], Path] = {}
+    group_counts: dict[Path, int] = {}
+    article_paths = {Path(item["local_path"]).with_suffix("") for item in source_items}
+    for item in source_items:
+        if item["source_path"] not in sidebar_urls:
+            continue
+        article_path = Path(item["local_path"]).with_suffix("")
+        category = str(item["navigation_folder"])
+        root_entry = category or article_path.name
+        if root_entry not in root_pages:
+            root_pages.append(root_entry)
+        if not category:
+            continue
+
+        folder = DOCS_ROOT / category
+        group_key = (category,)
+        for title in cast(tuple[str, ...], item["groups"]):
+            group_key += (title,)
+            if group_key not in group_paths:
+                group_counts[folder] = group_counts.get(folder, 0) + 1
+                group = folder / f"sea-group-{group_counts[folder]}"
+                if (
+                    group in article_paths or group.is_symlink()
+                    or (group.exists() and not group.is_dir())
+                ):
+                    raise RuntimeError(f"/sea navigation group path already occupied: {group.relative_to(REPO)}")
+                metadata[folder][1].append(group.name)
+                metadata[group] = (title, [])
+                group_paths[group_key] = group
+            folder = group_paths[group_key]
+
+        # Fumadocs resolves these references to the original files and URLs.
+        metadata[folder][1].append(relpath(article_path.as_posix(), folder.as_posix()))
+
+    rendered = {
+        folder / "meta.json": json.dumps({"title": title, "pages": pages}, ensure_ascii=False, indent=2) + "\n"
+        for folder, (title, pages) in metadata.items()
+    }
+    # A previous run may have written child groups before a parent write failed.
+    # Adopt only exact planned metadata, keeping unrelated files protected.
+    for group in set(group_paths.values()) - previous_groups:
+        for path in group.rglob("*"):
+            if path.is_symlink() or (not path.is_dir() and (
+                path not in rendered or path.read_bytes() != rendered[path].encode("utf-8")
+            )):
+                raise RuntimeError(f"/sea navigation group path already occupied: {group.relative_to(REPO)}")
+    return rendered, previous_groups - metadata.keys()
+
+
 def process_sea() -> None:
     """Synchronize `/sea` into the existing root AI handbook in-place."""
     print("\n##### sea (root AI handbook) #####")
@@ -659,9 +762,9 @@ def process_sea() -> None:
     # The source still serves its README landing page even when it is omitted
     # from the sidebar. Preserve the existing entry URL without adding a
     # sidebar item absent from the source tree.
-    sidebar_urls = {url for _, url in tree}
+    sidebar_urls = {entry.url for entry in tree}
     if "/sea/readme" not in sidebar_urls:
-        tree = [("网站出海必读", "/sea/readme")] + tree
+        tree = [PageTreeEntry("网站出海必读", "/sea/readme"), *tree]
 
     expected_category_order = list(SEA_CATEGORY_MAP)
     found_category_order: list[str] = []
@@ -672,7 +775,7 @@ def process_sea() -> None:
     pinned_routes: set[tuple[str, str]] = set()
     route_overrides = {**SEA_ROUTE_OVERRIDES, **SEA_ROOT_ROUTES}
 
-    for title, source_path in tree:
+    for title, source_path, folders in tree:
         if source_path in seen_source_urls:
             continue
         seen_source_urls.add(source_path)
@@ -703,6 +806,8 @@ def process_sea() -> None:
         else:
             raise RuntimeError(f"unmapped /sea article: {source_path}")
 
+        if folders and (not source_category or folders[0] != category_title):
+            raise RuntimeError(f"unexpected /sea navigation category for {source_path}: {folders}")
         title_key = (local_folder, _norm_sea_title(title))
         source_titles.setdefault(title_key, []).append(source_path)
         override = route_overrides.get(source_path)
@@ -730,6 +835,7 @@ def process_sea() -> None:
             "local_folder": local_folder,
             "navigation_folder": SEA_CATEGORY_MAP[source_category][0] if source_category else "",
             "category_title": category_title,
+            "groups": folders[1:],
         })
 
     for key, urls in source_titles.items():
@@ -815,6 +921,7 @@ def process_sea() -> None:
         item["local_path"] = path
 
     stale_local = sorted(all_existing - used_existing)
+    metadata, stale_groups = _plan_sea_navigation(source_items, sidebar_urls)
     source_to_local = {
         str(item["source_path"]): (
             "/docs/" + quote(
@@ -851,14 +958,10 @@ def process_sea() -> None:
     added: list[tuple[str, str]] = []
     updated_docs: list[tuple[str, str]] = []
     unchanged = 0
-    pages_by_folder: dict[str, list[str]] = {folder: [] for folder in local_folders}
-    root_pages: list[str] = []
-
     for item in source_items:
         title = str(item["title"])
         source_path = str(item["source_path"])
         local_folder = str(item["local_folder"])
-        navigation_folder = str(item["navigation_folder"])
         local_path = Path(item["local_path"])
         result = fetched[source_path]
         body = _rewrite_sea_internal_links(str(result["body"]), source_to_local)
@@ -868,16 +971,6 @@ def process_sea() -> None:
             str(result["updated"]) if result["updated"] else None,
             body,
         )
-        if source_path in sidebar_urls:
-            if navigation_folder:
-                # Fumadocs resolves relative file references with each locale's
-                # URL, preserving the old route without duplicating the article.
-                page_reference = local_path.stem if local_folder else f"../{local_path.stem}"
-                pages_by_folder[navigation_folder].append(page_reference)
-            root_entry = navigation_folder or local_path.stem
-            if root_entry not in root_pages:
-                root_pages.append(root_entry)
-
         current = local_path.read_text(encoding="utf-8") if local_path.exists() else None
         comparable = _rewrite_sea_image_urls(new_text, r2_config)
         if current is not None and _normalize_sea_markdown(current) == comparable:
@@ -901,26 +994,19 @@ def process_sea() -> None:
     for path in stale_local:
         path.unlink()
 
-    category_titles = {"must-read": "网站出海必读"}
-    category_titles.update({folder: title for folder, title in SEA_CATEGORY_MAP.values()})
-    for folder in local_folders:
-        meta_path = DOCS_ROOT / folder / "meta.json"
-        meta_text = json.dumps(
-            {"title": category_titles[folder], "pages": pages_by_folder[folder]},
-            ensure_ascii=False,
-            indent=2,
-        ) + "\n"
-        if not meta_path.exists() or meta_path.read_text(encoding="utf-8") != meta_text:
-            meta_path.write_text(meta_text, encoding="utf-8")
+    # Keep old parent references until cleanup succeeds so a retry can find
+    # every stale group, even after some of its descendants were removed.
+    for folder in sorted(stale_groups, key=lambda path: -len(path.parts)):
+        (folder / "meta.json").unlink(missing_ok=True)
 
-    root_meta = json.dumps(
-        {"title": "AI 出海手册", "pages": root_pages},
-        ensure_ascii=False,
-        indent=2,
-    ) + "\n"
-    root_meta_path = DOCS_ROOT / "meta.json"
-    if root_meta_path.read_text(encoding="utf-8") != root_meta:
-        root_meta_path.write_text(root_meta, encoding="utf-8")
+    # Write groups before their parents reference them.
+    for meta_path in sorted(metadata, key=lambda path: -len(path.parts)):
+        meta_text = metadata[meta_path]
+        if not meta_path.exists() or meta_path.read_text(encoding="utf-8") != meta_text:
+            folder = meta_path.parent
+            if not folder.exists():
+                folder.mkdir(parents=True, exist_ok=True)
+            meta_path.write_text(meta_text, encoding="utf-8")
 
     print(
         f"  sync result: {len(added)} added, {len(updated_docs)} updated, "

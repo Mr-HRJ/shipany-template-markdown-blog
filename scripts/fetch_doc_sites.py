@@ -134,6 +134,8 @@ SEA_CATEGORY_MAP = {
 SEA_ROUTE_OVERRIDES = {
     "/sea/geo/geo-optimization-playbook-ai-search-era": "geo/GEO-AI-搜索时代的新流量入口.md",
     "/sea/geo/geo-ai-search-door": "geo/geo-ai-search-door.md",
+    "/sea/review/review-some-guoqiong-newwords": "review/梳理下最近新词出单的几个复盘.md",
+    "/sea/review/recent-new-word-sales-recaps": "review/recent-new-word-sales-recaps.md",
 }
 
 # Pages originally imported at the root keep their routes even if the source

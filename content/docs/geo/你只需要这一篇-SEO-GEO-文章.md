@@ -3,8 +3,6 @@ title: '你只需要这一篇 SEO/GEO 文章，把它交给你的 AI'
 date: '2026-11-16'
 ---
 
-# 你只需要这一篇 SEO/GEO 文章，把它交给你的 AI
-
 ![image](https://pub-8dc0158e77a140d4b502b52ab75765b5.r2.dev/docs/80ca1964ce5cc8be.jpg)
 
 我让 Claude 读了 66 篇 SEO/GEO 文章、48 个技能和 14 个 GitHub 仓库。

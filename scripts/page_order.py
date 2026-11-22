@@ -91,6 +91,8 @@ PAGE_ORDER: dict[str, list[str]] = {
         "如何配置子域名",
         "Antigravity 从 0 ~ 1 完整保姆级教程",
         "Google Antigravity 最全使用攻略：从订阅、反代、插件、模型，到白嫖 40 美元 API",
+        "这 10 个 Skill 专门治 AI 网页同质化",
+        "别再把 Google Antigravity 当编辑器了：保姆级实战手册（附全套命令与提示词）",
         "为什么会频繁出现“AI 编程抽卡”",
         "创建claude code命令，减少重复操作",
         "创建一个claude skill 减少重复操作",
